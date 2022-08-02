@@ -436,26 +436,31 @@
 (add-hook 'org-mode-hook (lambda () (display-line-numbers-mode 0)))
 
 ;;org-mode 只补全 ascii 字符
-(with-eval-after-load 'org
-  (push (apply-partially #'cl-remove-if
-                         (lambda (c)
-                           (or (string-match-p "[^\x00-\x7F]+" c)
-                               (string-match-p "[0-9]+" c)
-                               (if (equal major-mode "org")
-                                   (>= (length c) 15)))))
-        company-transformers))
+;;(with-eval-after-load 'org
+;;  (push (apply-partially #'cl-remove-if
+;;                         (lambda (c)
+;;                           (or (string-match-p "[^\x00-\x7F]+" c)
+;;                               (string-match-p "[0-9]+" c)
+;;                               (if (equal major-mode "org")
+;;                                   (>= (length c) 15)))))
+;;        company-transformers))
 
-;;(use-package! org-roam
-;;  :custom
-;;  (org-roam-complete-everywhere t)
-;;  )
-;;(map!
-;; :map org-mode-map
-;;  "C-M-i"  #'completion-at-point
-;;  :map doom-leader-notes-map
-;;  (:prefix ("r" . "roam")
-;;   :desc "go back" "b" #'org-mark-ring-goto)
-;;  )
+(use-package! org-roam
+  :init
+  (setq org-roam-capture-templates '(("d" "default" plain "%?"
+     :target (file+head "${slug}.org"
+                        "${title}\n")
+     :unnarrowed t)))
+  :custom
+  (org-roam-complete-everywhere t)
+  )
+(map!
+ :map org-mode-map
+  "C-M-i"  #'completion-at-point
+  :map doom-leader-notes-map
+  (:prefix ("r" . "roam")
+   :desc "go back" "b" #'org-mark-ring-goto)
+  )
 
 ;;==============================================================================
 
