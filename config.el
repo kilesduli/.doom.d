@@ -448,19 +448,19 @@
 (use-package! org-roam
   :init
   (setq org-roam-capture-templates '(("d" "default" plain "%?"
-     :target (file+head "${slug}.org"
-                        "${title}\n")
-     :unnarrowed t)))
+                                      :target (file+head "${slug}.org"
+                                                         "${title}\n")
+                                      :unnarrowed t)))
   :custom
   (org-roam-complete-everywhere t)
   )
 (map!
  :map org-mode-map
-  "C-M-i"  #'completion-at-point
-  :map doom-leader-notes-map
-  (:prefix ("r" . "roam")
-   :desc "go back" "b" #'org-mark-ring-goto)
-  )
+ "C-M-i"  #'completion-at-point
+ :map doom-leader-notes-map
+ (:prefix ("r" . "roam")
+  :desc "go back" "b" #'org-mark-ring-goto)
+ )
 
 ;;==============================================================================
 

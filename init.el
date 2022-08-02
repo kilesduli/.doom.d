@@ -31,7 +31,7 @@
        ;;deft              ; notational velocity for Emacs
        doom                ; what makes DOOM look the way it does
        doom-dashboard      ; a nifty splash screen for Emacs
-       ;;       doom-quit         ; DOOM quit-message prompts when you quit Emacs
+       ;;doom-quit         ; DOOM quit-message prompts when you quit Emacs
        ;;(emoji +unicode)  ; 🙂
        hl-todo             ; highlight TODO/FIXME/NOTE/DEPRECATED/HACK/REVIEW
        hydra
@@ -95,13 +95,13 @@
        ;;gist              ; interacting with github gists
        (lookup
         +dictionary
-        +docsets)         ; navigate your code and its documentation
+        +docsets)          ; navigate your code and its documentation
        lsp                 ; M-x vscode
        (magit
         +force)            ; a git porcelain for Emacs
        make                ; run make tasks from Emacs
        ;;pass              ; password manager for nerds
-       (pdf +pdf-tools)               ; pdf enhancements
+       (pdf +pdf-tools)    ; pdf enhancements
        ;;prodigy           ; FIXME managing external services & code builders
        rgb                 ; creating color strings
        ;;taskrunner        ; taskrunner for all your projects
@@ -116,7 +116,7 @@
        :lang
        ;;agda              ; types of types of types of types...
        ;;beancount         ; mind the GAAP
-       (cc +lsp)                ; C > C++ == 1
+       (cc +lsp)           ; C > C++ == 1
        ;;clojure           ; java with a lisp
        common-lisp         ; if you've seen one lisp, you've seen them all
        ;;coq               ; proofs-as-programs
@@ -124,7 +124,7 @@
        (csharp
         +lsp
         ;;+unity
-        +dotnet)                  ; unity, .NET, and mono shenanigans
+        +dotnet)           ; unity, .NET, and mono shenanigans
        ;;data              ; config/data formats
        ;;(dart +flutter)   ; paint ui and not much else
        ;;elixir            ; erlang done right
@@ -137,7 +137,7 @@
        ;;fsharp            ; ML stands for Microsoft's Language
        ;;fstar             ; (dependent) types and (monadic) effects and Z3
        ;;gdscript          ; the language you waited for
-       (go +lsp)         ; the hipster dialect
+       (go +lsp)           ; the hipster dialect
        ;;(haskell +dante)  ; a language that's lazier than I am
        ;;hy                ; readability of scheme w/ speed of python
        ;;idris             ; a language you can depend on
@@ -164,11 +164,11 @@
         +hugo
         +roam2
         +dragndrop
-        +brain)               ; organize your plain life in plain text
+        +brain)            ; organize your plain life in plain text
        ;;php               ; perl's insecure younger brother
        ;;plantuml          ; diagrams for confusing people more
        ;;purescript        ; javascript, but functional
-       (python            ; beautiful is better than ugly
+       (python             ; beautiful is better than ugly
         +lsp)
        ;;qt                ; the 'cutest' gui framework ever
        ;;racket            ; a DSL for DSLs
@@ -185,7 +185,7 @@
        ;;swift             ; who asked for emoji variables?
        ;;terra             ; Earth and Moon in alignment for performance.
        ;;web               ; the tubes
-       yaml              ; JSON, but readable
+       yaml                ; JSON, but readable
        ;;zig               ; C, but simpler
 
        :email
