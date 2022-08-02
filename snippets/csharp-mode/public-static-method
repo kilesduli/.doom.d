@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: public-static-method
+# key: public
+# --
+public ${1:static} ${2:return} ${3:name}($4)
+{
+    $0
+}
