@@ -436,14 +436,8 @@
 (add-hook 'org-mode-hook (lambda () (display-line-numbers-mode 0)))
 
 ;;org-mode 只补全 ascii 字符
-;;(with-eval-after-load 'org
-;;  (push (apply-partially #'cl-remove-if
-;;                         (lambda (c)
-;;                           (or (string-match-p "[^\x00-\x7F]+" c)
-;;                               (string-match-p "[0-9]+" c)
-;;                               (if (equal major-mode "org")
-;;                                   (>= (length c) 15)))))
-;;        company-transformers))
+(set-company-backend! 'org
+  'company-dabbrev-char-regexp 'company-yasnippet)
 
 (use-package! org-roam
   :init
