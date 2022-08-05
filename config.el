@@ -436,8 +436,12 @@
 (add-hook 'org-mode-hook (lambda () (display-line-numbers-mode 0)))
 
 ;;org-mode 只补全 ascii 字符
-(set-company-backend! 'org
-  'company-dabbrev-char-regexp 'company-yasnippet)
+(progn
+  (push 'company-dabbrev-char-regexp company-backends)
+  (setq company-dabbrev-char-regexp "[\\.0-9a-z-_'/]")
+  (set-company-backend! 'org-mode
+    'company-dabbrev-char-regexp 'company-yasnippet))
+
 
 (use-package! org-roam
   :init
