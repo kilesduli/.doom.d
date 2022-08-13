@@ -25,7 +25,7 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'doom-opera)
+(setq doom-theme 'doom-monokai-pro)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -81,7 +81,7 @@
 ;;        doom-serif-font(font-spec :family "CMU Typewriter Text" :weight 'light :size 37 ))
 
 
-(setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
+(setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 28)
       doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
       doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
       doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 28)
@@ -101,40 +101,46 @@
 ;;==============================================================================
 
 ;;config of meow and buffer ====================================================
-(map! :leader
-      (:prefix-map ("b" . "buffer")
-       :desc "Toggle narrowing"            "-"   #'doom/toggle-narrow-buffer
-       :desc "Previous buffer"             "["   #'previous-buffer
-       :desc "Next buffer"                 "]"   #'next-buffer
-       (:when (featurep! :ui workspaces)
-        :desc "Switch workspace buffer" "b" #'persp-switch-to-buffer
-        :desc "Switch buffer"           "B" #'switch-to-buffer)
-       (:unless (featurep! :ui workspaces)
-        :desc "Switch buffer"           "b" #'switch-to-buffer)
-       :desc "Clone buffer"                "c"   #'clone-indirect-buffer
-       :desc "Clone buffer other window"   "C"   #'clone-indirect-buffer-other-window
-       :desc "Kill buffer"                 "d"   #'kill-current-buffer
-       :desc "ibuffer"                     "i"   #'ibuffer
-       :desc "Kill buffer"                 "k"   #'kill-current-buffer
-       :desc "Kill all buffers"            "K"   #'doom/kill-all-buffers
-       :desc "Switch to last buffer"       "l"   #'evil-switch-to-windows-last-buffer
-       :desc "Set bookmark"                "m"   #'bookmark-set
-       :desc "Delete bookmark"             "M"   #'bookmark-delete
-       :desc "Next buffer"                 "n"   #'next-buffer
-       :desc "New empty buffer"            "N"   #'evil-buffer-new
-       :desc "Kill other buffers"          "O"   #'doom/kill-other-buffers
-       :desc "Previous buffer"             "p"   #'previous-buffer
-       :desc "Revert buffer"               "r"   #'revert-buffer
-       :desc "Save buffer"                 "s"   #'basic-save-buffer
-       :desc "Save all buffers"            "S"   #'evil-write-all
-       :desc "Save buffer as root"         "u"   #'doom/sudo-save-buffer
-       :desc "Pop up scratch buffer"       "x"   #'doom/open-scratch-buffer
-       :desc "Switch to scratch buffer"    "X"   #'doom/switch-to-scratch-buffer
-       :desc "Bury buffer"                 "z"   #'bury-buffer
-       :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers)
-      )
+(defun set-useful-keybings()
+  (define-key doom-leader-workspaces/windows-map (kbd "t") 'treemacs-select-window)
+  (global-set-key (kbd "M-j") 'kmacro-start-macro-or-insert-counter)
+  (global-set-key (kbd "M-k") 'kmacro-end-or-call-macro)
+  (map! :leader
+        (:prefix-map ("b" . "buffer")
+         :desc "Toggle narrowing"            "-"   #'doom/toggle-narrow-buffer
+         :desc "Previous buffer"             "["   #'previous-buffer
+         :desc "Next buffer"                 "]"   #'next-buffer
+         (:when (featurep! :ui workspaces)
+          :desc "Switch workspace buffer" "b" #'persp-switch-to-buffer
+          :desc "Switch buffer"           "B" #'switch-to-buffer)
+         (:unless (featurep! :ui workspaces)
+          :desc "Switch buffer"           "b" #'switch-to-buffer)
+         :desc "Clone buffer"                "c"   #'clone-indirect-buffer
+         :desc "Clone buffer other window"   "C"   #'clone-indirect-buffer-other-window
+         :desc "Kill buffer"                 "d"   #'kill-current-buffer
+         :desc "ibuffer"                     "i"   #'ibuffer
+         :desc "Kill buffer"                 "k"   #'kill-current-buffer
+         :desc "Kill all buffers"            "K"   #'doom/kill-all-buffers
+         :desc "Switch to last buffer"       "l"   #'evil-switch-to-windows-last-buffer
+         :desc "Set bookmark"                "m"   #'bookmark-set
+         :desc "Delete bookmark"             "M"   #'bookmark-delete
+         :desc "Next buffer"                 "n"   #'next-buffer
+         :desc "New empty buffer"            "N"   #'evil-buffer-new
+         :desc "Kill other buffers"          "O"   #'doom/kill-other-buffers
+         :desc "Previous buffer"             "p"   #'previous-buffer
+         :desc "Revert buffer"               "r"   #'revert-buffer
+         :desc "Save buffer"                 "s"   #'basic-save-buffer
+         :desc "Save all buffers"            "S"   #'evil-write-all
+         :desc "Save buffer as root"         "u"   #'doom/sudo-save-buffer
+         :desc "Pop up scratch buffer"       "x"   #'doom/open-scratch-buffer
+         :desc "Switch to scratch buffer"    "X"   #'doom/switch-to-scratch-buffer
+         :desc "Bury buffer"                 "z"   #'bury-buffer
+         :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers)
+        )
+  )
 
 (defun meow-setup ()
+  (set-useful-keybings)
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
   ;;(add-to-list 'meow-keymap-alist (cons 'leader doom-leader-map))
   (meow-normal-define-key (cons "SPC" doom-leader-map))
@@ -145,7 +151,7 @@
   (meow-leader-define-key
    ;; SPC j/k will run the original command in MOTION state.
    '("j" . "H-j")
-   '("k" . "H-k");;因为j，k覆盖了案件，使原生按键可用得加SPC
+   '("k" . "H-k");;因为j，k覆盖了按键，使原生按键可用得加SPC
    ;; Use SPC (0-9) for digit arguments.
    '("1" . meow-digit-argument)
    '("2" . meow-digit-argument)
@@ -481,6 +487,8 @@
   (lsp-keep-workspace-alive nil)         ;; auto kill lsp server
   (lsp-lens-enable nil)
   (lsp-ui-sideline-enable nil)
+  (lsp-eldoc-enable-hover nil)          ;; disable eldoc hover
+  (lsp-signature-auto-activate nil)
   )
 
 (setq lsp-clients-clangd-args '("-j=3"
@@ -503,3 +511,7 @@
 (map! :map lsp-mode-map  "<tab>"  #'company-indent-or-complete-common)
 
 ;;==============================================================================
+(use-package! treemacs
+  :config
+  (setq treemacs-width 25)
+  )
