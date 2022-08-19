@@ -7,6 +7,20 @@
 ;; in ~/.doom.d/packages.el
 (package! doom-snippets :ignore t)
 (package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion"))
+(package! magit-delta :recipe (:host github :repo "dandavison/magit-delta"))
+(package! info-colors)
+(package! systemd)
+(package! seperate-inline :recipe
+ (:host github :repo "ingtshan/separate-inline.el" :files ("*.el")))
+(package! rotate)
+(package! ox-gfm)
+(package! org-roam-ui)
+;;(package! wakatime-mode)
+;;(package! clang-format+
+;;  :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
+;;(package! sis :recipe (:host github :repo "VitalyAnkh/emacs-smart-input-source"
+;;                           :files ("*.el" ) :branch "staging"))
+
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)
 ;; To install a package with Doom you must declare them here and run 'doom sync'

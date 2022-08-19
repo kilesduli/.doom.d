@@ -61,8 +61,6 @@
 
 ;;pixel scroll
 (pixel-scroll-precision-mode 1)
-(setq pixel-scroll-precision-large-scroll-height 60
-      pixel-scroll-precision-interpolation-factor 30.0)
 
 ;;set input toggle C-SPC
 (global-set-key (kbd "C-SPC") 'toggle-input-method)
@@ -106,6 +104,8 @@
   (global-set-key (kbd "M-j") 'kmacro-start-macro-or-insert-counter)
   (global-set-key (kbd "M-k") 'kmacro-end-or-call-macro)
   (map! :leader
+        :desc "help"                         "h"   help-map
+        (:after projectile :desc "project" "p" projectile-command-map)
         (:prefix-map ("b" . "buffer")
          :desc "Toggle narrowing"            "-"   #'doom/toggle-narrow-buffer
          :desc "Previous buffer"             "["   #'previous-buffer
@@ -137,7 +137,12 @@
          :desc "Bury buffer"                 "z"   #'bury-buffer
          :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers)
         )
+  (map! :map doom-leader-file-map
+        "o" #'find-file-other-window
+        )
+
   )
+
 
 (defun meow-setup ()
   (set-useful-keybings)
@@ -166,21 +171,6 @@
    '("/" . meow-keypad-describe-key)
    '("?" . meow-cheatsheet)
    '("SPC" . keyboard-escape-quit)
-   (cons "p" projectile-command-map)
-   (cons "h" help-map)
-   ;;(cons "f" doom-leader-file-map)
-   ;;(cons "C" doom-leader-code-map)
-   ;;(cons "s" doom-leader-search-map)
-   ;;(cons "b" doom-leader-buffer-map)
-   ;;(cons "o" doom-leader-open-map)
-   ;;(cons "v" doom-leader-versioning-map)
-   ;;(cons "n" doom-leader-notes-map)
-   ;;(cons "i" doom-leader-insert-map)
-   ;;(cons "q" doom-leader-quit/restart-map)
-   ;;(cons "t" doom-leader-toggle-map)
-   ;;(cons "w" doom-leader-workspaces/windows-map)
-   ;;(cons "S" doom-leader-snippets-map)
-   ;;(cons "M" doom-leader-multiple-cursors-map)
    )
   (map!
    (:when (featurep! :ui workspaces)
@@ -197,6 +187,7 @@
     :g "M-9"   #'+workspace/switch-to-8
     :g "M-0"   #'+workspace/switch-to-finla
     ))
+  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
   (meow-normal-define-key
    '("0" . meow-expand-0)
    '("9" . meow-expand-9)
@@ -444,7 +435,7 @@
 ;;org-mode 只补全 ascii 字符
 (progn
   (push 'company-dabbrev-char-regexp company-backends)
-  (setq company-dabbrev-char-regexp "[\\.0-9a-z-_'/]")
+  (setq company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
   (set-company-backend! 'org-mode
     'company-dabbrev-char-regexp 'company-yasnippet))
 
@@ -457,7 +448,12 @@
                                       :unnarrowed t)))
   :custom
   (org-roam-complete-everywhere t)
+  :config
+  (setq org-roam-db-node-include-function
+        (lambda ()
+          (not (member "ATTACH" (org-get-tags)))))
   )
+
 (map!
  :map org-mode-map
  "C-M-i"  #'completion-at-point
@@ -500,8 +496,14 @@
 
 ;;disable lsp-format-buffer in cc-mode, it doesn't run according to .clang-format
 ;;usage: https://docs.doomemacs.org/latest/modules/editor/format/#:~:text=To%20disable%20this%20behavior%20in%20one%20mode%3A%20(setq%2Dhook!%20%27python%2Dmode%2Dhook%20%2Bformat%2Dwith%2Dlsp%20nil)
-(setq-hook! 'c++-mode-hook +format-with-lsp nil)
-(setq-hook! 'c-mode-hook +format-with-lsp nil)
+(setq-hook! 'c-mode-common-hook +format-with-lsp nil)
+;;(use-package clang-format+
+;;  :config
+;;  (add-hook 'c-mode-common-hook #'clang-format+-mode)
+;;  (add-hook 'csharp-mode-hook #'clang-format+-mode)
+;;  (setq clang-format+-context 'modification)
+;;  (setq clang-format+-always-enable t)
+;;  )
 
 ;;set company tab complete motion
 (after! company
@@ -515,3 +517,67 @@
   :config
   (setq treemacs-width 25)
   )
+
+(after! magit
+  (magit-delta-mode +1))
+
+(use-package! systemd
+  :defer t)
+
+(use-package! ox-gfm
+  :after ox)
+
+;;something broken of font settings /斜体/
+(use-package seperate-inline
+  :hook ((org-mode-hook . separate-inline-mode)
+         (org-mode-hook . (lambda ()
+                            (add-hook 'separate-inline-mode-hook
+                                      'separate-inline-use-default-rules-for-org-local
+                                      nil 'make-it-local))))
+  )
+
+(use-package! info-colors
+  :commands (info-colors-fontify-node))
+
+(add-hook 'Info-selection-hook 'info-colors-fontify-node)
+
+(use-package! websocket
+  :after org-roam)
+
+(use-package! org-roam-ui
+  :after org-roam ;; or :after org
+  ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+  ;;         a hookable mode anymore, you're advised to pick something yourself
+  ;;         if you don't care about startup time, use
+  ;;  :hook (after-init . org-roam-ui-mode)
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t))
+
+;;(use-package wakatime-mode
+;;  :config
+;;  (setq wakatime-cli-path "~/.wakatime/wakatime-cli")
+;;  (global-wakatime-mode)
+;;  )
+
+;;(use-package! sis
+;;  ;;:hook
+;;  ;;enable the /follow context/ and /inline region/ mode for specific buffers
+;;  ;;(((text-mode prog-mode) . sis-context-mode)
+;;  ;; ((text-mode prog-mode) . sis-inline-mod
+;;  :after meow
+;;  ;;:defer-incrementally meow
+;;  :config
+;;  (sis-ism-lazyman-config "1" "2" 'fcitx5)
+;;  (add-hook 'meow-insert-exit-hook #'sis-set-english)
+;;  (add-to-list 'sis-context-hooks 'meow-insert-exit-hook)
+;;  ;; (defun describe-key-sis ()
+;;  ;;   (interactive)
+;;  ;;   (sis-set-english)
+;;  ;;   (sis-global-respect-mode 0)
+;;  ;;   (describe-key (help--read-key-sequence))
+;;  ;;   (sis-global-respect-mode t))
+;;  ;; :bind (("C-h k" . describe-key-sis))
+;;  )
