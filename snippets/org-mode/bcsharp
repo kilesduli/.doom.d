@@ -1,8 +1,8 @@
 # -*- mode: snippet -*-
 # name: bcsharp
-# key: <csharp
+# key: <cs
 # --
-#+begin_src csharp :tangle "~/Dev/.tmpcs/Program.cs" :exports both
+#+begin_src csharp :exports both
 class Program
 {
     public static void $1()
