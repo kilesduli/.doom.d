@@ -65,6 +65,7 @@
 ;;    unusing
 
 ;;; basic
+
 ;;; background transparent
 ;;(add-to-list 'default-frame-alist '(alpha-background . 98))
 
@@ -115,6 +116,7 @@
   (global-set-key (kbd "M-j") 'kmacro-start-macro-or-insert-counter)
   (global-set-key (kbd "M-k") 'kmacro-end-or-call-macro)
   )
+
 ;;; meow
 (use-package meow
   :demand t
