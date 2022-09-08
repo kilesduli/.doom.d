@@ -6,7 +6,7 @@
 (package! org-fragtog)
 ;; in ~/.doom.d/packages.el
 ;;(package! doom-snippets :ignore t)
-(package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion"))
+;;(package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion"))
 (package! magit-delta :recipe (:host github :repo "dandavison/magit-delta"))
 (package! info-colors)
 (package! systemd)
@@ -16,16 +16,17 @@
 (package! ox-gfm)
 (package! org-roam-ui)
 (package! color-theme-sanityinc-tomorrow)
-
 (unpin! org-roam)
 (unpin! org-mode)
 (package! doct)
 (package! org-ol-tree :recipe (:host github :repo "Townk/org-ol-tree"))
 (package! wakatime-mode :recipe
   (:host github :repo "Borwe/wakatime-mode"))
-;;(package! clang-format+
+;;(package! khoj :recipe (:host github :repo "debanjum/khoj" :files ("src/interface/emacs/khoj.el")))
+(package! ob-csharp :recipe (:host github :repo "samwdp/ob-csharp"))
+;; (package! clang-format+
 ;;  :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
-;;(package! sis :recipe (:host github :repo "VitalyAnkh/emacs-smart-input-source"
+;; (package! sis :recipe (:host github :repo "VitalyAnkh/emacs-smart-input-source" qq
 ;;                           :files ("*.el" ) :branch "staging"))
 
 ;; If you want to replace it with yasnippet's default snippets

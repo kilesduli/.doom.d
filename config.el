@@ -64,10 +64,16 @@
 ;;    +utils
 ;;    unusing
 
-;;; basic
-
 ;;; background transparent
 ;;(add-to-list 'default-frame-alist '(alpha-background . 98))
+
+;;; Simple settings
+(setq auth-sources '("~/.authinfo.gpg")
+      auth-source-cache-expiry nil
+      undo-limit 80000000
+      scroll-preserve-screen-position 'always ; Don't have `point' jump around
+      scroll-margin 2                ; It's nice to maintain a little margin
+      word-wrap-by-category t)       ; Different languages live together happily
 
 ;;; doom-font
 ;; old one for wayland
@@ -109,8 +115,162 @@
 (global-set-key  [C-mouse-wheel-down-event] 'text-scale-decrease)
 
 ;;; map define key
-(load! "lisp/+meow-keybings.el")
-(load! "lisp/+meow-setup.el")
+(map!
+ (:when (featurep! :ui workspaces)
+  ;;    :g "C-t"   #'+workspace/new
+  ;;    :g "C-S-t" #'+workspace/display
+  :g "M-1"   #'+workspace/switch-to-0
+  :g "M-2"   #'+workspace/switch-to-1
+  :g "M-3"   #'+workspace/switch-to-2
+  :g "M-4"   #'+workspace/switch-to-3
+  :g "M-5"   #'+workspace/switch-to-4
+  :g "M-6"   #'+workspace/switch-to-5
+  :g "M-7"   #'+workspace/switch-to-6
+  :g "M-8"   #'+workspace/switch-to-7
+  :g "M-9"   #'+workspace/switch-to-8
+  :g "M-0"   #'+workspace/switch-to-finla
+  ))
+(map! :leader
+      :desc "help"                         "h"   help-map
+      :after projectile :desc "project" "p" projectile-command-map
+      :after projectile :desc "project-search(fd)" "p s" #'+default/search-project
+      (:after org :desc "Outline" "n O" #'org-ol-tree)
+      (:prefix-map ("b" . "buffer")
+       :desc "Toggle narrowing"            "-"   #'doom/toggle-narrow-buffer
+       :desc "Previous buffer"             "["   #'previous-buffer
+       :desc "Next buffer"                 "]"   #'next-buffer
+       (:when (featurep! :ui workspaces)
+        :desc "Switch workspace buffer" "b" #'persp-switch-to-buffer
+        :desc "Switch buffer"           "B" #'switch-to-buffer)
+       (:unless (featurep! :ui workspaces)
+        :desc "Switch buffer"           "b" #'switch-to-buffer)
+       :desc "Clone buffer"                "c"   #'clone-indirect-buffer
+       :desc "Clone buffer other window"   "C"   #'clone-indirect-buffer-other-window
+       :desc "Kill buffer"                 "d"   #'kill-current-buffer
+       :desc "ibuffer"                     "i"   #'ibuffer
+       :desc "Kill buffer"                 "k"   #'kill-current-buffer
+       :desc "Kill all buffers"            "K"   #'doom/kill-all-buffers
+       :desc "Switch to last buffer"       "l"   #'evil-switch-to-windows-last-buffer
+       :desc "Set bookmark"                "m"   #'bookmark-set
+       :desc "Delete bookmark"             "M"   #'bookmark-delete
+       :desc "Next buffer"                 "n"   #'next-buffer
+       :desc "New empty buffer"            "N"   #'evil-buffer-new
+       :desc "Kill other buffers"          "O"   #'doom/kill-other-buffers
+       :desc "Previous buffer"             "p"   #'previous-buffer
+       :desc "Revert buffer"               "r"   #'revert-buffer
+       :desc "Save buffer"                 "s"   #'basic-save-buffer
+       :desc "Save all buffers"            "S"   #'evil-write-all
+       :desc "Save buffer as root"         "u"   #'doom/sudo-save-buffer
+       :desc "Pop up scratch buffer"       "x"   #'doom/open-scratch-buffer
+       :desc "Switch to scratch buffer"    "X"   #'doom/switch-to-scratch-buffer
+       :desc "Bury buffer"                 "z"   #'bury-buffer
+       :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers)
+      )
+(map! :map doom-leader-file-map
+      "o" #'find-file-other-window
+      )
+(defun meow-setup ()
+  (set-useful-keybings)
+  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+  ;;(add-to-list 'meow-keymap-alist (cons 'leader doom-leader-map))
+  (meow-normal-define-key (cons "SPC" doom-leader-map))
+  (meow-motion-overwrite-define-key (cons "SPC" doom-leader-map))
+  (meow-motion-overwrite-define-key
+   '("j" . meow-next)
+   '("k" . meow-prev))
+  (meow-leader-define-key
+   ;; SPC j/k will run the original command in MOTION state.
+   '("j" . "H-j")
+   '("k" . "H-k");;因为j，k覆盖了按键，使原生按键可用得加SPC
+   ;; Use SPC (0-9) for digit arguments.
+   '("1" . meow-digit-argument)
+   '("2" . meow-digit-argument)
+   '("3" . meow-digit-argument)
+   '("4" . meow-digit-argument)
+   '("5" . meow-digit-argument)
+   '("6" . meow-digit-argument)
+   '("7" . meow-digit-argument)
+   '("8" . meow-digit-argument)
+   '("9" . meow-digit-argument)
+   '("0" . meow-digit-argument)
+   '("/" . meow-keypad-describe-key)
+   '("?" . meow-cheatsheet)
+   '("SPC" . keyboard-escape-quit)
+   )
+  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+  (meow-normal-define-key
+   '("0" . meow-expand-0)
+   '("9" . meow-expand-9)
+   '("8" . meow-expand-8)
+   '("7" . meow-expand-7)
+   '("6" . meow-expand-6)
+   '("5" . meow-expand-5)
+   '("4" . meow-expand-4)
+   '("3" . meow-expand-3)
+   '("2" . meow-expand-2)
+   '("1" . meow-expand-1)
+   '("-" . negative-argument)
+   '(";" . meow-reverse)
+   '("," . meow-inner-of-thing)
+   '("." . meow-bounds-of-thing)
+   '("[" . meow-beginning-of-thing)
+   '("]" . meow-end-of-thing)
+   '("a" . meow-append)
+   '("A" . meow-open-below)
+   '("b" . meow-back-word)
+   '("B" . meow-back-symbol)
+   '("c" . meow-change)
+   '("C" . meow-change-save)
+   '("d" . meow-C-d)
+   '("D" . meow-backward-delete)
+   '("e" . meow-next-word)
+   '("E" . meow-next-symbol)
+   '("f" . meow-find)
+   '("F" . meow-find-expand)
+   '("g" . meow-cancel)
+   '("G" . meow-grab)
+   '("h" . meow-left)
+   '("H" . meow-left-expand)
+   '("j" . meow-next)
+   '("J" . meow-next-expand)
+   '("k" . meow-prev)
+   '("K" . meow-prev-expand)
+   '("l" . meow-right)
+   '("L" . meow-right-expand)
+   '("I" . meow-open-above)
+   '("i" . meow-insert)
+   '("m" . meow-join)
+   '("n" . meow-search)
+   '("N" . meow-pop-search)
+   '("o" . meow-block)
+   '("O" . meow-to-block)
+   '("p" . meow-yank)
+   '("P" . meow-yank-pop)
+   '("q" . meow-quit)
+   '("Q" . meow-goto-line)
+   '("r" . meow-replace)
+   '("R" . meow-swap-grab)
+   '("s" . meow-kill)
+   '("t" . meow-till)
+   '("T" . meow-till-expand)
+   '("u" . meow-undo)
+   '("U" . meow-undo-in-selection)
+   '("v" . meow-visit)
+   '("V" . meow-kmacro-matches)
+   '("w" . meow-mark-word)
+   '("W" . meow-mark-symbol)
+   '("x" . meow-line)
+   '("X" . meow-kmacro-lines)
+   '("y" . meow-save)
+   '("Y" . meow-sync-grab)
+   '("z" . meow-pop-selection)
+   '("Z" . meow-pop-all-selection)
+   '("&" . meow-query-replace)
+   '("%" . meow-query-replace-regexp)
+   '("'" . repeat)
+   '("\\" . quoted-insert)
+   '("<escape>" . ignore))
+  )
 (defun set-useful-keybings()
   (define-key doom-leader-workspaces/windows-map (kbd "t") 'treemacs-select-window)
   (global-set-key (kbd "M-j") 'kmacro-start-macro-or-insert-counter)
@@ -161,9 +321,8 @@
   (setq company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
   (set-company-backend! 'org-mode
     'company-dabbrev-char-regexp 'company-yasnippet))
-;; ob-csharp
-(load! "lisp/ob-csharp.el")             ; It's org-babel functions for csharp evaluation.
-
+;;; ob-csharp
+;; (load! "ob-csharp")             ; It's org-babel functions for csharp evaluation.
 (add-hook 'org-mode-hook (lambda () (display-line-numbers-mode 0)))
 ;; change uuid to timestamp
 (setq org-id-method 'ts)
@@ -407,6 +566,9 @@
 (use-package! info-colors
   :commands (info-colors-fontify-node))
 (add-hook 'Info-selection-hook 'info-colors-fontify-node)
+(add-hook 'Info-mode-hook '(lambda ()
+                             (add-to-list 'Info-directory-list
+                                          (expand-file-name "~/Documents/info"))))
 
 (use-package wakatime-mode
   :config
@@ -424,137 +586,74 @@
   (setq treemacs-width 25)
   )
 
-;;; org-templates unusing
+;;; org-templates
 (use-package! doct
   :commands doct)
-;; (defun set-org-capture-templates ()
-;;       (setq org-capture-templates
-;;             (doct `(("Personal todo" :keys "t"
-;;                      :icon ("checklist" :set "octicon" :color "green")
-;;                      :file +org-capture-todo-file
-;;                      :prepend t
-;;                      :headline "Inbox"
-;;                      :type entry
-;;                      :template ("* TODO %?"
-;;                                 "%i %a"))
-;;                     ("Personal note" :keys "n"
-;;                      :icon ("sticky-note-o" :set "faicon" :color "green")
-;;                      :file +org-capture-todo-file
-;;                      :prepend t
-;;                      :headline "Inbox"
-;;                      :type entry
-;;                      :template ("* %?"
-;;                                 "%i %a"))
-;;                     ("Personal journal" :keys "j"
-;;                      :icon ("checklist" :set "octicon" :color "yellow")
-;;                      :file +org-capture-journal-file
-;;                      :type entry
-;;                      :prepend t
-;;                      :target (file+olp+datatree +org-capture-journal-file)
-;;                      :type entry
-;;                      :template ("* %U"
-;;                                 "%i %a"
-;;                                 "%?"
-;;                                 ))
-;;                     ("Email" :keys "e"
-;;                      :icon ("envelope" :set "faicon" :color "blue")
-;;                      :file +org-capture-todo-file
-;;                      :prepend t
-;;                      :headline "Inbox"
-;;                      :type entry
-;;                      :template ("* TODO %^{type|reply to|contact} %\\3 %? :email:"
-;;                                 "Send an email %^{urgancy|soon|ASAP|anon|at some point|eventually} to %^{recipiant}"
-;;                                 "about %^{topic}"
-;;                                 "%U %i %a"))
-;;                     ("Interesting" :keys "i"
-;;                      :icon ("eye" :set "faicon" :color "lcyan")
-;;                      :file +org-capture-todo-file
-;;                      :prepend t
-;;                      :headline "Interesting"
-;;                      :type entry
-;;                      :template ("* [ ] %{desc}%? :%{i-type}:"
-;;                                 "%i %a")
-;;                      :children (("Webpage" :keys "w"
-;;                                  :icon ("globe" :set "faicon" :color "green")
-;;                                  :desc "%(org-cliplink-capture) "
-;;                                  :i-type "read:web")
-;;                                 ("Article" :keys "a"
-;;                                  :icon ("file-text" :set "octicon" :color "yellow")
-;;                                  :desc ""
-;;                                  :i-type "read:reaserch")
-;;                                 ("Information" :keys "i"
-;;                                  :icon ("info-circle" :set "faicon" :color "blue")
-;;                                  :desc ""
-;;                                  :i-type "read:info")
-;;                                 ("Idea" :keys "I"
-;;                                  :icon ("bubble_chart" :set "material" :color "silver")
-;;                                  :desc ""
-;;                                  :i-type "idea")))
-;;                     ("Tasks" :keys "k"
-;;                      :icon ("inbox" :set "octicon" :color "yellow")
-;;                      :file +org-capture-todo-file
-;;                      :prepend t
-;;                      :headline "Tasks"
-;;                      :type entry
-;;                      :template ("* TODO %? %^G%{extra}"
-;;                                 "%i %a")
-;;                      :children (("General Task" :keys "k"
-;;                                  :icon ("inbox" :set "octicon" :color "yellow")
-;;                                  :extra "")
-;;                                 ("Task with deadline" :keys "d"
-;;                                  :icon ("timer" :set "material" :color "orange" :v-adjust -0.1)
-;;                                  :extra "\nDEADLINE: %^{Deadline:}t")
-;;                                 ("Scheduled Task" :keys "s"
-;;                                  :icon ("calendar" :set "octicon" :color "orange")
-;;                                  :extra "\nSCHEDULED: %^{Start time:}t")))
-;;                     ("Project" :keys "p"
-;;                      :icon ("repo" :set "octicon" :color "silver")
-;;                      :prepend t
-;;                      :type entry
-;;                      :headline "Inbox"
-;;                      :template ("* %{time-or-todo} %?"
-;;                                 "%i"
-;;                                 "%a")
-;;                      :file ""
-;;                      :custom (:time-or-todo "")
-;;                      :children (("Project-local todo" :keys "t"
-;;                                  :icon ("checklist" :set "octicon" :color "green")
-;;                                  :time-or-todo "TODO"
-;;                                  :file +org-capture-project-todo-file)
-;;                                 ("Project-local note" :keys "n"
-;;                                  :icon ("sticky-note" :set "faicon" :color "yellow")
-;;                                  :time-or-todo "%U"
-;;                                  :file +org-capture-project-notes-file)
-;;                                 ("Project-local changelog" :keys "c"
-;;                                  :icon ("list" :set "faicon" :color "blue")
-;;                                  :time-or-todo "%U"
-;;                                  :heading "Unreleased"
-;;                                  :file +org-capture-project-changelog-file)))
-;;                     ("\tCentralised project templates"
-;;                      :keys "o"
-;;                      :type entry
-;;                      :prepend t
-;;                      :template ("* %{time-or-todo} %?"
-;;                                 "%i"
-;;                                 "%a")
-;;                      :children (("Project todo"
-;;                                  :keys "t"
-;;                                  :prepend nil
-;;                                  :time-or-todo "TODO"
-;;                                  :heading "Tasks"
-;;                                  :file +org-capture-central-project-todo-file)
-;;                                 ("Project note"
-;;                                  :keys "n"
-;;                                  :time-or-todo "%U"
-;;                                  :heading "Notes"
-;;                                  :file +org-capture-central-project-notes-file)
-;;                                 ("Project changelog"
-;;                                  :keys "c"
-;;                                  :time-or-todo "%U"
-;;                                  :heading "Unreleased"
-;;                                  :file +org-capture-central-project-changelog-file)))))))
-
-;;     (set-org-capture-templates)
+;; https://github.com/VitalyAnkh/config/blob/adcd0ab0c679b108cfb9402b9e024556890379d5/doom/config.el#L2035
+(setq org-capture-templates
+      (doct `(("Personal todo" :keys "t"
+               :icon ("checklist" :set "octicon" :color "green")
+               :file +org-capture-todo-file
+               :prepend t
+               :headline "Inbox"
+               :type entry
+               :template ("* TODO %?"
+                          "%i %a"))
+              ;; ("Personal note" :keys "n"
+              ;;  :icon ("sticky-note-o" :set "faicon" :color "green")
+              ;;  :file +org-capture-todo-file
+              ;;  :prepend t
+              ;;  :headline "Inbox"
+              ;;  :type entry
+              ;;  :template ("* %?"
+              ;;             "%i %a"))
+              ("Personal journal" :keys "j"
+               :icon ("checklist" :set "octicon" :color "yellow")
+               :file +org-capture-journal-file
+               :type entry
+               :prepend t
+               :target (file+olp+datatree +org-capture-journal-file)
+               :type entry
+               :template ("* %U"
+                          "%i %a"
+                          "%?"
+                          ))
+              ("Email" :keys "e"
+               :icon ("envelope" :set "faicon" :color "blue")
+               :file +org-capture-todo-file
+               :prepend t
+               :headline "Inbox"
+               :type entry
+               :template ("* TODO %^{type|reply to|contact} %\\3 %? :email:"
+                          "Send an email %^{urgancy|soon|ASAP|anon|at some point|eventually} to %^{recipiant}"
+                          "about %^{topic}"
+                          "%U %i %a"))
+              ("Interesting" :keys "i"
+               :icon ("eye" :set "faicon" :color "lcyan")
+               :file +org-capture-todo-file
+               :prepend t
+               :headline "Interesting"
+               :type entry
+               :template ("* [ ] %{desc}%? :%{i-type}:"
+                          "%i %a")
+               :children (("Webpage" :keys "w"
+                           :icon ("globe" :set "faicon" :color "green")
+                           :desc "%(org-cliplink-capture) "
+                           :i-type "read:web")
+                          ("Article" :keys "a"
+                           :icon ("file-text" :set "octicon" :color "yellow")
+                           :desc ""
+                           :i-type "read:reaserch")
+                          ("Information" :keys "i"
+                           :icon ("info-circle" :set "faicon" :color "blue")
+                           :desc ""
+                           :i-type "read:info")
+                          ("Idea" :keys "I"
+                           :icon ("bubble_chart" :set "material" :color "silver")
+                           :desc ""
+                           :i-type "idea")))
+              )))
+;;; scheme geiser
 
 ;;; sis-mode unusing
 ;;(use-package! sis
@@ -576,3 +675,7 @@
 ;;  ;;   (sis-global-respect-mode t))
 ;;  ;; :bind (("C-h k" . describe-key-sis))
 ;;  )
+
+;;; khoj
+;; (use-package! khoj
+;;   :after org)
