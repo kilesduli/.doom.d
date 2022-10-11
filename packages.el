@@ -6,11 +6,11 @@
 (package! org-fragtog)
 ;; in ~/.doom.d/packages.el
 ;;(package! doom-snippets :ignore t)
-;;(package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion"))
+(package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion"))
 (package! magit-delta :recipe (:host github :repo "dandavison/magit-delta"))
 (package! info-colors)
 (package! systemd)
-(package! seperate-inline :recipe
+(package! separate-inline :recipe
   (:host github :repo "ingtshan/separate-inline.el" :files ("*.el")))
 (package! rotate)
 (package! ox-gfm)
@@ -22,12 +22,14 @@
 (package! org-ol-tree :recipe (:host github :repo "Townk/org-ol-tree"))
 (package! wakatime-mode :recipe
   (:host github :repo "Borwe/wakatime-mode"))
-;;(package! khoj :recipe (:host github :repo "debanjum/khoj" :files ("src/interface/emacs/khoj.el")))
+(package! khoj :recipe (:host github :repo "debanjum/khoj" :files ("src/interface/emacs/khoj.el")))
 (package! ob-csharp :recipe (:host github :repo "samwdp/ob-csharp"))
-;; (package! clang-format+
-;;  :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
-;; (package! sis :recipe (:host github :repo "VitalyAnkh/emacs-smart-input-source" qq
-;;                           :files ("*.el" ) :branch "staging"))
+(package! consult-org-roam)
+(package! graphviz-dot-mode)
+(package! all-the-icons :disable t)
+(package! clang-format+
+ :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
+(package! pipenv :ignore t)
 
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)

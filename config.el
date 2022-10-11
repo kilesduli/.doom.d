@@ -65,15 +65,16 @@
 ;;    unusing
 
 ;;; background transparent
-;;(add-to-list 'default-frame-alist '(alpha-background . 98))
+(add-to-list 'default-frame-alist '(alpha-background . 96))
 
-;;; Simple settings
+;;; Simple settings or extra
 (setq auth-sources '("~/.authinfo.gpg")
       auth-source-cache-expiry nil
       undo-limit 80000000
       scroll-preserve-screen-position 'always ; Don't have `point' jump around
       scroll-margin 2                ; It's nice to maintain a little margin
-      word-wrap-by-category t)       ; Different languages live together happily
+      word-wrap-by-category t
+      delete-by-moving-to-trash t)       ; Different languages live together happily
 
 ;;; doom-font
 ;; old one for wayland
@@ -116,7 +117,7 @@
 
 ;;; map define key
 (map!
- (:when (featurep! :ui workspaces)
+ (:when (modulep! :ui workspaces)
   ;;    :g "C-t"   #'+workspace/new
   ;;    :g "C-S-t" #'+workspace/display
   :g "M-1"   #'+workspace/switch-to-0
@@ -134,15 +135,17 @@
       :desc "help"                         "h"   help-map
       :after projectile :desc "project" "p" projectile-command-map
       :after projectile :desc "project-search(fd)" "p s" #'+default/search-project
+      :after consult-org-roam :desc "consult-roam-search" "s r" #'consult-org-roam-search
+      :after treemacs :desc "treemacs-select-window" "w t" #'treemacs-select-window
       (:after org :desc "Outline" "n O" #'org-ol-tree)
       (:prefix-map ("b" . "buffer")
        :desc "Toggle narrowing"            "-"   #'doom/toggle-narrow-buffer
        :desc "Previous buffer"             "["   #'previous-buffer
        :desc "Next buffer"                 "]"   #'next-buffer
-       (:when (featurep! :ui workspaces)
+       (:when (modulep! :ui workspaces)
         :desc "Switch workspace buffer" "b" #'persp-switch-to-buffer
         :desc "Switch buffer"           "B" #'switch-to-buffer)
-       (:unless (featurep! :ui workspaces)
+       (:unless (modulep! :ui workspaces)
         :desc "Switch buffer"           "b" #'switch-to-buffer)
        :desc "Clone buffer"                "c"   #'clone-indirect-buffer
        :desc "Clone buffer other window"   "C"   #'clone-indirect-buffer-other-window
@@ -272,7 +275,6 @@
    '("<escape>" . ignore))
   )
 (defun set-useful-keybings()
-  (define-key doom-leader-workspaces/windows-map (kbd "t") 'treemacs-select-window)
   (global-set-key (kbd "M-j") 'kmacro-start-macro-or-insert-counter)
   (global-set-key (kbd "M-k") 'kmacro-end-or-call-macro)
   )
@@ -321,6 +323,8 @@
   (setq company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
   (set-company-backend! 'org-mode
     'company-dabbrev-char-regexp 'company-yasnippet))
+(add-hook 'org-mode-hook
+          (lambda () (setq fill-column 120)))
 ;;; ob-csharp
 ;; (load! "ob-csharp")             ; It's org-babel functions for csharp evaluation.
 (add-hook 'org-mode-hook (lambda () (display-line-numbers-mode 0)))
@@ -329,14 +333,13 @@
 ;; export to gfm
 (use-package! ox-gfm
   :after ox)
-;;something broken of font settings /斜体/
-(use-package seperate-inline
-  :hook ((org-mode-hook . separate-inline-mode)
-         (org-mode-hook . (lambda ()
-                            (add-hook 'separate-inline-mode-hook
-                                      'separate-inline-use-default-rules-for-org-local
-                                      nil 'make-it-local))))
-  )
+;; (use-package! separate-inline
+;;   :hook ((org-mode . separate-inline-mode)
+;;          (org-mode . (lambda ()
+;;                        (add-hook 'separate-inline-mode-hook
+;;                                  'separate-inline-use-default-rules-for-org-local
+;;                                  nil 'make-it-local))))
+;;   )
 
 ;;; org-roam
 (use-package! org-roam
@@ -347,6 +350,37 @@
         (lambda ()
           (not (member "ATTACH" (org-get-tags)))))
   )
+
+;;; org roam dynamic agenda file
+;; stolen from https://emacs-china.org/t/org-roam/15659
+(defvar dynamic-agenda-files nil
+  "dynamic generate agenda files list when changing org state")
+
+(defun update-dynamic-agenda-hook ()
+  (let ((done (or (not org-state) ;; nil when no TODO list
+                  (member org-state org-done-keywords)))
+        (file (buffer-file-name))
+        (agenda (funcall (ad-get-orig-definition 'org-agenda-files)) ))
+    (unless (member file agenda)
+      (if done
+          (save-excursion
+            (goto-char (point-min))
+            ;; Delete file from dynamic files when all TODO entry changed to DONE
+            (unless (search-forward-regexp org-not-done-heading-regexp nil t)
+              (customize-save-variable
+               'dynamic-agenda-files
+               (cl-delete-if (lambda (k) (string= k file))
+                             dynamic-agenda-files))))
+        ;; Add this file to dynamic agenda files
+        (unless (member file dynamic-agenda-files)
+          (customize-save-variable 'dynamic-agenda-files
+                                   (add-to-list 'dynamic-agenda-files file)))))))
+
+(defun dynamic-agenda-files-advice (orig-val)
+  (cl-union orig-val dynamic-agenda-files :test #'equal))
+
+(advice-add 'org-agenda-files :filter-return #'dynamic-agenda-files-advice)
+(add-to-list 'org-after-todo-state-change-hook 'update-dynamic-agenda-hook t)
 
 (use-package! websocket
   :after org-roam)
@@ -586,7 +620,7 @@
   (setq treemacs-width 25)
   )
 
-;;; org-templates
+;;; org-capture-templates
 (use-package! doct
   :commands doct)
 ;; https://github.com/VitalyAnkh/config/blob/adcd0ab0c679b108cfb9402b9e024556890379d5/doom/config.el#L2035
@@ -655,27 +689,26 @@
               )))
 ;;; scheme geiser
 
-;;; sis-mode unusing
-;;(use-package! sis
-;;  ;;:hook
-;;  ;;enable the /follow context/ and /inline region/ mode for specific buffers
-;;  ;;(((text-mode prog-mode) . sis-context-mode)
-;;  ;; ((text-mode prog-mode) . sis-inline-mod
-;;  :after meow
-;;  ;;:defer-incrementally meow
-;;  :config
-;;  (sis-ism-lazyman-config "1" "2" 'fcitx5)
-;;  (add-hook 'meow-insert-exit-hook #'sis-set-english)
-;;  (add-to-list 'sis-context-hooks 'meow-insert-exit-hook)
-;;  ;; (defun describe-key-sis ()
-;;  ;;   (interactive)
-;;  ;;   (sis-set-english)
-;;  ;;   (sis-global-respect-mode 0)
-;;  ;;   (describe-key (help--read-key-sequence))
-;;  ;;   (sis-global-respect-mode t))
-;;  ;; :bind (("C-h k" . describe-key-sis))
-;;  )
+;;; consult-org-roam
+(use-package! consult-org-roam
+  :config
+  (consult-org-roam-mode t))
 
-;;; khoj
-;; (use-package! khoj
-;;   :after org)
+;;; graphviz-dot-mode
+(use-package! graphviz-dot-mode
+  :commands graphviz-dot-mode
+  :mode ("\\.dot\\'" . graphviz-dot-mode)
+  :init
+  (after! org
+    (setcdr (assoc "dot" org-src-lang-modes)
+            'graphviz-dot)))
+
+(use-package! company-graphviz-dot
+  :after graphviz-dot-mode)
+
+;;; clang-fotmat+
+(use-package clang-format+
+  :config
+  (add-hook 'c-mode-common-hook #'clang-format+-mode)
+  (setq clang-format+-context 'modification)
+  (setq clang-format+-always-enable t))
