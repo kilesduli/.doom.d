@@ -30,7 +30,7 @@
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/Documents/org/")
+(setq org-directory (concat (getenv "HOME") "/Documents/org"))
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `'relative'.
@@ -118,19 +118,19 @@
 ;;; map define key
 (map!
  (:when (modulep! :ui workspaces)
-  ;;    :g "C-t"   #'+workspace/new
-  ;;    :g "C-S-t" #'+workspace/display
-  :g "M-1"   #'+workspace/switch-to-0
-  :g "M-2"   #'+workspace/switch-to-1
-  :g "M-3"   #'+workspace/switch-to-2
-  :g "M-4"   #'+workspace/switch-to-3
-  :g "M-5"   #'+workspace/switch-to-4
-  :g "M-6"   #'+workspace/switch-to-5
-  :g "M-7"   #'+workspace/switch-to-6
-  :g "M-8"   #'+workspace/switch-to-7
-  :g "M-9"   #'+workspace/switch-to-8
-  :g "M-0"   #'+workspace/switch-to-finla
-  ))
+   ;;    :g "C-t"   #'+workspace/new
+   ;;    :g "C-S-t" #'+workspace/display
+   :g "M-1"   #'+workspace/switch-to-0
+   :g "M-2"   #'+workspace/switch-to-1
+   :g "M-3"   #'+workspace/switch-to-2
+   :g "M-4"   #'+workspace/switch-to-3
+   :g "M-5"   #'+workspace/switch-to-4
+   :g "M-6"   #'+workspace/switch-to-5
+   :g "M-7"   #'+workspace/switch-to-6
+   :g "M-8"   #'+workspace/switch-to-7
+   :g "M-9"   #'+workspace/switch-to-8
+   :g "M-0"   #'+workspace/switch-to-finla
+   ))
 (map! :leader
       :desc "help"                         "h"   help-map
       :after projectile :desc "project" "p" projectile-command-map
@@ -143,10 +143,10 @@
        :desc "Previous buffer"             "["   #'previous-buffer
        :desc "Next buffer"                 "]"   #'next-buffer
        (:when (modulep! :ui workspaces)
-        :desc "Switch workspace buffer" "b" #'persp-switch-to-buffer
-        :desc "Switch buffer"           "B" #'switch-to-buffer)
+         :desc "Switch workspace buffer" "b" #'persp-switch-to-buffer
+         :desc "Switch buffer"           "B" #'switch-to-buffer)
        (:unless (modulep! :ui workspaces)
-        :desc "Switch buffer"           "b" #'switch-to-buffer)
+         :desc "Switch buffer"           "b" #'switch-to-buffer)
        :desc "Clone buffer"                "c"   #'clone-indirect-buffer
        :desc "Clone buffer other window"   "C"   #'clone-indirect-buffer-other-window
        :desc "Kill buffer"                 "d"   #'kill-current-buffer
@@ -450,6 +450,7 @@
                      ("convert -density %D -trim -antialias %f -quality 100 %O")))
       )
 
+
 ;; org-latex-compilers = ("pdflatex" "xelatex" "lualatex"), which are the possible values for %latex
 (setq org-latex-pdf-process '("latexmk -f -pdf -%latex -shell-escape -interaction=nonstopmode -output-directory=%o %f"))
 (setq org-latex-compiler "xelatex")
@@ -712,3 +713,14 @@
   (add-hook 'c-mode-common-hook #'clang-format+-mode)
   (setq clang-format+-context 'modification)
   (setq clang-format+-always-enable t))
+
+;;; python pyright
+(add-hook 'python-mode 'pyvenv-mode-hook)
+(use-package! lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+                         (lsp)))
+  :config
+  (setq lsp-pyright-use-library-code-for-types t)
+  )
+(setq lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs"))
