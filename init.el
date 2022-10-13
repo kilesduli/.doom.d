@@ -69,8 +69,7 @@
 
        :emacs
        (dired
-        +icons
-        +dirvish)          ; making dired pretty [functional]
+        +icons)          ; making dired pretty [functional]
        electric            ; smarter, keyword-based electric-indent
        (ibuffer +icons)    ; interactive buffer management
        undo                ; persistent, smarter undo for your inevitable mistakes
