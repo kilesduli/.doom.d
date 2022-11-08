@@ -120,16 +120,15 @@
  (:when (modulep! :ui workspaces)
    ;;    :g "C-t"   #'+workspace/new
    ;;    :g "C-S-t" #'+workspace/display
-   :g "M-1"   #'+workspace/switch-to-0
-   :g "M-2"   #'+workspace/switch-to-1
-   :g "M-3"   #'+workspace/switch-to-2
-   :g "M-4"   #'+workspace/switch-to-3
-   :g "M-5"   #'+workspace/switch-to-4
-   :g "M-6"   #'+workspace/switch-to-5
-   :g "M-7"   #'+workspace/switch-to-6
-   :g "M-8"   #'+workspace/switch-to-7
-   :g "M-9"   #'+workspace/switch-to-8
-   :g "M-0"   #'+workspace/switch-to-finla
+   :g "M-1"   #'sort-tab-select-visible-tab
+   :g "M-2"   #'sort-tab-select-visible-tab
+   :g "M-3"   #'sort-tab-select-visible-tab
+   :g "M-4"   #'sort-tab-select-visible-tab
+   :g "M-5"   #'sort-tab-select-visible-tab
+   :g "M-6"   #'sort-tab-select-visible-tab
+   :g "M-7"   #'sort-tab-select-visible-tab
+   :g "M-8"   #'sort-tab-select-visible-tab
+   :g "M-9"   #'sort-tab-select-visible-tab
    ))
 (map! :leader
       :desc "help"                         "h"   help-map
@@ -137,6 +136,7 @@
       :after projectile :desc "project-search(fd)" "p s" #'+default/search-project
       :after consult-org-roam :desc "consult-roam-search" "s r" #'consult-org-roam-search
       :after treemacs :desc "treemacs-select-window" "w t" #'treemacs-select-window
+      :after consult :desc "bookmarked-dir-find-file" "f b" #'consult-dir
       (:after org :desc "Outline" "n O" #'org-ol-tree)
       (:prefix-map ("b" . "buffer")
        :desc "Toggle narrowing"            "-"   #'doom/toggle-narrow-buffer
@@ -172,12 +172,23 @@
 (map! :map doom-leader-file-map
       "o" #'find-file-other-window
       )
+
+(defun meow/setup-doom-keybindings()
+  (map! :map meow-normal-state-keymap
+        doom-leader-key doom-leader-map)
+  (map! :map meow-motion-state-keymap
+        doom-leader-key doom-leader-map)
+  (map! :map meow-beacon-state-keymap
+        doom-leader-key nil)
+  )
+
 (defun meow-setup ()
   (set-useful-keybings)
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
-  ;;(add-to-list 'meow-keymap-alist (cons 'leader doom-leader-map))
-  (meow-normal-define-key (cons "SPC" doom-leader-map))
-  (meow-motion-overwrite-define-key (cons "SPC" doom-leader-map))
+  (meow/setup-doom-keybindings)
+  ;; ;;(add-to-list 'meow-keymap-alist (cons 'leader doom-leader-map))
+  ;; (meow-normal-define-key (cons "SPC" doom-leader-map))
+  ;; (meow-motion-overwrite-define-key (cons "SPC" doom-leader-map))
   (meow-motion-overwrite-define-key
    '("j" . meow-next)
    '("k" . meow-prev))
@@ -415,19 +426,19 @@
 (setq org-preview-latex-default-process 'dvisvgm)
 (setq org-preview-latex-process-alist
       '((dvipng :programs
-                ("latex" "dvipng")
-                :description "dvi > png"
-                :message "you need to install the programs: latex and dvipng."
-                :image-input-type "dvi"
-                :image-output-type "png"
-                :image-size-adjust
-                (0.7 . 0.7)
-                :latex-compiler
-                ("latex -interaction nonstopmode -output-directory %o %f")
-                :image-converter
-                ("dvipng -D %D -T tight -o %O %f")
-                :transparent-image-converter
-                ("dvipng -D %D -T tight -bg Transparent -o %O %f"))
+         ("latex" "dvipng")
+         :description "dvi > png"
+         :message "you need to install the programs: latex and dvipng."
+         :image-input-type "dvi"
+         :image-output-type "png"
+         :image-size-adjust
+         (0.7 . 0.7)
+         :latex-compiler
+         ("latex -interaction nonstopmode -output-directory %o %f")
+         :image-converter
+         ("dvipng -D %D -T tight -o %O %f")
+         :transparent-image-converter
+         ("dvipng -D %D -T tight -bg Transparent -o %O %f"))
         (dvisvgm :programs
                  ("latex" "dvisvgm")
                  :description "dvi > svg"
@@ -724,3 +735,8 @@
   (setq lsp-pyright-use-library-code-for-types t)
   )
 (setq lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs"))
+
+(use-package! sort-tab
+  :ensure t
+  :config
+  (sort-tab-mode 1))
