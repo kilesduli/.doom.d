@@ -80,18 +80,18 @@
 ;; old one for wayland
 ;;(set-face-attribute 'default nil :height 120)
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
-;;(setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 33)
+;; (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 33)
 ;;        doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
 ;;        doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
 ;;        doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 37)
 ;;        doom-serif-font(font-spec :family "CMU Typewriter Text" :weight 'light :size 37 ))
 
 ;;new one for X-org
-(setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 26)
+(setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
       doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
       doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
-      doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 26)
-      doom-serif-font(font-spec :family "CMU Typewriter Text" :weight 'light :size 26))
+      doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
+      doom-serif-font(font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
 
 ;; redo
 (global-set-key (kbd "C-r" ) 'undo-fu-only-redo)
@@ -118,18 +118,20 @@
 ;;; map define key
 (map!
  (:when (modulep! :ui workspaces)
-   ;;    :g "C-t"   #'+workspace/new
-   ;;    :g "C-S-t" #'+workspace/display
-   :g "M-1"   #'sort-tab-select-visible-tab
-   :g "M-2"   #'sort-tab-select-visible-tab
-   :g "M-3"   #'sort-tab-select-visible-tab
-   :g "M-4"   #'sort-tab-select-visible-tab
-   :g "M-5"   #'sort-tab-select-visible-tab
-   :g "M-6"   #'sort-tab-select-visible-tab
-   :g "M-7"   #'sort-tab-select-visible-tab
-   :g "M-8"   #'sort-tab-select-visible-tab
-   :g "M-9"   #'sort-tab-select-visible-tab
+   ;; :n "C-t"   #'+workspace/new
+   ;; :n "C-S-t" #'+workspace/display
+   :g "M-1"   #'+workspace/switch-to-0
+   :g "M-2"   #'+workspace/switch-to-1
+   :g "M-3"   #'+workspace/switch-to-2
+   :g "M-4"   #'+workspace/switch-to-3
+   :g "M-5"   #'+workspace/switch-to-4
+   :g "M-6"   #'+workspace/switch-to-5
+   :g "M-7"   #'+workspace/switch-to-6
+   :g "M-8"   #'+workspace/switch-to-7
+   :g "M-9"   #'+workspace/switch-to-8
+   :g "M-0"   #'+workspace/switch-to-final
    ))
+
 (map! :leader
       :desc "help"                         "h"   help-map
       :after projectile :desc "project" "p" projectile-command-map
@@ -137,7 +139,9 @@
       :after consult-org-roam :desc "consult-roam-search" "s r" #'consult-org-roam-search
       :after treemacs :desc "treemacs-select-window" "w t" #'treemacs-select-window
       :after consult :desc "bookmarked-dir-find-file" "f b" #'consult-dir
-      (:after org :desc "Outline" "n O" #'org-ol-tree)
+      :after org :desc "Outline" "n O" #'org-ol-tree)
+
+(map! :leader
       (:prefix-map ("b" . "buffer")
        :desc "Toggle narrowing"            "-"   #'doom/toggle-narrow-buffer
        :desc "Previous buffer"             "["   #'previous-buffer
@@ -167,8 +171,8 @@
        :desc "Pop up scratch buffer"       "x"   #'doom/open-scratch-buffer
        :desc "Switch to scratch buffer"    "X"   #'doom/switch-to-scratch-buffer
        :desc "Bury buffer"                 "z"   #'bury-buffer
-       :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers)
-      )
+       :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers))
+
 (map! :map doom-leader-file-map
       "o" #'find-file-other-window
       )
@@ -211,7 +215,6 @@
    '("?" . meow-cheatsheet)
    '("SPC" . keyboard-escape-quit)
    )
-  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
   (meow-normal-define-key
    '("0" . meow-expand-0)
    '("9" . meow-expand-9)
@@ -628,6 +631,7 @@
   :defer t)
 
 (use-package! treemacs
+  :defer t
   :config
   (setq treemacs-width 25)
   )
@@ -728,7 +732,6 @@
 ;;; python pyright
 (add-hook 'python-mode 'pyvenv-mode-hook)
 (use-package! lsp-pyright
-  :ensure t
   :hook (python-mode . (lambda ()
                          (lsp)))
   :config
@@ -736,7 +739,21 @@
   )
 (setq lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs"))
 
-(use-package! sort-tab
-  :ensure t
-  :config
-  (sort-tab-mode 1))
+;; (use-package! sort-tab
+;;   :ensure t
+;;   :config
+;;   (sort-tab-mode 1))
+;; (map!
+;;  (:when (modulep! :ui workspaces)
+;;    ;;    :g "C-t"   #'+workspace/new
+;;    ;;    :g "C-S-t" #'+workspace/display
+;;    :g "M-1"   #'sort-tab-select-visible-tab
+;;    :g "M-2"   #'sort-tab-select-visible-tab
+;;    :g "M-3"   #'sort-tab-select-visible-tab
+;;    :g "M-4"   #'sort-tab-select-visible-tab
+;;    :g "M-5"   #'sort-tab-select-visible-tab
+;;    :g "M-6"   #'sort-tab-select-visible-tab
+;;    :g "M-7"   #'sort-tab-select-visible-tab
+;;    :g "M-8"   #'sort-tab-select-visible-tab
+;;    :g "M-9"   #'sort-tab-select-visible-tab
+;;    ))
