@@ -757,3 +757,6 @@
 ;;    :g "M-8"   #'sort-tab-select-visible-tab
 ;;    :g "M-9"   #'sort-tab-select-visible-tab
 ;;    ))
+
+;;; fix centaur-tabs
+(setq centaur-tabs-set-bar 'under)

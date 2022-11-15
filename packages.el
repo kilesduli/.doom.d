@@ -30,7 +30,7 @@
 (package! clang-format+
  :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
 (package! dirvish)
-(package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab"))
+;; (package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab"))
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)
 ;; To install a package with Doom you must declare them here and run 'doom sync'
