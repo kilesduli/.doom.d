@@ -28,7 +28,7 @@
 (package! graphviz-dot-mode)
 (package! all-the-icons :disable t)
 (package! clang-format+
- :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
+  :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
 (package! dirvish)
 ;; (package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab"))
 ;; If you want to replace it with yasnippet's default snippets

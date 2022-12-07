@@ -168,6 +168,7 @@
             ;;+pretty
             +hugo
             +roam2
+            ;;+noter
             +dragndrop
             +brain)            ; organize your plain life in plain text
        ;;php               ; perl's insecure younger brother
