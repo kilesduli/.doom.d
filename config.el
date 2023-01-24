@@ -2,7 +2,11 @@
 
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
-
+(use-package benchmark-init
+  :ensure t
+  :config
+  ;; To disable collection of benchmark data after init is done.
+  (add-hook 'doom-first-input-hook 'benchmark-init/deactivate))
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets.
@@ -30,7 +34,8 @@
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory (concat (getenv "HOME") "/Documents/org"))
+(setq org-directory (concat (getenv "HOME") "/Documents/org")
+      org-roam-directory org-directory)
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `'relative'.
@@ -65,7 +70,7 @@
 ;;    unusing
 
 ;;; background transparent
-(add-to-list 'default-frame-alist '(alpha-background . 96))
+(add-to-list 'default-frame-alist '(alpha-background . 95))
 
 ;;; Simple settings or extra
 (setq auth-sources '("~/.authinfo.gpg")
@@ -80,11 +85,11 @@
 ;; old one for wayland
 ;;(set-face-attribute 'default nil :height 120)
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
-;; (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 33)
+;; (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
 ;;        doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
 ;;        doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
-;;        doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 37)
-;;        doom-serif-font(font-spec :family "CMU Typewriter Text" :weight 'light :size 37 ))
+;;        doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
+;;        doom-serif-font(font-spec :family "CMU Typewriter Text" :weight 'light :size 15 ))
 
 ;;new one for X-org
 (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
@@ -287,7 +292,7 @@
    '("%" . meow-query-replace-regexp)
    '("'" . repeat)
    '("\\" . quoted-insert)
-   '("<escape>" . keyboard-quit))
+   '("<escape>" . ignore))
   )
 (defun set-useful-keybings()
   (global-set-key (kbd "M-j") 'kmacro-start-macro-or-insert-counter)
@@ -306,6 +311,37 @@
   ;;(meow-setup-line-number)
   ;; 如果你需要自动的 mode-line 设置（如果需要自定义见下文对 `meow-indicator' 说明）
   (meow-setup-indicator))
+
+;; Use jk to escape from insert state to normal state
+(defvar meow-two-char-escape-sequence "jk")
+(defvar meow-two-char-escape-delay 0.5)
+(defun meow--two-char-exit-insert-state (s)
+  "Exit meow insert state when pressing consecutive two keys.
+
+S is string of the two-key sequence."
+  (when (meow-insert-mode-p)
+    (let ((modified (buffer-modified-p))
+          (undo-list buffer-undo-list))
+      (insert (elt s 0))
+      (let* ((second-char (elt s 1))
+             (event
+              (if defining-kbd-macro
+                  (read-event nil nil)
+              (read-event nil nil meow-two-char-escape-delay))))
+        (when event
+          (if (and (characterp event) (= event second-char))
+              (progn
+                (backward-delete-char 1)
+                (set-buffer-modified-p modified)
+                (setq buffer-undo-list undo-list)
+                (meow-insert-exit))
+            (push event unread-command-events)))))))
+(defun meow-two-char-exit-insert-state ()
+  "Exit meow insert state when pressing consecutive two keys."
+  (interactive)
+  (meow--two-char-exit-insert-state meow-two-char-escape-sequence))
+(define-key meow-insert-state-keymap (substring meow-two-char-escape-sequence 0 1)
+  #'meow-two-char-exit-insert-state)
 
 ;;; rime setting
 (use-package rime
@@ -409,20 +445,20 @@
  )
 
 ;;org roam ugly hack for yas error
-(set-file-template! "/roam/.+\\.org$" 'org-mode :ignore t)
+;;(set-file-template! "/roam/.+\\.org$" 'org-mode :ignore t)
 
 
-(use-package! org-roam-ui
-  :after org-roam ;; or :after org
-  ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
-  ;;         a hookable mode anymore, you're advised to pick something yourself
-  ;;         if you don't care about startup time, use
-  ;;  :hook (after-init . org-roam-ui-mode)
-  :config
-  (setq org-roam-ui-sync-theme t
-        org-roam-ui-follow t
-        org-roam-ui-update-on-save t
-        org-roam-ui-open-on-start t))
+;; (use-package! org-roam-ui
+;;   :after org-roam ;; or :after org
+;;   ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+;;   ;;         a hookable mode anymore, you're advised to pick something yourself
+;;   ;;         if you don't care about startup time, use
+;;   ;;  :hook (after-init . org-roam-ui-mode)
+;;   :config
+;;   (setq org-roam-ui-sync-theme t
+;;         org-roam-ui-follow t
+;;         org-roam-ui-update-on-save t
+;;         org-roam-ui-open-on-start t))
 
 ;;;  org-latex-preview
 (add-hook 'org-mode-hook 'org-fragtog-mode)
@@ -561,24 +597,19 @@
 ;;; lsp-mode
 (use-package! lsp-mode
   :custom
-  (lsp-enable-links nil)                 ;; no clickable links
-  (lsp-enable-folding nil)               ;; use `hideshow' instead
-  (lsp-enable-snippet nil)               ;; no snippets, it requires `yasnippet'
   (lsp-enable-file-watchers nil)         ;; performance matters
-  (lsp-enable-text-document-color nil)   ;; as above
-  (lsp-enable-symbol-highlighting nil)   ;; as above
-  (lsp-enable-on-type-formatting nil)    ;; as above
-  (lsp-enable-indentation t)           ;; don't change my code without my permission
-  (lsp-headerline-breadcrumb-enable nil) ;; keep headline clean
-  (lsp-modeline-code-actions-enable nil) ;; keep modeline clean
-  (lsp-modeline-diagnostics-enable nil)  ;; as above
-  (lsp-log-io nil)                       ;; debug only
-  (lsp-auto-guess-root t)                ;; Yes, I'm using projectile
   (lsp-keep-workspace-alive nil)         ;; auto kill lsp server
-  (lsp-lens-enable nil)
+  (lsp-enable-symbol-highlighting nil)
+  (lsp-auto-guess-root t)                ;; Yes, I'm using projectile
+  (lsp-modeline-code-actions-enable nil) ;; keep modeline clean
+  (lsp-headerline-breadcrumb-enable t)
+  (lsp-headerline-breadcrumb-segments '(symbols))
+  (lsp-headerline-breadcrumb-enable-diagnostics nil)
   (lsp-ui-sideline-enable nil)
+  (lsp-enable-indentation t)           ;; don't change my code without my permission
+  (lsp-modeline-diagnostics-enable nil)  ;; as above
   (lsp-eldoc-enable-hover t)          ;; disable eldoc hover
-  (lsp-signature-auto-activate nil)
+  (lsp-log-io nil)                       ;; debug only,
   )
 
 (setq lsp-clients-clangd-args '("-j=3"
@@ -626,8 +657,6 @@
   (global-wakatime-mode)
   )
 
-(after! magit
-  (magit-delta-mode +1))
 
 (use-package! systemd
   :defer t)
@@ -659,17 +688,17 @@
               ;;  :type entry
               ;;  :template ("* %?"
               ;;             "%i %a"))
-              ("Personal journal" :keys "j"
-               :icon ("checklist" :set "octicon" :color "yellow")
-               :file +org-capture-journal-file
-               :type entry
-               :prepend t
-               :target (file+olp+datatree +org-capture-journal-file)
-               :type entry
-               :template ("* %U"
-                          "%i %a"
-                          "%?"
-                          ))
+              ;; ("Personal journal" :keys "j"
+              ;;  :icon ("checklist" :set "octicon" :color "yellow")
+              ;;  :file +org-capture-journal-file
+              ;;  :type entry
+              ;;  :prepend t
+              ;;  :target (file+olp+datatree +org-capture-journal-file)
+              ;;  :type entry
+              ;;  :template ("* %U"
+              ;;             "%i %a"
+              ;;             "%?"
+              ;;             ))
               ("Email" :keys "e"
                :icon ("envelope" :set "faicon" :color "blue")
                :file +org-capture-todo-file
@@ -760,5 +789,15 @@
 ;;    :g "M-9"   #'sort-tab-select-visible-tab
 ;;    ))
 
-;;; fix centaur-tabs
-(setq centaur-tabs-set-bar 'under)
+(use-package org-protocol
+  :ensure org
+  :config
+  (add-to-list 'org-protocol-protocol-alist
+               '("org-find-file" :protocol "find-file" :function org-protocol-find-file :kill-client nil))
+  (defun org-protocol-find-file (fname)
+    "Process org-protocol://find-file?path= style URL."
+    (let ((f (plist-get (org-protocol-parse-parameters fname nil '(:path)) :path)))
+      (find-file f)
+      (raise-frame)
+      (select-frame-set-input-focus (selected-frame)))))
+

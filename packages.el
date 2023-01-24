@@ -7,16 +7,15 @@
 ;; in ~/.doom.d/packages.el
 ;;(package! doom-snippets :ignore t)
 (package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion"))
-(package! magit-delta :recipe (:host github :repo "dandavison/magit-delta"))
 (package! info-colors)
 (package! systemd)
 (package! separate-inline :recipe
   (:host github :repo "ingtshan/separate-inline.el" :files ("*.el")))
 (package! rotate)
 (package! ox-gfm)
-(package! org-roam-ui)
+;;(package! org-roam-ui)
 (package! color-theme-sanityinc-tomorrow)
-(unpin! org-roam)
+;;(unpin! org-roam)
 (unpin! org-mode)
 (package! doct)
 (package! org-ol-tree :recipe (:host github :repo "Townk/org-ol-tree"))
@@ -30,6 +29,10 @@
 (package! clang-format+
   :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
 (package! dirvish)
+(package! benchmark-init)
+(unpin! lsp-mode)
+(unpin! lsp-ui)
+;; (package! magit-delta :recipe (:host github :repo "dandavison/magit-delta"))
 ;; (package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab"))
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)
