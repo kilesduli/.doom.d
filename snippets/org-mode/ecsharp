@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: ecsharp
-# key: <ecs
-# --
-#+begin_src csharp :exports both
-$0
-#+end_src
