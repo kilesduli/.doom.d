@@ -88,7 +88,7 @@
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 
 ;;if using wayland session and 1.5x scale, use another font size.
-(if (equal (getenv "XDG_SESSION_TYPE") "x11")
+(if (string= "x11" (getenv "XDG_SESSION_TYPE"))
     (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
           doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
           doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
@@ -300,45 +300,57 @@
   ;; 如果你需要自动的 mode-line 设置（如果需要自定义见下文对 `meow-indicator' 说明）
   (meow-setup-indicator))
 
-;; Use jk to escape from insert state to normal state
-(defvar meow-two-char-escape-sequence "jk")
-(defvar meow-two-char-escape-delay 0.5)
-(defun meow--two-char-exit-insert-state (s)
-  "Exit meow insert state when pressing consecutive two keys.
+;; ;; Use jk to escape from insert state to normal state
+;; (defvar meow-two-char-escape-sequence "jk")
+;; (defvar meow-two-char-escape-delay 0.5)
+;; (defun meow--two-char-exit-insert-state (s)
+;;   "Exit meow insert state when pressing consecutive two keys.
 
-S is string of the two-key sequence."
-  (when (meow-insert-mode-p)
-    (let ((modified (buffer-modified-p))
-          (undo-list buffer-undo-list))
-      (insert (elt s 0))
-      (let* ((second-char (elt s 1))
-             (event
-              (if defining-kbd-macro
-                  (read-event nil nil)
-                (read-event nil nil meow-two-char-escape-delay))))
-        (when event
-          (if (and (characterp event) (= event second-char))
-              (progn
-                (backward-delete-char 1)
-                (set-buffer-modified-p modified)
-                (setq buffer-undo-list undo-list)
-                (meow-insert-exit))
-            (push event unread-command-events)))))))
-(defun meow-two-char-exit-insert-state ()
-  "Exit meow insert state when pressing consecutive two keys."
-  (interactive)
-  (meow--two-char-exit-insert-state meow-two-char-escape-sequence))
-(define-key meow-insert-state-keymap (substring meow-two-char-escape-sequence 0 1)
-            #'meow-two-char-exit-insert-state)
+;; S is string of the two-key sequence."
+;;   (when (meow-insert-mode-p)
+;;     (let ((modified (buffer-modified-p))
+;;           (undo-list buffer-undo-list))
+;;       (insert (elt s 0))
+;;       (let* ((second-char (elt s 1))
+;;              (event
+;;               (if defining-kbd-macro
+;;                   (read-event nil nil)
+;;                 (read-event nil nil meow-two-char-escape-delay))))
+;;         (when event
+;;           (if (and (characterp event) (= event second-char))
+;;               (progn
+;;                 (backward-delete-char 1)
+;;                 (set-buffer-modified-p modified)
+;;                 (setq buffer-undo-list undo-list)
+;;                 (meow-insert-exit))
+;;             (push event unread-command-events)))))))
+;; (defun meow-two-char-exit-insert-state ()
+;;   "Exit meow insert state when pressing consecutive two keys."
+;;   (interactive)
+;;   (meow--two-char-exit-insert-state meow-two-char-escape-sequence))
+;; (define-key meow-insert-state-keymap (substring meow-two-char-escape-sequence 0 1)
+;;             #'meow-two-char-exit-insert-state)
 
-;;unset org-cycle-agenda-file when org loading
-(with-eval-after-load 'org
-  (keymap-unset org-mode-map "C-,"))
-;;; set input toggle C-,
-(global-set-key (kbd "C-,") 'toggle-input-method)
+;; https://emacs.stackexchange.com/questions/65080/stop-major-modes-from-overwriting-my-keybinding
+;; https://emacs.stackexchange.com/questions/27926/avoiding-overwriting-global-key-bindings
+(defvar my/keys-keymap (make-keymap)
+  "Keymap for my/keys-mode")
+
+(define-minor-mode my/keys-mode
+  "Minor mode for my personal keybindings."
+  :init-value t
+  :global t
+  :keymap my/keys-keymap)
+
+;; The keymaps in `emulation-mode-map-alists' take precedence over
+;; `minor-mode-map-alist'
+(add-to-list 'emulation-mode-map-alists
+             `((my/keys-mode . ,my/keys-keymap)))
+
+(define-key my/keys-keymap (kbd "C-,") 'toggle-input-method)
+
 ;;; rime setting
 (use-package rime
-  :commands (toggle-input-method)
   :custom
   (default-input-method "rime")
   (rime-user-data-dir "~/.config/ibus/rime")
@@ -604,11 +616,11 @@ S is string of the two-key sequence."
   (setq lsp-eldoc-enable-hover t)          ;; disable eldoc hover
   (setq lsp-log-io nil)                       ;; debug only,
   (setq lsp-clients-clangd-args '("-j=3"
-                                "--background-index"
-                                "--clang-tidy"
-                                "--completion-style=detailed"
-                                "--header-insertion=never"
-                                "--header-insertion-decorators=0"))
+                                  "--background-index"
+                                  "--clang-tidy"
+                                  "--completion-style=detailed"
+                                  "--header-insertion=never"
+                                  "--header-insertion-decorators=0"))
   (add-hook 'doom-first-input-hook #'lsp-deferred)
   )
 
@@ -738,9 +750,6 @@ S is string of the two-key sequence."
     (setcdr (assoc "dot" org-src-lang-modes)
             'graphviz-dot)))
 
-(use-package! company-graphviz-dot
-  :after graphviz-dot-mode)
-
 ;;; clang-fotmat+
 (use-package clang-format+
   :config
@@ -769,3 +778,8 @@ S is string of the two-key sequence."
       (find-file f)
       (raise-frame)
       (select-frame-set-input-focus (selected-frame)))))
+
+(use-package graphviz-dot-mode
+  :ensure t
+  :config
+  (setq graphviz-dot-indent-width 4))

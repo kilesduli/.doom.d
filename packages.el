@@ -37,6 +37,7 @@
 ;; (package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab"))
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)
+
 ;; To install a package with Doom you must declare them here and run 'doom sync'
 ;; on the command line, then restart Emacs for the changes to take effect -- or
 ;; use 'M-x doom/reload'.
