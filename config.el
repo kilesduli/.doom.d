@@ -84,8 +84,9 @@
 
 ;;; doom-font
 ;; old one for wayland
-;;(set-face-attribute 'default nil :height 120)
-(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+;; (set-face-attribute 'default nil :height 120)
+;; (add-to-list 'initial-frame-alist '(fullscreen . maximized))
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 ;;if using wayland session and 1.5x scale, use another font size.
 (if (string= "x11" (getenv "XDG_SESSION_TYPE"))
