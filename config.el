@@ -389,7 +389,7 @@
 ;;   )
 
 (use-package! org
-  :defer t
+  ;; :defer t
   :config
   ;; change uuid to timestamp
   (setq org-id-method 'ts)
@@ -400,7 +400,7 @@
 
 ;;; org-roam
 (use-package! org-roam
-  :defer t
+  ;; :defer t
   :config
   (setq org-roam-complete-everywhere t)
   (setq org-roam-db-node-include-function
@@ -451,7 +451,7 @@
   (add-to-list 'org-after-todo-state-change-hook 'update-dynamic-agenda-hook t))
 
 (use-package! websocket
-  :defer t)
+  ;; :defer t)
 
 (use-package! org-roam-ui
   :after org-roam ;; or :after org
@@ -659,10 +659,10 @@
   )
 
 (use-package! systemd
-  :defer t)
+  ;; :defer t)
 
 (use-package! treemacs
-  :defer t
+  ;; :defer t
   :config
   (setq treemacs-width 25)
   )
@@ -769,7 +769,7 @@
 
 ;;could be defer org-protocl will be wake up
 (use-package org-protocol
-  :defer t
+  ;; :defer t
   :config
   (add-to-list 'org-protocol-protocol-alist
                '("org-find-file" :protocol "find-file" :function org-protocol-find-file :kill-client nil))
