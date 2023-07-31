@@ -33,6 +33,7 @@
 (package! ef-themes)
 (package! kaolin-themes)
 (package! htmlz-mode :recipe (:host github :repo "kilesduli/htmlz-mode"))
+(package! indent-bars :recipe (:host github :repo "jdtsmith/indent-bars"))
 ;; (package! magit-delta :recipe (:host github :repo "dandavison/magit-delta"))
 ;; (package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab"))
 ;; If you want to replace it with yasnippet's default snippets

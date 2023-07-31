@@ -451,7 +451,7 @@
   (add-to-list 'org-after-todo-state-change-hook 'update-dynamic-agenda-hook t))
 
 (use-package! websocket
-  ;; :defer t)
+  :defer t)
 
 (use-package! org-roam-ui
   :after org-roam ;; or :after org
@@ -659,7 +659,7 @@
   )
 
 (use-package! systemd
-  ;; :defer t)
+  :defer t)
 
 (use-package! treemacs
   ;; :defer t
@@ -784,3 +784,6 @@
   :ensure t
   :config
   (setq graphviz-dot-indent-width 4))
+
+(use-package indent-bars
+  :hook ((python-mode yaml-mode) . indent-bars-mode))
