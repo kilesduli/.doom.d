@@ -26,7 +26,6 @@
 (package! all-the-icons :disable t)
 (package! clang-format+
   :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
-(package! dirvish)
 (package! benchmark-init)
 (unpin! lsp-mode)
 (unpin! lsp-ui)
