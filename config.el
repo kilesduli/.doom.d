@@ -35,8 +35,8 @@
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
 
-(setq org-directory "~/zzz-org/pool"
-      org-roam-directory "~/zzz-org/roam")
+(setq org-directory "~/documents/org"
+      org-roam-directory "~/documents/org-roam")
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `'relative'.
@@ -59,7 +59,6 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
-
 
 ;;; Menu
 ;;    basic
@@ -787,3 +786,6 @@
 
 (use-package indent-bars
   :hook ((python-mode yaml-mode) . indent-bars-mode))
+
+(after! racket-mode
+  (add-hook 'racket-mode-hook #'racket-smart-open-bracket-mode))
