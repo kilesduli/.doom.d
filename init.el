@@ -43,7 +43,7 @@
        ;;neotree           ; a project drawer, like NERDTree for vim
        ophints             ; highlight the region an operation acts on
        (popup +defaults)   ; tame sudden yet inevitable temporary windows
-       ;; tabs             ; a tab bar for Emacs
+       ;;tabs             ; a tab bar for Emacs
        treemacs            ; a project drawer, like neotree but cooler
        ;;unicode           ; extended unicode support for various languages
        (vc-gutter +pretty) ; vcs diff in the fringe
@@ -68,7 +68,7 @@
 
        :emacs
        ;; (dired
-       ;;  +icons)            ; making dired pretty [functional]
+       ;;  +icons)         ; making dired pretty [functional]
        electric            ; smarter, keyword-based electric-indent
        (ibuffer +icons)    ; interactive buffer management
        undo                ; persistent, smarter undo for your inevitable mistakes
@@ -126,8 +126,7 @@
        ;;crystal           ; ruby at the speed of c
        (csharp
         +lsp
-        +unity)
-        ;;+dotnet)         ; unity, .NET, and mono shenanigans
+        +unity)            ; unity, .NET, and mono shenanigans
        ;;data              ; config/data formats
        ;;(dart +flutter)   ; paint ui and not much else
        ;;dhall
@@ -180,20 +179,20 @@
         )
        ;;qt                ; the 'cutest' gui framework ever
        (racket +lsp
-               +xp)            ; a DSL for DSLs
+               +xp)        ; a DSL for DSLs
        ;;raku              ; the artist formerly known as perl6
        ;;rest              ; Emacs as a REST client
        ;;rst               ; ReST in peace
        ;;(ruby +rails)     ; 1.step {|i| p "Ruby is #{i.even? ? 'love' : 'life'}"}
-       (rust +lsp)              ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
+       (rust +lsp)         ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
        ;;scala             ; java, but good
-       (scheme +chez)              ; a fully conniving family of lisps
+       (scheme +chez)      ; a fully conniving family of lisps
        (sh +lsp)           ; she sells {ba,z,fi}sh shells on the C xor
        ;;sml
        ;;solidity          ; do you need a blockchain? No.
        ;;swift             ; who asked for emoji variables?
        ;;terra             ; Earth and Moon in alignment for performance.
-       (web +lsp)               ; the tubes
+       (web +lsp)          ; the tubes
        yaml                ; JSON, but readable
        ;;zig               ; C, but simpler
 
