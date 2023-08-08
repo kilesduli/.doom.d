@@ -2,7 +2,7 @@
 
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
-(use-package benchmark-init
+(use-package! benchmark-init
   :ensure t
   :config
   ;; To disable collection of benchmark data after init is done.
@@ -103,7 +103,7 @@
 
 ;; redo
 (global-set-key (kbd "C-r" ) 'undo-fu-only-redo)
-
+(global-set-key (kbd "C-:") 'avy-goto-char-2)
 ;;; which-key-idle-delay
 ;; delay setting?
 (setq which-key-idle-delay 0.01)
@@ -139,7 +139,6 @@
       :after projectile :desc "project-search(fd)" "p s" #'+default/search-project
       :after consult-org-roam :desc "consult-roam-search" "s r" #'consult-org-roam-search
       :after treemacs :desc "treemacs-select-window" "w t" #'treemacs-select-window
-      :after consult :desc "bookmarked-dir-find-file" "f b" #'consult-dir
       )
 
 (map! :leader
@@ -154,7 +153,6 @@
          :desc "Switch buffer"           "b" #'switch-to-buffer)
        :desc "Clone buffer"                "c"   #'clone-indirect-buffer
        :desc "Clone buffer other window"   "C"   #'clone-indirect-buffer-other-window
-       :desc "Kill buffer"                 "d"   #'kill-current-buffer
        :desc "ibuffer"                     "i"   #'ibuffer
        :desc "Kill buffer"                 "k"   #'kill-current-buffer
        :desc "Kill all buffers"            "K"   #'doom/kill-all-buffers
@@ -162,20 +160,20 @@
        :desc "Set bookmark"                "m"   #'bookmark-set
        :desc "Delete bookmark"             "M"   #'bookmark-delete
        :desc "Next buffer"                 "n"   #'next-buffer
-       :desc "New empty buffer"            "N"   #'evil-buffer-new
+       :desc "New empty buffer"            "N"   #'+default/new-buffer
        :desc "Kill other buffers"          "O"   #'doom/kill-other-buffers
        :desc "Previous buffer"             "p"   #'previous-buffer
        :desc "Revert buffer"               "r"   #'revert-buffer
-       :desc "Save buffer"                 "s"   #'basic-save-buffer
-       :desc "Save all buffers"            "S"   #'evil-write-all
+       :desc "Swap buffer"                 "s"   #'ace-swap-window
        :desc "Save buffer as root"         "u"   #'doom/sudo-save-buffer
        :desc "Pop up scratch buffer"       "x"   #'doom/open-scratch-buffer
-       :desc "Switch to scratch buffer"    "X"   #'doom/switch-to-scratch-buffer
+       :desc "Switch to scratch buffer"    "X"   #'scratch-buffer
        :desc "Bury buffer"                 "z"   #'bury-buffer
        :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers))
 
 (map! :map doom-leader-file-map
       "o" #'find-file-other-window
+      :after consult :desc "Consult-dir" "b" #'consult-dir
       )
 
 ;;setup-doom-keybindings
@@ -195,7 +193,7 @@
 (global-set-key (kbd "M-k") 'kmacro-end-or-call-macro)
 
 ;;; meow
-(use-package meow
+(use-package! meow
   :demand t
   :init
   (meow-global-mode 1)
@@ -350,7 +348,8 @@
 (define-key my/keys-keymap (kbd "C-,") 'toggle-input-method)
 
 ;;; rime setting
-(use-package rime
+;; emacs-rime doesn't support lua will cause some bug, like rime-scheme-select couldn't persistence store
+(use-package! rime
   :custom
   (default-input-method "rime")
   (rime-user-data-dir "~/.config/ibus/rime")
@@ -638,21 +637,22 @@
 (map! :map lsp-mode-map  "<tab>"  #'company-indent-or-complete-common)
 
 ;;; csharp
-(add-hook 'csharp-mode-hook '(lambda()(c-set-offset 'func-decl-cont 0)
-                               (c-set-offset 'statement-cont 0)
-                               (c-set-offset 'topmost-intro-cont 0)))
+(add-hook 'csharp-mode-hook #'(lambda ()
+                                (c-set-offset 'func-decl-cont 0)
+                                (c-set-offset 'statement-cont 0)
+                                (c-set-offset 'topmost-intro-cont 0)))
 
 ;;; +utils
 (use-package! info-colors
   :commands (info-colors-fontify-node))
 (add-hook 'Info-selection-hook 'info-colors-fontify-node)
-(add-hook 'Info-mode-hook '(lambda ()
-                             (add-to-list 'Info-directory-list
-                                          (expand-file-name "~/Documents/info"))
-                             (add-to-list 'Info-directory-list
-                                          (expand-file-name "/var/guix/profiles/per-user/root/current-guix/share/info/"))))
+(add-hook 'Info-mode-hook #'(lambda ()
+                              (add-to-list 'Info-directory-list
+                                           (expand-file-name "~/Documents/info"))
+                              (add-to-list 'Info-directory-list
+                                           (expand-file-name "/var/guix/profiles/per-user/root/current-guix/share/info/"))))
 
-(use-package wakatime-mode
+(use-package! wakatime-mode
   :config
   (global-wakatime-mode)
   )
@@ -751,14 +751,13 @@
             'graphviz-dot)))
 
 ;;; clang-fotmat+
-(use-package clang-format+
+(use-package! clang-format+
   :config
   (add-hook 'c-mode-common-hook #'clang-format+-mode)
   (setq clang-format+-context 'modification)
   (setq clang-format+-always-enable t))
 
 ;; ;;; python pyright
-(add-hook 'python-mode 'pyvenv-mode-hook)
 (use-package! lsp-pyright
   :after lsp-mode
   :config
@@ -767,7 +766,7 @@
   )
 
 ;;could be defer org-protocl will be wake up
-(use-package org-protocol
+(use-package! org-protocol
   ;; :defer t
   :config
   (add-to-list 'org-protocol-protocol-alist
@@ -779,13 +778,17 @@
       (raise-frame)
       (select-frame-set-input-focus (selected-frame)))))
 
-(use-package graphviz-dot-mode
+(use-package! graphviz-dot-mode
   :ensure t
   :config
   (setq graphviz-dot-indent-width 4))
 
-(use-package indent-bars
+(use-package! indent-bars
   :hook ((python-mode yaml-mode) . indent-bars-mode))
 
 (after! racket-mode
   (add-hook 'racket-mode-hook #'racket-smart-open-bracket-mode))
+
+(use-package! doom-modeline
+  :config
+  (setq doom-modeline-env-enable-python nil))
