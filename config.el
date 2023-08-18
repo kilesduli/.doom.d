@@ -331,25 +331,13 @@
 
 ;; https://emacs.stackexchange.com/questions/65080/stop-major-modes-from-overwriting-my-keybinding
 ;; https://emacs.stackexchange.com/questions/27926/avoiding-overwriting-global-key-bindings
-(defvar my/keys-keymap (make-keymap)
-  "Keymap for my/keys-mode")
-
-(define-minor-mode my/keys-mode
-  "Minor mode for my personal keybindings."
-  :init-value t
-  :global t
-  :keymap my/keys-keymap)
-
-;; The keymaps in `emulation-mode-map-alists' take precedence over
-;; `minor-mode-map-alist'
-(add-to-list 'emulation-mode-map-alists
-             `((my/keys-mode . ,my/keys-keymap)))
-
-(define-key my/keys-keymap (kbd "C-,") 'toggle-input-method)
-
+;; emacs do not provide us a way to make keybinding live all over the time, but use-package does. and don't need define a new minor mode.
+;; found in https://emacs.stackexchange.com/questions/352/how-to-override-major-mode-bindings
+;; just (bind-key* ...)
 ;;; rime setting
 ;; emacs-rime doesn't support lua will cause some bug, like rime-scheme-select couldn't persistence store
 (use-package! rime
+  :bind* ("C-," . toggle-input-method)
   :custom
   (default-input-method "rime")
   (rime-user-data-dir "~/.config/ibus/rime")
@@ -362,6 +350,12 @@
      ))
   ;; (rime-inline-predicates '(rime-predicate-space-after-cc-p))
   )
+
+;;unbind necessary key
+(use-package! flyspell
+  :hook ((flyspell-mode . (lambda ()
+                            (dolist (key '("C-;" "C-," "C-."))
+                              (unbind-key key flyspell-mode-map))))))
 
 ;;; org-mode
 ;; disable company chinese extend.
