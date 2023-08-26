@@ -30,7 +30,7 @@
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
 ;;; doom-theme
-(setq doom-theme 'doom-one-light)
+(setq doom-theme 'doom-tomorrow-day)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -353,9 +353,9 @@
 
 ;;unbind necessary key
 (use-package! flyspell
-  :hook ((flyspell-mode . (lambda ()
-                            (dolist (key '("C-;" "C-," "C-."))
-                              (unbind-key key flyspell-mode-map))))))
+  :hook ((flyspell-mode . #'(lambda ()
+                              (dolist (key '("C-;" "C-," "C-."))
+                                (unbind-key key flyspell-mode-map))))))
 
 ;;; org-mode
 ;; disable company chinese extend.

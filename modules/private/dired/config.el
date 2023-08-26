@@ -142,4 +142,10 @@
   (when (modulep! :ui vc-gutter)
     (push 'vc-state dirvish-attributes))
   (when (modulep! +icons)
-    (appendq! dirvish-attributes '(all-the-icons subtree-state))))
+    (appendq! dirvish-attributes '(all-the-icons subtree-state)))
+  (dirvish-define-preview exa (file)
+    "Use `exa' to generate directory preview."
+    :require ("exa") ; tell Dirvish to check if we have the executable
+    (when (file-directory-p file) ; we only interest in directories here
+      `(shell . ("exa" "-al" "--color=always" "--icons"
+                 "--group-directories-first" ,file)))))
