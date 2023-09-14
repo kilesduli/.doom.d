@@ -87,7 +87,7 @@
 ;; (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;;if using wayland session and 1.5x scale, use another font size.
+;; Set different font sizes according to x11 and wayland
 (if (string= "x11" (getenv "XDG_SESSION_TYPE"))
     (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
           doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
@@ -102,8 +102,7 @@
   )
 
 ;; redo
-(global-set-key (kbd "C-r" ) 'undo-fu-only-redo)
-(global-set-key (kbd "C-:") 'avy-goto-char-2)
+(bind-key* "C-r" 'undo-fu-only-redo)
 ;;; which-key-idle-delay
 ;; delay setting?
 (setq which-key-idle-delay 0.01)
@@ -340,7 +339,7 @@
   :bind* ("C-," . toggle-input-method)
   :custom
   (default-input-method "rime")
-  (rime-user-data-dir "~/.config/ibus/rime")
+  (rime-user-data-dir "~/.local/share/emacs-rime")
   (rime-show-candidate 'posframe)
   (rime-disable-predicates
    '(meow-normal-mode-p
@@ -608,12 +607,6 @@
   (setq lsp-modeline-diagnostics-enable nil)  ;; as above
   (setq lsp-eldoc-enable-hover t)          ;; disable eldoc hover
   (setq lsp-log-io nil)                       ;; debug only,
-  (setq lsp-clients-clangd-args '("-j=3"
-                                  "--background-index"
-                                  "--clang-tidy"
-                                  "--completion-style=detailed"
-                                  "--header-insertion=never"
-                                  "--header-insertion-decorators=0"))
   (add-hook 'doom-first-input-hook #'lsp-deferred)
   )
 
