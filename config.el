@@ -75,7 +75,6 @@
 ;;; Simple settings
 (setq auth-sources '("~/.authinfo.gpg")
       auth-source-cache-expiry nil
-      undo-limit 80000000
       scroll-preserve-screen-position 'always ; Don't have `point' jump around
       scroll-margin 2                ; It's nice to maintain a little margin
       word-wrap-by-category t
@@ -93,12 +92,12 @@
           doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
           doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
           doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
-          doom-serif-font(font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
+          doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
   (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
         doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
         doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
         doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
-        doom-serif-font(font-spec :family "CMU Typewriter Text" :weight 'light :size 15 ))
+        doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 15 ))
   )
 
 ;; redo
@@ -779,3 +778,11 @@
 (use-package! doom-modeline
   :config
   (setq doom-modeline-env-enable-python nil))
+
+(add-hook 'scheme-mode-hook 'paredit-mode)
+
+;; undo-fu
+(use-package! undo-fu
+  :hook (doom-first-buffer . undo-fu-mode)
+  :config
+  (setq undo-limit 80000000))
