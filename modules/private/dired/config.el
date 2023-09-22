@@ -1,5 +1,8 @@
 ;;; emacs/dired/config.el -*- lexical-binding: t; -*-
 
+(defvar +dired-dirvish-icon-provider 'nerd-icons
+  "Icon provider to use for dirvish when the module is enabled.")
+
 (use-package! dired
   :commands dired-jump
   :init
@@ -142,10 +145,4 @@
   (when (modulep! :ui vc-gutter)
     (push 'vc-state dirvish-attributes))
   (when (modulep! +icons)
-    (appendq! dirvish-attributes '(all-the-icons subtree-state)))
-  (dirvish-define-preview exa (file)
-    "Use `exa' to generate directory preview."
-    :require ("exa") ; tell Dirvish to check if we have the executable
-    (when (file-directory-p file) ; we only interest in directories here
-      `(shell . ("exa" "-al" "--color=always" "--icons"
-                 "--group-directories-first" ,file)))))
+    (appendq! dirvish-attributes (list +dired-dirvish-icon-provider 'subtree-state))))
