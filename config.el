@@ -780,9 +780,18 @@
   (setq doom-modeline-env-enable-python nil))
 
 (add-hook 'scheme-mode-hook 'paredit-mode)
+(add-hook 'emacs-lisp-mode-hook 'paredit-mode)
 
 ;; undo-fu
 (use-package! undo-fu
   :hook (doom-first-buffer . undo-fu-mode)
   :config
   (setq undo-limit 80000000))
+
+(use-package! copilot
+  :bind (:map copilot-completion-map
+              ("<tab>" . 'copilot-accept-completion)
+              ("TAB" . 'copilot-accept-completion)
+              ("C-TAB" . 'copilot-accept-completion-by-word)
+              ("C-<tab>" . 'copilot-accept-completion-by-word)))
+(add-to-list 'copilot-major-mode-alist '("python" . "python"))

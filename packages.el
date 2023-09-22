@@ -66,6 +66,8 @@
 (package! indent-bars :recipe (:host github :repo "jdtsmith/indent-bars"))
 (package! anaconda-mode :disable t)
 (package! setup)
+(package! copilot
+  :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "dist")))
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)
 
