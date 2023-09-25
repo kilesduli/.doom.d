@@ -1,12 +1,13 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
-;; Place your private configuration here! Remember, you do not need to run 'doom
-;; sync' after modifying this file!
 (use-package! benchmark-init
   :ensure t
   :config
   ;; To disable collection of benchmark data after init is done.
   (add-hook 'doom-first-input-hook 'benchmark-init/deactivate))
+
+;; Place your private configuration here! Remember, you do not need to run 'doom
+;; sync' after modifying this file!
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets.
@@ -25,6 +26,21 @@
 ;; font string. You generally only need these two:
 ;; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
 ;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
+;;
+;; Set different font sizes according to x11 and wayland
+(if (string= "x11" (getenv "XDG_SESSION_TYPE"))
+    (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
+          doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
+          doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
+          doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
+          doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
+  (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
+        doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
+        doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
+        doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
+        doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 15 ))
+  )
+
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
@@ -61,47 +77,30 @@
 ;; they are implemented.
 
 ;;; Menu
-;;    basic
-;;    org-mode
-;;    lsp
-;;    company
-;;    a lot of package
+;;    Simple settings
 ;;    +utils
 ;;    unusing
-
-;;; background transparent
-;; (add-to-list 'default-frame-alist '(alpha-background . 95))
 
 ;;; Simple settings
 (setq auth-sources '("~/.authinfo.gpg")
       auth-source-cache-expiry nil
       scroll-preserve-screen-position 'always ; Don't have `point' jump around
-      scroll-margin 2                ; It's nice to maintain a little margin
+      scroll-margin 2                    ; It's nice to maintain a little margin
       word-wrap-by-category t
       delete-by-moving-to-trash t)       ; Different languages live together happily
 
-;;; doom-font
+;;; background transparent
+;; (add-to-list 'default-frame-alist '(alpha-background . 95))
+
+;; doom-font
 ;; old one for wayland
 ;; (set-face-attribute 'default nil :height 120)
 ;; (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;; Set different font sizes according to x11 and wayland
-(if (string= "x11" (getenv "XDG_SESSION_TYPE"))
-    (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
-          doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
-          doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
-          doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
-          doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
-  (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
-        doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
-        doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
-        doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
-        doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 15 ))
-  )
-
 ;; redo
 (bind-key* "C-r" 'undo-fu-only-redo)
+
 ;;; which-key-idle-delay
 ;; delay setting?
 (setq which-key-idle-delay 0.01)
