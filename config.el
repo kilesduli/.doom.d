@@ -46,7 +46,7 @@
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
 ;;; doom-theme
-(setq doom-theme 'doom-tomorrow-day)
+(setq doom-theme 'modus-operandi-tritanopia)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -794,3 +794,4 @@
               ("C-TAB" . 'copilot-accept-completion-by-word)
               ("C-<tab>" . 'copilot-accept-completion-by-word)))
 (add-to-list 'copilot-major-mode-alist '("python" . "python"))
+

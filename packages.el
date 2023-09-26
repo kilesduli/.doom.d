@@ -16,7 +16,7 @@
 (package! org-roam-ui)
 (package! color-theme-sanityinc-tomorrow)
 ;;(unpin! org-roam)
-;; (unpin! org)
+;;(unpin! org)
 (package! org
   :recipe (:host github
            ;; REVIEW: I intentionally avoid git.savannah.gnu.org because of SSL
