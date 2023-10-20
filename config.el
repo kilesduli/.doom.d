@@ -828,3 +828,6 @@
                            (point)))))))
                  (apply fn args)))
   )
+
+(after! company
+  (setq company-idle-delay 0.01))
