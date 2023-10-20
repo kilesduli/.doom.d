@@ -45,7 +45,7 @@
        (popup +defaults)   ; tame sudden yet inevitable temporary windows
        ;;tabs             ; a tab bar for Emacs
        treemacs            ; a project drawer, like neotree but cooler
-       ;;unicode           ; extended unicode support for various languages
+       unicode             ; extended unicode support for various languages
        (vc-gutter +pretty) ; vcs diff in the fringe
        vi-tilde-fringe     ; fringe tildes to mark beyond EOB
        ;;window-select     ; visually switch windows
@@ -82,7 +82,7 @@
 
        :checkers
        syntax              ; tasing you for every semicolon you forget
-       (spell +flyspell)   ; tasing you for misspelling mispelling
+       spell               ; tasing you for misspelling mispelling
        ;;grammar           ; tasing grammar mistake every you make
 
        :tools
@@ -92,7 +92,7 @@
        direnv
        ;;docker
        editorconfig        ; let someone else argue about tabs vs spaces
-       ein                 ; tame Jupyter notebooks with emacs
+       ;;ein               ; tame Jupyter notebooks with emacs
        (eval +overlay)     ; run code, run (also, repls)
        ;;gist              ; interacting with github gists
        (lookup
@@ -143,7 +143,7 @@
        ;;gdscript          ; the language you waited for
        (go +lsp)           ; the hipster dialect
        ;;(graphql +lsp)    ; Give queries a REST
-       (haskell +lsp)      ; a language that's lazier than I am
+       ;;(haskell +lsp)    ; a language that's lazier than I am
        ;;hy                ; readability of scheme w/ speed of python
        ;;idris             ; a language you can depend on
        json                ; At least it ain't XML

@@ -31,12 +31,12 @@
 (if (string= "x11" (getenv "XDG_SESSION_TYPE"))
     (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
           doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
-          doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
+          doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
           doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
           doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
   (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
         doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
-        doom-unicode-font (font-spec :family "LXGW Wenkai Mono" )
+        doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
         doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
         doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 15 ))
   )
@@ -348,15 +348,16 @@
   ;; (rime-inline-predicates '(rime-predicate-space-after-cc-p))
   )
 
-;;unbind necessary key
-(use-package! flyspell
-  :hook ((flyspell-mode . #'(lambda ()
-                              (dolist (key '("C-;" "C-," "C-."))
-                                (unbind-key key flyspell-mode-map))))))
+;; ;; unbind necessary key
+;; ;; BUG：listp flyspell-mode
+;; (use-package! flyspell
+;;   :hook ((flyspell-mode . #'(lambda ()
+;;                               (dolist (key '("C-;" "C-," "C-."))
+;;                                 (unbind-key key flyspell-mode-map))))))
 
 ;;; org-mode
 ;; disable company chinese extend.
-(with-eval-after-load 'company-mode
+(with-eval-after-load 'org
   (push 'company-dabbrev-char-regexp company-backends)
   (setq company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
   (set-company-backend! 'org-mode
@@ -654,6 +655,7 @@
 ;;; org-capture-templates
 (use-package! doct
   :commands doct)
+
 ;; https://github.com/VitalyAnkh/config/blob/adcd0ab0c679b108cfb9402b9e024556890379d5/doom/config.el#L2035
 (setq org-capture-templates
       (doct `(("Personal todo" :keys "t"
@@ -795,3 +797,34 @@
               ("C-<tab>" . 'copilot-accept-completion-by-word)))
 (add-to-list 'copilot-major-mode-alist '("python" . "python"))
 
+;; (with-eval-after-load 'org
+;;   (setq org-M-RET-may-split-line '((default . t))))
+
+(after! org-tree-slide
+  (advice-remove 'org-tree-slide--display-tree-with-narrow
+                 #'+org-present--hide-first-heading-maybe-a)
+  (defadvice! +org-present--hide-first-heading-maybe-a (fn &rest args)
+                "Omit the first heading if `+org-present-hide-first-heading' is non-nil."
+                :around #'org-tree-slide--display-tree-with-narrow
+                (letf!
+                 (defun org-narrow-to-subtree (&optional element)
+                   "Narrow buffer to the current subtree."
+                   (interactive)
+                   (save-excursion
+                     (save-match-data
+                       (org-with-limited-levels
+                        (narrow-to-region
+                         (progn
+                           (when (org-before-first-heading-p)
+                             (org-next-visible-heading 1))
+                           (org-back-to-heading t)
+                           (when +org-present-hide-first-heading
+                             (forward-line 1))
+                           (point))
+                         (progn
+                           (org-end-of-subtree t t)
+                           (when (and (org-at-heading-p) (not (eobp)))
+                             (backward-char 1))
+                           (point)))))))
+                 (apply fn args)))
+  )
