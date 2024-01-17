@@ -1,63 +1,7 @@
-;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
-
-(use-package! benchmark-init
-  :ensure t
-  :config
-  ;; To disable collection of benchmark data after init is done.
-  (add-hook 'doom-first-input-hook 'benchmark-init/deactivate))
+;;; $DOOMDIR/config.el --- duli's doom emacs config -*- lexical-binding: t; -*-
 
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
-
-;; Some functionality uses this to identify you, e.g. GPG configuration, email
-;; clients, file templates and snippets.
-(setq user-full-name "duli kiles"
-      user-mail-address "duli4868@gmail.com")
-
-;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
-;; are the three important ones:
-;;
-;; + `doom-font'
-;; + `doom-variable-pitch-font'
-;; + `doom-big-font' -- used for `doom-big-font-mode'; use this for
-;;   presentations or streaming.
-;;
-;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
-;; font string. You generally only need these two:
-;; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
-;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
-;;
-;; Set different font sizes according to x11 and wayland
-(if (string= "x11" (getenv "XDG_SESSION_TYPE"))
-    (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
-          doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
-          doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
-          doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
-          doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
-  (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
-        doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
-        doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
-        doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
-        doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 15 ))
-  )
-
-
-;; There are two ways to load a theme. Both assume the theme is installed and
-;; available. You can either set `doom-theme' or manually load a theme with the
-;; `load-theme' function. This is the default:
-;;; doom-theme
-(setq doom-theme 'modus-operandi-tritanopia)
-
-;; If you use `org' and don't want your org files in the default location below,
-;; change `org-directory'. It must be set before org loads!
-
-(setq org-directory "~/documents/org"
-      org-roam-directory "~/documents/org-roam")
-
-;; This determines the style of line numbers in effect. If set to `nil', line
-;; numbers are disabled. For relative line numbers, set this to `'relative'.
-(setq display-line-numbers-type 'relative)
-
 
 ;; Here are some additional functions/macros that could help you configure Doom:
 ;;
@@ -76,12 +20,96 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-;;; Menu
-;;    Simple settings
-;;    +utils
-;;    unusing
+;;; Code:
+;;@1 Basic setup(benchmark user-identify font-setting theme-setting init-outline)
+;;@@ benchmark-init
+(use-package! benchmark-init
+  :ensure t
+  :config
+  ;; To disable collection of benchmark data after init is done.
+  (add-hook 'doom-first-input-hook 'benchmark-init/deactivate))
 
-;;; Simple settings
+;;@@ user identify
+;;(Some functionality uses this to identify you,
+;;     e.g. GPG configuration, email clients, file templates and snippets)
+(setq user-full-name "duli kiles"
+      user-mail-address "duli4868@gmail.com")
+
+;;@@ font setting
+;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
+;; are the three important ones:
+;;
+;; + `doom-font'
+;; + `doom-variable-pitch-font'
+;; + `doom-big-font' -- used for `doom-big-font-mode'; use this for
+;;   presentations or streaming.
+;;
+;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
+;; font string. You generally only need these two:
+;; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
+;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
+;;
+;; Set fonts according to different window systems
+(if (string= "x11" (getenv "XDG_SESSION_TYPE"))
+    (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
+          doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
+          doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
+          doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
+          doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
+  (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
+        doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
+        doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
+        doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
+        doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 15 ))
+  )
+
+;;@@ theme setting
+;; There are two ways to load a theme. Both assume the theme is installed and
+;; available. You can either set `doom-theme' or manually load a theme with the
+;; `load-theme' function. This is the default:
+;;; doom-theme
+(setq doom-theme 'modus-operandi-tritanopia)
+
+;;@@ init-outline
+(defun set-init-outline-minor-mode ()
+  (interactive)
+  (when (equal (expand-file-name "~/dotfiles/doomemacs/.doom.d/config.el")
+               (buffer-file-name (current-buffer)))
+    (setq-local outline-regexp ";;; Code\\|;;@+")
+    (setq-local outline-heading-alist '((";;; Code" . 1) (";;@" . 2) (";;@@" . 3)))
+    (setq-local outline-minor-mode-use-buttons 'in-margins)
+    (setq-local outline-minor-mode-highlight 'override)
+    (setq-local outline-minor-mode-cycle t)
+    (setq-local outline-level 'outline-level)
+    (outline-minor-mode)
+    (init-outline-mode)))
+
+(defvar-keymap init-outline-mode-map
+  :doc "部分来自 outline-mode 的键绑定"
+  "C-c C-n" #'outline-next-visible-heading
+  "C-c C-p" #'outline-previous-visible-heading
+  "C-c C-u" #'outline-up-heading
+  "C-c C-a" #'outline-show-all)
+
+(define-minor-mode init-outline-mode
+  "用于浏览配置文件各节点的 minor-mode，添加了部分 outline-mode 按键绑定"
+  :keymap init-outline-mode-map)
+
+;;@2 Simple configuration related to emacs
+;;@@ specify org directory
+;; If you use `org' and don't want your org files in the default location below,
+;; change `org-directory'. It must be set before org loads!
+(setq org-directory "~/documents/org"
+      org-roam-directory "~/documents/org-roam")
+
+;;@@ display-line-number setting
+;; This determines the style of line numbers in effect. If set to `nil', line
+;; numbers are disabled. For relative line numbers, set this to `'relative'.
+(setq display-line-numbers-type 'relative)
+
+
+;;@@ a bunch of setting
+;;TODO
 (setq auth-sources '("~/.authinfo.gpg")
       auth-source-cache-expiry nil
       scroll-preserve-screen-position 'always ; Don't have `point' jump around
@@ -89,31 +117,29 @@
       word-wrap-by-category t
       delete-by-moving-to-trash t)       ; Different languages live together happily
 
-;;; background transparent
+;;@@ background transparent
 ;; (add-to-list 'default-frame-alist '(alpha-background . 95))
 
-;; doom-font
-;; old one for wayland
-;; (set-face-attribute 'default nil :height 120)
+
+;;@@ let frame maximized
 ;; (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;; redo
+;;@@ bind redo key to C-r
 (bind-key* "C-r" 'undo-fu-only-redo)
 
-;;; which-key-idle-delay
-;; delay setting?
+;;@@ which-key-idle-delay
 (setq which-key-idle-delay 0.01)
 (setq which-key-idle-secondary-delay 0.01)
 
-;;; pixel-scroll-precision-mode
+;;@@ enable pixel-scroll-precision-mode
 (pixel-scroll-precision-mode 1)
 
-;;; mouse wheel zoom
+;;@@ mouse wheel zoom
 (global-set-key  [C-mouse-wheel-up-event]  'text-scale-increase)
 (global-set-key  [C-mouse-wheel-down-event] 'text-scale-decrease)
 
-;;; map define key
+;;@@ Map M-n to switch workspace
 (map!
  (:when (modulep! :ui workspaces)
    ;; :n "C-t"   #'+workspace/new
@@ -130,6 +156,8 @@
    :g "M-0"   #'+workspace/switch-to-final
    ))
 
+;;@@ map some keys..
+;;TODO
 (map! :leader
       :desc "help"                         "h"   help-map
       :after projectile :desc "project" "p" projectile-command-map
@@ -173,6 +201,8 @@
       :after consult :desc "Consult-dir" "b" #'consult-dir
       )
 
+;;@3 package setup
+;;@@ Meow
 ;;setup-doom-keybindings
 (map! :map meow-normal-state-keymap
       doom-leader-key doom-leader-map)
@@ -185,11 +215,10 @@
 ;; (meow-motion-overwrite-define-key (cons "SPC" doom-leader-map)) diff???
 
 
-;;wanna figure out binding (set-useful-binding)
+;; wanna figure out binding (set-useful-binding)
 (global-set-key (kbd "M-j") 'kmacro-start-macro-or-insert-counter)
 (global-set-key (kbd "M-k") 'kmacro-end-or-call-macro)
 
-;;; meow
 (use-package! meow
   :demand t
   :init
@@ -326,6 +355,7 @@
 ;; (define-key meow-insert-state-keymap (substring meow-two-char-escape-sequence 0 1)
 ;;             #'meow-two-char-exit-insert-state)
 
+;;@@ rime
 ;; https://emacs.stackexchange.com/questions/65080/stop-major-modes-from-overwriting-my-keybinding
 ;; https://emacs.stackexchange.com/questions/27926/avoiding-overwriting-global-key-bindings
 ;; emacs do not provide us a way to make keybinding live all over the time, but use-package does. and don't need define a new minor mode.
@@ -355,7 +385,7 @@
 ;;                               (dolist (key '("C-;" "C-," "C-."))
 ;;                                 (unbind-key key flyspell-mode-map))))))
 
-;;; org-mode
+;;@@ Org-mode
 ;; disable company chinese extend.
 (with-eval-after-load 'org
   (push 'company-dabbrev-char-regexp company-backends)
@@ -384,7 +414,7 @@
   ;; change uuid to timestamp
   (setq org-id-method 'ts)
   (add-hook 'org-mode-hook (lambda ()
-                             (setq fill-column 120)
+                             ;; (setq fill-column 120)
                              (display-line-numbers-mode 0)))
   )
 
@@ -590,7 +620,7 @@
     (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
   (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
 
-;;; lsp-mode
+;;@@ lsp-mode and company-mode
 (use-package! lsp-mode
   :config
   (setq lsp-enable-file-watchers nil)         ;; performance matters
@@ -614,7 +644,6 @@
 (setq-hook! 'c++-mode-hook +format-with-lsp nil)
 (setq-hook! 'c-mode-hook +format-with-lsp nil)
 
-;;; company-mode
 ;;set company tab complete motion
 (after! company
   (map! :map company-active-map "<tab>"  #'company-complete-selection)
@@ -622,13 +651,13 @@
   )
 (map! :map lsp-mode-map  "<tab>"  #'company-indent-or-complete-common)
 
-;;; csharp
+;;@@ csharp
 (add-hook 'csharp-mode-hook #'(lambda ()
                                 (c-set-offset 'func-decl-cont 0)
                                 (c-set-offset 'statement-cont 0)
                                 (c-set-offset 'topmost-intro-cont 0)))
 
-;;; +utils
+;;@@ +utils
 (use-package! info-colors
   :commands (info-colors-fontify-node))
 (add-hook 'Info-selection-hook 'info-colors-fontify-node)
@@ -795,7 +824,9 @@
               ("TAB" . 'copilot-accept-completion)
               ("C-TAB" . 'copilot-accept-completion-by-word)
               ("C-<tab>" . 'copilot-accept-completion-by-word)))
-(add-to-list 'copilot-major-mode-alist '("python" . "python"))
+(add-to-list 'copilot-major-mode-alist '("python" . "python")
+             (add-to-list 'copilot-major-mode-alist '("c" . "c"))
+             )
 
 ;; (with-eval-after-load 'org
 ;;   (setq org-M-RET-may-split-line '((default . t))))
@@ -804,30 +835,105 @@
   (advice-remove 'org-tree-slide--display-tree-with-narrow
                  #'+org-present--hide-first-heading-maybe-a)
   (defadvice! +org-present--hide-first-heading-maybe-a (fn &rest args)
-                "Omit the first heading if `+org-present-hide-first-heading' is non-nil."
-                :around #'org-tree-slide--display-tree-with-narrow
-                (letf!
-                 (defun org-narrow-to-subtree (&optional element)
-                   "Narrow buffer to the current subtree."
-                   (interactive)
-                   (save-excursion
-                     (save-match-data
-                       (org-with-limited-levels
-                        (narrow-to-region
-                         (progn
-                           (when (org-before-first-heading-p)
-                             (org-next-visible-heading 1))
-                           (org-back-to-heading t)
-                           (when +org-present-hide-first-heading
-                             (forward-line 1))
-                           (point))
-                         (progn
-                           (org-end-of-subtree t t)
-                           (when (and (org-at-heading-p) (not (eobp)))
-                             (backward-char 1))
-                           (point)))))))
-                 (apply fn args)))
+    "Omit the first heading if `+org-present-hide-first-heading' is non-nil."
+    :around #'org-tree-slide--display-tree-with-narrow
+    (letf!
+      (defun org-narrow-to-subtree (&optional element)
+        "Narrow buffer to the current subtree."
+        (interactive)
+        (save-excursion
+          (save-match-data
+            (org-with-limited-levels
+             (narrow-to-region
+              (progn
+                (when (org-before-first-heading-p)
+                  (org-next-visible-heading 1))
+                (org-back-to-heading t)
+                (when +org-present-hide-first-heading
+                  (forward-line 1))
+                (point))
+              (progn
+                (org-end-of-subtree t t)
+                (when (and (org-at-heading-p) (not (eobp)))
+                  (backward-char 1))
+                (point)))))))
+      (apply fn args)))
   )
 
 (after! company
   (setq company-idle-delay 0.01))
+
+;; (defun start-lsp-pylance ()
+;;   "Start lsp pyright with pdm."
+;;   (require 'lsp-pyright)
+;;   (when (zerop (shell-command "pdm info"))
+;;     (setq-local
+;;      lsp-pyright-python-executable-cmd
+;;      (string-trim (shell-command-to-string
+;;                    "pdm info --python")))
+;;     ;; (setq-local flycheck-python-flake8-executable lsp-pyright-python-executable-cmd)
+;;     (setq-local python-shell-interpreter lsp-pyright-python-executable-cmd)
+;;     (let ((ppath (concat (string-trim (shell-command-to-string
+;;                                        "pdm info --package"))
+;;                          "/lib")))
+;;       (setq-local
+;;        lsp-pyright-extra-paths
+;;        (vector ppath)
+;;        python-shell-extra-pythonpaths (list ppath))))
+;;   (lsp))
+;; ;; (lsp-inlay-hints-mode 1)
+
+;; (defun nasy/lsp--render-string (str language)
+;;   "Render STR using `major-mode' corresponding to LANGUAGE.
+;;  When language is nil render as markup if `markdown-mode' is loaded."
+;;   (setq str (s-replace "\r" "" (or str "")))
+;;   (setq str (s-replace-regexp "<!--.*-->" "" (or str "")))
+;;   (if-let ((mode (-some (-lambda ((mode . lang))
+;;                           (when (and (equal lang language) (functionp mode))
+;;                             mode))
+;;                         lsp-language-id-configuration)))
+;;       (lsp--fontlock-with-mode str mode)
+;;     str))
+
+;; (use-package lsp-pylance
+;;   :init (require 'lsp-pylance)
+;;   :hook (python-mode . start-lsp-pylance)
+;;   )
+
+;; (after! lsp
+;;   (advice-add lsp--render-string :override
+;;               nasy/lsp--render-string))
+
+(defun kill-ring-save-no-newline ()
+  "Save the region to the kill ring without newline characters."
+  (interactive)
+  (kill-new (replace-regexp-in-string "\n" "" (filter-buffer-substring (region-beginning) (region-end)))))
+
+(bind-key "C-c M-w" 'kill-ring-save-no-newline)
+
+;; (use-package jieba
+;;   :commands jieba-mode
+;;   )
+
+(run-with-idle-timer 30 t #'recentf-save-list)
+
+;;@@ cns
+(use-package! cns
+  :config
+  (let ((repodir (concat doom-local-dir "straight/repos/emacs-chinese-word-segmentation/")))
+    (setq cns-prog (concat repodir "cnws")
+          cns-dict-directory (concat repodir "cppjieba/dict")))
+  :hook
+  (find-file . cns-auto-enable))
+
+;; (use-package! nano-vertico
+;;   :init
+;;   (nano-vertico-mode 1))
+
+(set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
+
+
+
+;; Local Variables:
+;; eval: (when (fboundp 'set-init-outline-minor-mode) (set-init-outline-minor-mode))
+;; End:
