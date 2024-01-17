@@ -46,6 +46,8 @@
            ))
 (package! nano-vertico
   :recipe (:host github :repo "rougier/nano-vertico"))
+(package! outli
+  :recipe (:host github :repo "jdtsmith/outli"))
 
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)

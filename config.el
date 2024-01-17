@@ -21,21 +21,21 @@
 ;; they are implemented.
 
 ;;; Code:
-;;@1 Basic setup(benchmark user-identify font-setting theme-setting init-outline)
-;;@@ benchmark-init
+;;;; Basic setup(benchmark user-identify font-setting theme-setting)
+;;;;; benchmark-init
 (use-package! benchmark-init
   :ensure t
   :config
   ;; To disable collection of benchmark data after init is done.
   (add-hook 'doom-first-input-hook 'benchmark-init/deactivate))
 
-;;@@ user identify
+;;;;; user identify
 ;;(Some functionality uses this to identify you,
 ;;     e.g. GPG configuration, email clients, file templates and snippets)
 (setq user-full-name "duli kiles"
       user-mail-address "duli4868@gmail.com")
 
-;;@@ font setting
+;;;;; font setting
 ;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
 ;; are the three important ones:
 ;;
@@ -63,52 +63,28 @@
         doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 15 ))
   )
 
-;;@@ theme setting
+;;;;; theme setting
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-;;; doom-theme
+;; doom-theme
 (setq doom-theme 'modus-operandi-tritanopia)
 
-;;@@ init-outline
-(defun set-init-outline-minor-mode ()
-  (interactive)
-  (when (equal (expand-file-name "~/dotfiles/doomemacs/.doom.d/config.el")
-               (buffer-file-name (current-buffer)))
-    (setq-local outline-regexp ";;; Code\\|;;@+")
-    (setq-local outline-heading-alist '((";;; Code" . 1) (";;@" . 2) (";;@@" . 3)))
-    (setq-local outline-minor-mode-use-buttons 'in-margins)
-    (setq-local outline-minor-mode-highlight 'override)
-    (setq-local outline-minor-mode-cycle t)
-    (setq-local outline-level 'outline-level)
-    (outline-minor-mode)
-    (init-outline-mode)))
 
-(defvar-keymap init-outline-mode-map
-  :doc "部分来自 outline-mode 的键绑定"
-  "C-c C-n" #'outline-next-visible-heading
-  "C-c C-p" #'outline-previous-visible-heading
-  "C-c C-u" #'outline-up-heading
-  "C-c C-a" #'outline-show-all)
-
-(define-minor-mode init-outline-mode
-  "用于浏览配置文件各节点的 minor-mode，添加了部分 outline-mode 按键绑定"
-  :keymap init-outline-mode-map)
-
-;;@2 Simple configuration related to emacs
-;;@@ specify org directory
+;;;; Simple configuration related to emacs
+;;;;; specify org directory
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/documents/org"
       org-roam-directory "~/documents/org-roam")
 
-;;@@ display-line-number setting
+;;;;; display-line-number setting
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `'relative'.
 (setq display-line-numbers-type 'relative)
 
 
-;;@@ a bunch of setting
+;;;;; a bunch of setting
 ;;TODO
 (setq auth-sources '("~/.authinfo.gpg")
       auth-source-cache-expiry nil
@@ -117,29 +93,29 @@
       word-wrap-by-category t
       delete-by-moving-to-trash t)       ; Different languages live together happily
 
-;;@@ background transparent
+;;;;; background transparent
 ;; (add-to-list 'default-frame-alist '(alpha-background . 95))
 
 
-;;@@ let frame maximized
+;;;;; let frame maximized
 ;; (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;;@@ bind redo key to C-r
+;;;;; bind redo key to C-r
 (bind-key* "C-r" 'undo-fu-only-redo)
 
-;;@@ which-key-idle-delay
+;;;;; which-key-idle-delay
 (setq which-key-idle-delay 0.01)
 (setq which-key-idle-secondary-delay 0.01)
 
-;;@@ enable pixel-scroll-precision-mode
+;;;;; enable pixel-scroll-precision-mode
 (pixel-scroll-precision-mode 1)
 
-;;@@ mouse wheel zoom
+;;;;; mouse wheel zoom
 (global-set-key  [C-mouse-wheel-up-event]  'text-scale-increase)
 (global-set-key  [C-mouse-wheel-down-event] 'text-scale-decrease)
 
-;;@@ Map M-n to switch workspace
+;;;;; Map M-n to switch workspace
 (map!
  (:when (modulep! :ui workspaces)
    ;; :n "C-t"   #'+workspace/new
@@ -156,7 +132,7 @@
    :g "M-0"   #'+workspace/switch-to-final
    ))
 
-;;@@ map some keys..
+;;;;; map some keys..
 ;;TODO
 (map! :leader
       :desc "help"                         "h"   help-map
@@ -201,8 +177,8 @@
       :after consult :desc "Consult-dir" "b" #'consult-dir
       )
 
-;;@3 package setup
-;;@@ Meow
+;;;; package setup
+;;;;; Meow
 ;;setup-doom-keybindings
 (map! :map meow-normal-state-keymap
       doom-leader-key doom-leader-map)
@@ -355,13 +331,14 @@
 ;; (define-key meow-insert-state-keymap (substring meow-two-char-escape-sequence 0 1)
 ;;             #'meow-two-char-exit-insert-state)
 
-;;@@ rime
+;;;;; rime
 ;; https://emacs.stackexchange.com/questions/65080/stop-major-modes-from-overwriting-my-keybinding
 ;; https://emacs.stackexchange.com/questions/27926/avoiding-overwriting-global-key-bindings
 ;; emacs do not provide us a way to make keybinding live all over the time, but use-package does. and don't need define a new minor mode.
 ;; found in https://emacs.stackexchange.com/questions/352/how-to-override-major-mode-bindings
 ;; just (bind-key* ...)
-;;; rime setting
+
+;; rime setting
 ;; emacs-rime doesn't support lua will cause some bug, like rime-scheme-select couldn't persistence store
 (use-package! rime
   :bind* ("C-," . toggle-input-method)
@@ -385,14 +362,14 @@
 ;;                               (dolist (key '("C-;" "C-," "C-."))
 ;;                                 (unbind-key key flyspell-mode-map))))))
 
-;;@@ Org-mode
+;;;;; Org-mode
 ;; disable company chinese extend.
 (with-eval-after-load 'org
   (push 'company-dabbrev-char-regexp company-backends)
   (setq company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
   (set-company-backend! 'org-mode
     'company-dabbrev-char-regexp 'company-yasnippet))
-;;; ob-csharp
+;; ob-csharp
 ;; (load! "ob-csharp")             ; It's org-babel functions for csharp evaluation.
 
 
@@ -418,7 +395,7 @@
                              (display-line-numbers-mode 0)))
   )
 
-;;; org-roam
+;; org-roam
 (use-package! org-roam
   ;; :defer t
   :config
@@ -438,7 +415,7 @@
   :desc "go back" "b" #'org-mark-ring-goto)
  )
 
-;;; org roam dynamic agenda file
+;; org roam dynamic agenda file
 ;; stolen from https://emacs-china.org/t/org-roam/15659
 (with-eval-after-load 'org-roam
   (defvar dynamic-agenda-files nil
@@ -485,7 +462,7 @@
         org-roam-ui-update-on-save t
         org-roam-ui-open-on-start t))
 
-;;;  org-latex-preview
+;;  org-latex-preview
 (add-hook 'org-mode-hook 'org-fragtog-mode)
 ;;set latex preview default process
 (setq org-preview-latex-default-process 'dvisvgm)
@@ -533,7 +510,7 @@
 (setq org-latex-compiler "xelatex")
 
 
-;;; org-mode-pretty-src
+;; org-mode-pretty-src
 (with-eval-after-load 'org
   (defvar-local rasmus/org-at-src-begin -1
     "Variable that holds whether last position was a ")
@@ -620,7 +597,7 @@
     (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
   (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
 
-;;@@ lsp-mode and company-mode
+;;;;; lsp-mode and company-mode
 (use-package! lsp-mode
   :config
   (setq lsp-enable-file-watchers nil)         ;; performance matters
@@ -651,13 +628,13 @@
   )
 (map! :map lsp-mode-map  "<tab>"  #'company-indent-or-complete-common)
 
-;;@@ csharp
+;;;;; csharp
 (add-hook 'csharp-mode-hook #'(lambda ()
                                 (c-set-offset 'func-decl-cont 0)
                                 (c-set-offset 'statement-cont 0)
                                 (c-set-offset 'topmost-intro-cont 0)))
 
-;;@@ +utils
+;;;;; +utils
 (use-package! info-colors
   :commands (info-colors-fontify-node))
 (add-hook 'Info-selection-hook 'info-colors-fontify-node)
@@ -681,7 +658,7 @@
   (setq treemacs-width 25)
   )
 
-;;; org-capture-templates
+;;;;; org-capture-templates and again
 (use-package! doct
   :commands doct)
 
@@ -749,15 +726,14 @@
                            :desc ""
                            :i-type "idea")))
               )))
-;; ;;; scheme geiser
 
-;;; consult-org-roam
+;; consult-org-roam
 (use-package! consult-org-roam
   :after org-roam
   :config
   (consult-org-roam-mode t))
 
-;;; graphviz-dot-mode
+;;;;; graphviz-dot-mode
 (use-package! graphviz-dot-mode
   :commands graphviz-dot-mode
   :mode ("\\.dot\\'" . graphviz-dot-mode)
@@ -766,14 +742,14 @@
     (setcdr (assoc "dot" org-src-lang-modes)
             'graphviz-dot)))
 
-;;; clang-fotmat+
+;;;;; clang-fotmat+
 (use-package! clang-format+
   :config
   (add-hook 'c-mode-common-hook #'clang-format+-mode)
   (setq clang-format+-context 'modification)
   (setq clang-format+-always-enable t))
 
-;; ;;; python pyright
+;;;;; python pyright
 (use-package! lsp-pyright
   :after lsp-mode
   :config
@@ -781,7 +757,7 @@
   (setq lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs"))
   )
 
-;;could be defer org-protocl will be wake up
+;;;;; org-protocol
 (use-package! org-protocol
   ;; :defer t
   :config
@@ -794,6 +770,7 @@
       (raise-frame)
       (select-frame-set-input-focus (selected-frame)))))
 
+;;;;; something
 (use-package! graphviz-dot-mode
   :ensure t
   :config
@@ -917,7 +894,7 @@
 
 (run-with-idle-timer 30 t #'recentf-save-list)
 
-;;@@ cns
+;;;;; cns
 (use-package! cns
   :config
   (let ((repodir (concat doom-local-dir "straight/repos/emacs-chinese-word-segmentation/")))
@@ -932,8 +909,9 @@
 
 (set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
 
-
-
-;; Local Variables:
-;; eval: (when (fboundp 'set-init-outline-minor-mode) (set-init-outline-minor-mode))
-;; End:
+;;;;; outli
+(use-package outli
+  :bind (:map outli-mode-map ; convenience key to get back to containing heading
+	      ("C-c C-p" . (lambda () (interactive) (outline-back-to-heading))))
+  :config
+  :hook ((prog-mode text-mode) . outli-mode)) ; or whichever modes you prefer
