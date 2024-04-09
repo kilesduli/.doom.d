@@ -42,7 +42,7 @@
 (package! pylance-nasy :recipe (:host github :repo "nasyxx/emacs-site-lisp" :files ("lsp-pylance/lsp-pylance.el")))
 (package! cns
   :recipe (:host github :repo "kanglmf/emacs-chinese-word-segmentation"
-           :pre-build ("env" "CXX=clang++" "make")
+           :pre-build ("make")
            ))
 (package! nano-vertico
   :recipe (:host github :repo "rougier/nano-vertico"))

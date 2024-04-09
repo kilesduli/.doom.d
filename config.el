@@ -50,18 +50,19 @@
 ;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
 ;;
 ;; Set fonts according to different window systems
-(if (string= "x11" (getenv "XDG_SESSION_TYPE"))
-    (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
-          doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
-          doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
-          doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
-          doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
+(setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
+      doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
+      doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
+      doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
+      doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
+
+;; avoid font change regenerate unicode file
+(when (string= "wayland" (getenv "XDG_SESSION_TYPE"))
   (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
         doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
         doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
         doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
-        doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 15 ))
-  )
+        doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 15)))
 
 ;;;;; theme setting
 ;; There are two ways to load a theme. Both assume the theme is installed and
@@ -129,8 +130,7 @@
    :g "M-7"   #'+workspace/switch-to-6
    :g "M-8"   #'+workspace/switch-to-7
    :g "M-9"   #'+workspace/switch-to-8
-   :g "M-0"   #'+workspace/switch-to-final
-   ))
+   :g "M-0"   #'+workspace/switch-to-final))
 
 ;;;;; map some keys..
 ;;TODO
@@ -139,8 +139,7 @@
       :after projectile :desc "project" "p" projectile-command-map
       :after projectile :desc "project-search(fd)" "p s" #'+default/search-project
       :after consult-org-roam :desc "consult-roam-search" "s r" #'consult-org-roam-search
-      :after treemacs :desc "treemacs-select-window" "w t" #'treemacs-select-window
-      )
+      :after treemacs :desc "treemacs-select-window" "w t" #'treemacs-select-window)
 
 (map! :leader
       (:prefix-map ("b" . "buffer")
@@ -174,8 +173,7 @@
 
 (map! :map doom-leader-file-map
       "o" #'find-file-other-window
-      :after consult :desc "Consult-dir" "b" #'consult-dir
-      )
+      :after consult :desc "Consult-dir" "b" #'consult-dir)
 
 ;;;; package setup
 ;;;;; Meow
@@ -345,15 +343,14 @@
   :custom
   (default-input-method "rime")
   (rime-user-data-dir "~/.local/share/emacs-rime")
+  (rime-share-data-dir "~/.local/share/rime-data")
   (rime-show-candidate 'posframe)
+  ;; (rime-inline-predicates '(rime-predicate-space-after-cc-p))
   (rime-disable-predicates
    '(meow-normal-mode-p
      meow-motion-mode-p
      meow-keypad-mode-p
-     meow-beacon-mode-p
-     ))
-  ;; (rime-inline-predicates '(rime-predicate-space-after-cc-p))
-  )
+     meow-beacon-mode-p)))
 
 ;; ;; unbind necessary key
 ;; ;; BUG：listp flyspell-mode
@@ -365,10 +362,10 @@
 ;;;;; Org-mode
 ;; disable company chinese extend.
 (with-eval-after-load 'org
-  (push 'company-dabbrev-char-regexp company-backends)
   (setq company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
+  (push 'company-dabbrev company-backends)
   (set-company-backend! 'org-mode
-    'company-dabbrev-char-regexp 'company-yasnippet))
+    'company-dabbrev 'company-yasnippet))
 ;; ob-csharp
 ;; (load! "ob-csharp")             ; It's org-babel functions for csharp evaluation.
 
@@ -392,8 +389,7 @@
   (setq org-id-method 'ts)
   (add-hook 'org-mode-hook (lambda ()
                              ;; (setq fill-column 120)
-                             (display-line-numbers-mode 0)))
-  )
+                             (display-line-numbers-mode 0))))
 
 ;; org-roam
 (use-package! org-roam
@@ -404,16 +400,14 @@
         (lambda ()
           (not (member "ATTACH" (org-get-tags)))))
   ;;org roam ugly hack for yas error
-  (set-file-template! "/roam/.+\\.org$" 'org-mode :ignore t)
-  )
+  (set-file-template! "/roam/.+\\.org$" 'org-mode :ignore t))
 
 (map!
  :map org-mode-map
  "C-M-i"  #'completion-at-point
  :map doom-leader-notes-map
  (:prefix ("r" . "roam")
-  :desc "go back" "b" #'org-mark-ring-goto)
- )
+  :desc "go back" "b" #'org-mark-ring-goto))
 
 ;; org roam dynamic agenda file
 ;; stolen from https://emacs-china.org/t/org-roam/15659
@@ -501,8 +495,7 @@
                      :latex-compiler
                      ("pdflatex -interaction nonstopmode -output-directory %o %f")
                      :image-converter
-                     ("convert -density %D -trim -antialias %f -quality 100 %O")))
-      )
+                     ("convert -density %D -trim -antialias %f -quality 100 %O"))))
 
 
 ;; org-latex-compilers = ("pdflatex" "xelatex" "lualatex"), which are the possible values for %latex
@@ -613,8 +606,7 @@
   (setq lsp-modeline-diagnostics-enable nil)  ;; as above
   (setq lsp-eldoc-enable-hover t)          ;; disable eldoc hover
   (setq lsp-log-io nil)                       ;; debug only,
-  (add-hook 'doom-first-input-hook #'lsp-deferred)
-  )
+  (add-hook 'doom-first-input-hook #'lsp-deferred))
 
 ;;disable lsp-format-buffer in cc-mode, it doesn't running well according to .clang-format
 ;;usage: https://docs.doomemacs.org/latest/modules/editor/format/#:~:text=To%20disable%20this%20behavior%20in%20one%20mode%3A%20(setq%2Dhook!%20%27python%2Dmode%2Dhook%20%2Bformat%2Dwith%2Dlsp%20nil)
@@ -624,8 +616,7 @@
 ;;set company tab complete motion
 (after! company
   (map! :map company-active-map "<tab>"  #'company-complete-selection)
-  (map! :map company-active-map "TAB"  #'company-complete-selection)
-  )
+  (map! :map company-active-map "TAB"  #'company-complete-selection))
 (map! :map lsp-mode-map  "<tab>"  #'company-indent-or-complete-common)
 
 ;;;;; csharp
@@ -646,8 +637,7 @@
 
 (use-package! wakatime-mode
   :config
-  (global-wakatime-mode)
-  )
+  (global-wakatime-mode))
 
 (use-package! systemd
   :defer t)
@@ -655,8 +645,7 @@
 (use-package! treemacs
   ;; :defer t
   :config
-  (setq treemacs-width 25)
-  )
+  (setq treemacs-width 25))
 
 ;;;;; org-capture-templates and again
 (use-package! doct
@@ -724,8 +713,7 @@
                           ("Idea" :keys "I"
                            :icon ("bubble_chart" :set "material" :color "silver")
                            :desc ""
-                           :i-type "idea")))
-              )))
+                           :i-type "idea"))))))
 
 ;; consult-org-roam
 (use-package! consult-org-roam
@@ -754,8 +742,7 @@
   :after lsp-mode
   :config
   (setq lsp-pyright-use-library-code-for-types t)
-  (setq lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs"))
-  )
+  (setq lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs")))
 
 ;;;;; org-protocol
 (use-package! org-protocol
@@ -802,8 +789,7 @@
               ("C-TAB" . 'copilot-accept-completion-by-word)
               ("C-<tab>" . 'copilot-accept-completion-by-word)))
 (add-to-list 'copilot-major-mode-alist '("python" . "python")
-             (add-to-list 'copilot-major-mode-alist '("c" . "c"))
-             )
+             (add-to-list 'copilot-major-mode-alist '("c" . "c")))
 
 ;; (with-eval-after-load 'org
 ;;   (setq org-M-RET-may-split-line '((default . t))))
@@ -834,8 +820,7 @@
                 (when (and (org-at-heading-p) (not (eobp)))
                   (backward-char 1))
                 (point)))))))
-      (apply fn args)))
-  )
+      (apply fn args))))
 
 (after! company
   (setq company-idle-delay 0.01))
@@ -903,6 +888,7 @@
   :hook
   (find-file . cns-auto-enable))
 
+;;;;; nano-vertico
 ;; (use-package! nano-vertico
 ;;   :init
 ;;   (nano-vertico-mode 1))
@@ -915,3 +901,21 @@
 	      ("C-c C-p" . (lambda () (interactive) (outline-back-to-heading))))
   :config
   :hook ((prog-mode text-mode) . outli-mode)) ; or whichever modes you prefer
+
+
+(defun +setup-enable-imenu-support ()
+  (setf (map-elt imenu-generic-expression "Setup")
+        (list (rx line-start (0+ blank)
+                  "(setup" (1+ blank)
+                  (or (group-n 1 (1+ (or (syntax word)
+                                         (syntax symbol))))
+                      ;; Add here items that can define a feature:
+                      (seq "(:" (or "straight" "require" "package")
+                           (1+ blank)
+                           (group-n 1 (1+ (or (syntax word)
+                                              (syntax symbol)))))))
+              1)))
+
+(setup imenu
+  (:with-hook emacs-lisp-mode-hook
+    (:hook +setup-enable-imenu-support)))
