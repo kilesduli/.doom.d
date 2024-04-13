@@ -2,7 +2,6 @@
 ;;; $DOOMDIR/packages.el
 (package! meow)
 (package! disable-mouse)
-(package! rime)
 (package! org-fragtog)
 ;; in ~/.doom.d/packages.el
 ;;(package! doom-snippets :ignore t)
