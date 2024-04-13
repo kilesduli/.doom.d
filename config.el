@@ -50,19 +50,12 @@
 ;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
 ;;
 ;; Set fonts according to different window systems
+;; No more wayland
 (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
       doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
       doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
       doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
       doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
-
-;; avoid font change regenerate unicode file
-(when (string= "wayland" (getenv "XDG_SESSION_TYPE"))
-  (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
-        doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
-        doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
-        doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 15)
-        doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 15)))
 
 ;;;;; theme setting
 ;; There are two ways to load a theme. Both assume the theme is installed and
