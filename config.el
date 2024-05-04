@@ -69,8 +69,7 @@
 ;;;;; specify org directory
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/documents/org"
-      org-roam-directory "~/documents/org-roam")
+(setq org-directory "~/documents/org")
 
 ;;;;; display-line-number setting
 ;; This determines the style of line numbers in effect. If set to `nil', line
@@ -131,7 +130,7 @@
       :desc "help"                         "h"   help-map
       :after projectile :desc "project" "p" projectile-command-map
       :after projectile :desc "project-search(fd)" "p s" #'+default/search-project
-      :after consult-org-roam :desc "consult-roam-search" "s r" #'consult-org-roam-search
+      ;; :after consult-org-roam :desc "consult-roam-search" "s r" #'consult-org-roam-search
       :after treemacs :desc "treemacs-select-window" "w t" #'treemacs-select-window)
 
 (map! :leader
@@ -325,20 +324,22 @@
 ;;;;; rime
 ;; https://emacs.stackexchange.com/questions/65080/stop-major-modes-from-overwriting-my-keybinding
 ;; https://emacs.stackexchange.com/questions/27926/avoiding-overwriting-global-key-bindings
-;; emacs do not provide us a way to make keybinding live all over the time, but use-package does. and don't need define a new minor mode.
-;; found in https://emacs.stackexchange.com/questions/352/how-to-override-major-mode-bindings
+;; emacs do not provide us a way to make keybinding live all over the time, but
+;; use-package does. and don't need define a new minor mode. found in
+;; https://emacs.stackexchange.com/questions/352/how-to-override-major-mode-bindings
 ;; just (bind-key* ...)
 
 ;; rime setting
 ;; emacs-rime doesn't support lua will cause some bug, like rime-scheme-select couldn't persistence store
 (use-package! rime
   :bind* ("C-," . toggle-input-method)
+  :init (require 'rime-autoloads)
   :custom
   (default-input-method "rime")
   (rime-user-data-dir "~/.local/share/emacs-rime")
   (rime-share-data-dir "~/.local/share/rime-data")
   (rime-show-candidate 'posframe)
-  ;; (rime-inline-predicates '(rime-predicate-space-after-cc-p))
+  (rime-inline-predicates '(rime-predicate-space-after-cc-p))
   (rime-disable-predicates
    '(meow-normal-mode-p
      meow-motion-mode-p
@@ -385,54 +386,54 @@
                              (display-line-numbers-mode 0))))
 
 ;; org-roam
-(use-package! org-roam
-  ;; :defer t
-  :config
-  (setq org-roam-complete-everywhere t)
-  (setq org-roam-db-node-include-function
-        (lambda ()
-          (not (member "ATTACH" (org-get-tags)))))
-  ;;org roam ugly hack for yas error
-  (set-file-template! "/roam/.+\\.org$" 'org-mode :ignore t))
+;; (use-package! org-roam
+;;   ;; :defer t
+;;   :config
+;;   (setq org-roam-complete-everywhere t)
+;;   (setq org-roam-db-node-include-function
+;;         (lambda ()
+;;           (not (member "ATTACH" (org-get-tags)))))
+;;   ;;org roam ugly hack for yas error
+;;   (set-file-template! "/roam/.+\\.org$" 'org-mode :ignore t))
 
-(map!
- :map org-mode-map
- "C-M-i"  #'completion-at-point
- :map doom-leader-notes-map
- (:prefix ("r" . "roam")
-  :desc "go back" "b" #'org-mark-ring-goto))
+;; (map!
+;;  :map org-mode-map
+;;  "C-M-i"  #'completion-at-point
+;;  :map doom-leader-notes-map
+;;  (:prefix ("r" . "roam")
+;;   :desc "go back" "b" #'org-mark-ring-goto))
 
 ;; org roam dynamic agenda file
 ;; stolen from https://emacs-china.org/t/org-roam/15659
-(with-eval-after-load 'org-roam
-  (defvar dynamic-agenda-files nil
-    "dynamic generate agenda files list when changing org state")
+;; (with-eval-after-load 'org-roam
+;;   (defvar dynamic-agenda-files nil
+;;     "dynamic generate agenda files list when changing org state")
 
-  (defun update-dynamic-agenda-hook ()
-    (let ((done (or (not org-state) ;; nil when no TODO list
-                    (member org-state org-done-keywords)))
-          (file (buffer-file-name))
-          (agenda (funcall (ad-get-orig-definition 'org-agenda-files)) ))
-      (unless (member file agenda)
-        (if done
-            (save-excursion
-              (goto-char (point-min))
-              ;; Delete file from dynamic files when all TODO entry changed to DONE
-              (unless (search-forward-regexp org-not-done-heading-regexp nil t)
-                (customize-save-variable
-                 'dynamic-agenda-files
-                 (cl-delete-if (lambda (k) (string= k file))
-                               dynamic-agenda-files))))
-          ;; Add this file to dynamic agenda files
-          (unless (member file dynamic-agenda-files)
-            (customize-save-variable 'dynamic-agenda-files
-                                     (add-to-list 'dynamic-agenda-files file)))))))
+;;   (defun update-dynamic-agenda-hook ()
+;;     (let ((done (or (not org-state) ;; nil when no TODO list
+;;                     (member org-state org-done-keywords)))
+;;           (file (buffer-file-name))
+;;           (agenda (funcall (ad-get-orig-definition 'org-agenda-files)) ))
+;;       (unless (member file agenda)
+;;         (if done
+;;             (save-excursion
+;;               (goto-char (point-min))
+;;               ;; Delete file from dynamic files when all TODO entry changed to DONE
+;;               (unless (search-forward-regexp org-not-done-heading-regexp nil t)
+;;                 (customize-save-variable
+;;                  'dynamic-agenda-files
+;;                  (cl-delete-if (lambda (k) (string= k file))
+;;                                dynamic-agenda-files))))
+;;           ;; Add this file to dynamic agenda files
+;;           (unless (member file dynamic-agenda-files)
+;;             (customize-save-variable 'dynamic-agenda-files
+;;                                      (add-to-list 'dynamic-agenda-files file)))))))
 
-  (defun dynamic-agenda-files-advice (orig-val)
-    (cl-union orig-val dynamic-agenda-files :test #'equal))
+;;   (defun dynamic-agenda-files-advice (orig-val)
+;;     (cl-union orig-val dynamic-agenda-files :test #'equal))
 
-  (advice-add 'org-agenda-files :filter-return #'dynamic-agenda-files-advice)
-  (add-to-list 'org-after-todo-state-change-hook 'update-dynamic-agenda-hook t))
+;;   (advice-add 'org-agenda-files :filter-return #'dynamic-agenda-files-advice)
+;;   (add-to-list 'org-after-todo-state-change-hook 'update-dynamic-agenda-hook t))
 
 (use-package! websocket
   :defer t)
@@ -697,10 +698,10 @@
                            :i-type "idea"))))))
 
 ;; consult-org-roam
-(use-package! consult-org-roam
-  :after org-roam
-  :config
-  (consult-org-roam-mode t))
+;; (use-package! consult-org-roam
+;;   :after org-roam
+;;   :config
+;;   (consult-org-roam-mode t))
 
 ;;;;; graphviz-dot-mode
 (use-package! graphviz-dot-mode
@@ -727,16 +728,35 @@
 
 ;;;;; org-protocol
 (use-package! org-protocol
-  ;; :defer t
+  :init (require 'org-protocol)
   :config
   (add-to-list 'org-protocol-protocol-alist
                '("org-find-file" :protocol "find-file" :function org-protocol-find-file :kill-client nil))
+
+  (defun org-protocol-find-file-fix-wsl-path (path)
+    "If inside WSL, change Windows-style paths to WSL-style paths."
+    (if (not (string-match-p "-[Mm]icrosoft" operating-system-release))
+        path
+      (save-match-data
+        (if (/= 0 (string-match "^\\([a-zA-Z]\\):\\(/.*\\)" path))
+            path
+          (let ((volume (match-string-no-properties 1 path))
+                (abspath (match-string-no-properties 2 path)))
+            (format "/mnt/%s%s" (downcase volume) abspath))))))
   (defun org-protocol-find-file (fname)
     "Process org-protocol://find-file?path= style URL."
-    (let ((f (plist-get (org-protocol-parse-parameters fname nil '(:path)) :path)))
-      (find-file f)
+    (let* ((parsed (org-protocol-parse-parameters fname nil '(:path :anchor)))
+           (f (plist-get parsed :path))
+           (anchor (plist-get parsed :anchor))
+           (anchor-re (and anchor (concat "\\(-\\|\\*\\) " (regexp-quote anchor)))))
+      (find-file (org-protocol-find-file-fix-wsl-path f))
       (raise-frame)
-      (select-frame-set-input-focus (selected-frame)))))
+      (select-frame-set-input-focus (selected-frame))
+      (unhighlight-regexp t)
+      (highlight-regexp anchor-re)
+      (when anchor
+        (or (re-search-forward anchor-re nil t 1)
+            (re-search-backward anchor-re nil t 1))))))
 
 ;;;;; something
 (use-package! graphviz-dot-mode
@@ -861,13 +881,13 @@
 (run-with-idle-timer 30 t #'recentf-save-list)
 
 ;;;;; cns
-(use-package! cns
-  :config
-  (let ((repodir (concat doom-local-dir "straight/repos/emacs-chinese-word-segmentation/")))
-    (setq cns-prog (concat repodir "cnws")
-          cns-dict-directory (concat repodir "cppjieba/dict")))
-  :hook
-  (find-file . cns-auto-enable))
+;; (use-package! cns
+;;   :config
+;;   (let ((repodir (concat doom-local-dir "straight/repos/emacs-chinese-word-segmentation/")))
+;;     (setq cns-prog (concat repodir "cnws")
+;;           cns-dict-directory (concat repodir "cppjieba/dict")))
+;;   :hook
+;;   (find-file . cns-auto-enable))
 
 ;;;;; nano-vertico
 ;; (use-package! nano-vertico
@@ -900,3 +920,9 @@
 (setup imenu
   (:with-hook emacs-lisp-mode-hook
     (:hook +setup-enable-imenu-support)))
+
+(use-package! denote
+  :config
+  (setq denote-directory (concat (getenv "HOME") "/documents/notes/")))
+
+(set-formatter! 'nixpkgs-fmt "nixpkgs-fmt" :modes (nix-mode))

@@ -12,15 +12,13 @@
   (:host github :repo "ingtshan/separate-inline.el" :files ("*.el")))
 (package! rotate)
 (package! ox-gfm)
-(package! org-roam-ui)
 (package! color-theme-sanityinc-tomorrow)
-;;(unpin! org-roam)
 (unpin! org)
 (package! doct)
 (package! wakatime-mode :recipe
   (:host github :repo "Borwe/wakatime-mode"))
 (package! ob-csharp :recipe (:host github :repo "samwdp/ob-csharp"))
-(package! consult-org-roam)
+;; (package! consult-org-roam)
 (package! graphviz-dot-mode)
 (package! all-the-icons :disable t)
 (package! clang-format+
@@ -39,15 +37,15 @@
 (package! jieba
   :recipe (:host github :repo "cireu/jieba.el"))
 (package! pylance-nasy :recipe (:host github :repo "nasyxx/emacs-site-lisp" :files ("lsp-pylance/lsp-pylance.el")))
-(package! cns
-  :recipe (:host github :repo "kanglmf/emacs-chinese-word-segmentation"
-           :pre-build ("make")
-           ))
+;;(package! cns
+;;  :recipe (:host github :repo "kanglmf/emacs-chinese-word-segmentation"
+;;           :pre-build ("make")
+;;           ))
 (package! nano-vertico
   :recipe (:host github :repo "rougier/nano-vertico"))
 (package! outli
   :recipe (:host github :repo "jdtsmith/outli"))
-
+(package! denote)
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)
 
