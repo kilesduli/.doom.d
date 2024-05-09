@@ -8,19 +8,14 @@
 (package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion"))
 (package! info-colors)
 (package! systemd)
-(package! separate-inline :recipe
-  (:host github :repo "ingtshan/separate-inline.el" :files ("*.el")))
 (package! rotate)
 (package! ox-gfm)
-(package! color-theme-sanityinc-tomorrow)
 (unpin! org)
 (package! doct)
 (package! wakatime-mode :recipe
   (:host github :repo "Borwe/wakatime-mode"))
 (package! ob-csharp :recipe (:host github :repo "samwdp/ob-csharp"))
 ;; (package! consult-org-roam)
-(package! graphviz-dot-mode)
-(package! all-the-icons :disable t)
 (package! clang-format+
   :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
 (package! benchmark-init)
