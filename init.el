@@ -45,12 +45,12 @@
        ophints             ; highlight the region an operation acts on
        (popup +defaults)   ; tame sudden yet inevitable temporary windows
        ;;tabs              ; a tab bar for Emacs
-       ;;treemacs            ; a project drawer, like neotree but cooler
+       ;;treemacs          ; a project drawer, like neotree but cooler
        unicode             ; extended unicode support for various languages
        (vc-gutter +pretty) ; vcs diff in the fringe
        vi-tilde-fringe     ; fringe tildes to mark beyond EOB
        ;;window-select     ; visually switch windows
-       workspaces          ; tab emulation, persistence & separate workspaces
+       ;;workspaces        ; tab emulation, persistence & separate workspaces
        ;;zen               ; distraction-free coding or writing
 
        :editor
@@ -68,8 +68,8 @@
        word-wrap           ; soft wrapping with language-aware indent
 
        :emacs
-       ;; (dired
-       ;;  +icons)         ; making dired pretty [functional]
+       (dired
+        +icons)            ; making dired pretty [functional]
        electric            ; smarter, keyword-based electric-indent
        (ibuffer +icons)    ; interactive buffer management
        undo                ; persistent, smarter undo for your inevitable mistakes
@@ -148,10 +148,10 @@
        ;;hy                ; readability of scheme w/ speed of python
        ;;idris             ; a language you can depend on
        json                ; At least it ain't XML
-       ;;(java +meghanada) ; the poster child for carpal tunnel syndrome
+       (java +lsp)         ; the poster child for carpal tunnel syndrome
        (javascript +lsp)   ; all(hope(abandon(ye(who(enter(here))))))
        ;;julia             ; a better, faster MATLAB
-       ;;kotlin            ; a better, slicker Java(Script)
+       kotlin            ; a better, slicker Java(Script)
        (latex
         +latexmk
         +cdlatex
@@ -165,9 +165,7 @@
        ;;ocaml             ; an objective camel
        (org +pandoc
             +present
-            +hugo
-            +dragndrop
-            +brain)        ; organize your plain life in plain text
+            +dragndrop)    ; organize your plain life in plain text
        ;;php               ; perl's insecure younger brother
        plantuml            ; diagrams for confusing people more
        ;;purescript        ; javascript, but functional
@@ -209,7 +207,4 @@
 
        :config
        ;;literate
-       (default +bindings +smartparens)
-
-       :private
-       (dired +icons +dirvish))
+       (default +bindings +smartparens))

@@ -1,8 +1,4 @@
 ;;; $DOOMDIR/config.el --- duli's doom emacs config -*- lexical-binding: t; -*-
-
-;; Place your private configuration here! Remember, you do not need to run 'doom
-;; sync' after modifying this file!
-
 ;; Here are some additional functions/macros that could help you configure Doom:
 ;;
 ;; - `load!' for loading external *.el files relative to this one
@@ -12,125 +8,76 @@
 ;;   this file. Emacs searches the `load-path' when you load packages with
 ;;   `require' or `use-package'.
 ;; - `map!' for binding new keys
+
+;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
+;; are the three important ones:
 ;;
-;; To get information about any of these functions/macros, move the cursor over
-;; the highlighted symbol at press 'K' (non-evil users mustpress 'C-c c k').
-;; This will open documentation for it, including demos of how they are used.
+;; - `doom-font' -- the primary font to use
+;; - `doom-variable-pitch-font' -- a non-monospace font (where applicable)
+;; - `doom-big-font' -- used for `doom-big-font-mode'; use this for
+;;   presentations or streaming.
+;; - `doom-symbol-font' -- for symbols
+;; - `doom-serif-font' -- for the `fixed-pitch-serif' face
 ;;
-;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
-;; they are implemented.
 
 ;;; Code:
-;;;; Basic setup(benchmark user-identify font-setting theme-setting)
+;;;; Basic setup
 ;;;;; benchmark-init
 (use-package! benchmark-init
-  :ensure t
   :config
   ;; To disable collection of benchmark data after init is done.
   (add-hook 'doom-first-input-hook 'benchmark-init/deactivate))
 
-;;;;; user identify
-;;(Some functionality uses this to identify you,
-;;     e.g. GPG configuration, email clients, file templates and snippets)
+;;;;; settings
 (setq user-full-name "duli kiles"
       user-mail-address "duli4868@gmail.com")
 
-;;;;; font setting
-;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
-;; are the three important ones:
-;;
-;; + `doom-font'
-;; + `doom-variable-pitch-font'
-;; + `doom-big-font' -- used for `doom-big-font-mode'; use this for
-;;   presentations or streaming.
-;;
-;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
-;; font string. You generally only need these two:
-;; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
-;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
-;;
-;; Set fonts according to different window systems
-;; No more wayland
 (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
       doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
-      doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
       doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
+      doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
       doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
 
-;;;;; theme setting
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
 ;; doom-theme
 (setq doom-theme 'modus-operandi-tritanopia)
 
-
-;;;; Simple configuration related to emacs
-;;;;; specify org directory
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/documents/org")
+(setq org-directory "~/documents/notes/")
 
-;;;;; display-line-number setting
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `'relative'.
 (setq display-line-numbers-type 'relative)
 
-
-;;;;; a bunch of setting
-;;TODO
 (setq auth-sources '("~/.authinfo.gpg")
       auth-source-cache-expiry nil
-      scroll-preserve-screen-position 'always ; Don't have `point' jump around
-      scroll-margin 2                    ; It's nice to maintain a little margin
+      scroll-preserve-screen-position 'always
+      scroll-margin 2
       word-wrap-by-category t
-      delete-by-moving-to-trash t)       ; Different languages live together happily
+      delete-by-moving-to-trash t)
 
-;;;;; background transparent
-;; (add-to-list 'default-frame-alist '(alpha-background . 95))
+(setq truncate-lines nil)
+(setq cursor-in-non-selected-windows t)
 
 
-;;;;; let frame maximized
 ;; (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;;;;; bind redo key to C-r
-(bind-key* "C-r" 'undo-fu-only-redo)
-
-;;;;; which-key-idle-delay
 (setq which-key-idle-delay 0.01)
 (setq which-key-idle-secondary-delay 0.01)
 
-;;;;; enable pixel-scroll-precision-mode
 (pixel-scroll-precision-mode 1)
 
-;;;;; mouse wheel zoom
 (global-set-key  [C-mouse-wheel-up-event]  'text-scale-increase)
 (global-set-key  [C-mouse-wheel-down-event] 'text-scale-decrease)
 
-;;;;; Map M-n to switch workspace
-(map!
- (:when (modulep! :ui workspaces)
-   ;; :n "C-t"   #'+workspace/new
-   ;; :n "C-S-t" #'+workspace/display
-   :g "M-1"   #'+workspace/switch-to-0
-   :g "M-2"   #'+workspace/switch-to-1
-   :g "M-3"   #'+workspace/switch-to-2
-   :g "M-4"   #'+workspace/switch-to-3
-   :g "M-5"   #'+workspace/switch-to-4
-   :g "M-6"   #'+workspace/switch-to-5
-   :g "M-7"   #'+workspace/switch-to-6
-   :g "M-8"   #'+workspace/switch-to-7
-   :g "M-9"   #'+workspace/switch-to-8
-   :g "M-0"   #'+workspace/switch-to-final))
-
-;;;;; map some keys..
-;;TODO
 (map! :leader
       :desc "help"                         "h"   help-map
       :after projectile :desc "project" "p" projectile-command-map
       :after projectile :desc "project-search(fd)" "p s" #'+default/search-project
-      ;; :after consult-org-roam :desc "consult-roam-search" "s r" #'consult-org-roam-search
       :after treemacs :desc "treemacs-select-window" "w t" #'treemacs-select-window)
 
 (map! :leader
@@ -164,8 +111,7 @@
        :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers))
 
 (map! :map doom-leader-file-map
-      "o" #'find-file-other-window
-      :after consult :desc "Consult-dir" "b" #'consult-dir)
+      "o" #'find-file-other-window)
 
 ;;;; package setup
 ;;;;; Meow
@@ -176,20 +122,10 @@
       doom-leader-key doom-leader-map)
 (map! :map meow-beacon-state-keymap
       doom-leader-key nil)
-;; (add-to-list 'meow-keymap-alist (cons 'leader doom-leader-map))
-;; (meow-normal-define-key (cons "SPC" doom-leader-map))
-;; (meow-motion-overwrite-define-key (cons "SPC" doom-leader-map)) diff???
-
-
-;; wanna figure out binding (set-useful-binding)
-(global-set-key (kbd "M-j") 'kmacro-start-macro-or-insert-counter)
-(global-set-key (kbd "M-k") 'kmacro-end-or-call-macro)
 
 (use-package! meow
-  :demand t
-  :init
-  (meow-global-mode 1)
   :config
+  ;; (meow-global-mode 1)
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
   ;; meow-setup 用于自定义按键绑定，可以直接使用下文中的示例
   (meow-motion-overwrite-define-key
@@ -199,7 +135,7 @@
   (meow-leader-define-key
    ;; SPC j/k will run the original command in MOTION state.
    '("j" . "H-j")
-   '("k" . "H-k");;因为j，k覆盖了按键，使原生按键可用得加SPC
+   '("k" . "H-k") ;;因为j，k覆盖了按键，使原生按键可用得加SPC
    ;; Use SPC (0-9) for digit arguments.
    '("1" . meow-digit-argument)
    '("2" . meow-digit-argument)
@@ -290,305 +226,72 @@
   ;; 如果你需要自动的 mode-line 设置（如果需要自定义见下文对 `meow-indicator' 说明）
   (meow-setup-indicator))
 
-;; ;; Use jk to escape from insert state to normal state
-;; (defvar meow-two-char-escape-sequence "jk")
-;; (defvar meow-two-char-escape-delay 0.5)
-;; (defun meow--two-char-exit-insert-state (s)
-;;   "Exit meow insert state when pressing consecutive two keys.
-
-;; S is string of the two-key sequence."
-;;   (when (meow-insert-mode-p)
-;;     (let ((modified (buffer-modified-p))
-;;           (undo-list buffer-undo-list))
-;;       (insert (elt s 0))
-;;       (let* ((second-char (elt s 1))
-;;              (event
-;;               (if defining-kbd-macro
-;;                   (read-event nil nil)
-;;                 (read-event nil nil meow-two-char-escape-delay))))
-;;         (when event
-;;           (if (and (characterp event) (= event second-char))
-;;               (progn
-;;                 (backward-delete-char 1)
-;;                 (set-buffer-modified-p modified)
-;;                 (setq buffer-undo-list undo-list)
-;;                 (meow-insert-exit))
-;;             (push event unread-command-events)))))))
-;; (defun meow-two-char-exit-insert-state ()
-;;   "Exit meow insert state when pressing consecutive two keys."
-;;   (interactive)
-;;   (meow--two-char-exit-insert-state meow-two-char-escape-sequence))
-;; (define-key meow-insert-state-keymap (substring meow-two-char-escape-sequence 0 1)
-;;             #'meow-two-char-exit-insert-state)
-
 ;;;;; rime
-;; https://emacs.stackexchange.com/questions/65080/stop-major-modes-from-overwriting-my-keybinding
-;; https://emacs.stackexchange.com/questions/27926/avoiding-overwriting-global-key-bindings
 ;; emacs do not provide us a way to make keybinding live all over the time, but
 ;; use-package does. and don't need define a new minor mode. found in
 ;; https://emacs.stackexchange.com/questions/352/how-to-override-major-mode-bindings
-;; just (bind-key* ...)
 
 ;; rime setting
-;; emacs-rime doesn't support lua will cause some bug, like rime-scheme-select couldn't persistence store
 (use-package! rime
-  :bind* ("C-," . toggle-input-method)
-  :init (require 'rime-autoloads)
   :custom
   (default-input-method "rime")
   (rime-user-data-dir "~/.local/share/emacs-rime")
   (rime-share-data-dir "~/.local/share/rime-data")
   (rime-show-candidate 'posframe)
-  (rime-inline-predicates '(rime-predicate-space-after-cc-p))
+  ;; (rime-inline-predicates '(rime-predicate-space-after-cc-p))
   (rime-disable-predicates
    '(meow-normal-mode-p
      meow-motion-mode-p
      meow-keypad-mode-p
      meow-beacon-mode-p)))
 
-;; ;; unbind necessary key
-;; ;; BUG：listp flyspell-mode
-;; (use-package! flyspell
-;;   :hook ((flyspell-mode . #'(lambda ()
-;;                               (dolist (key '("C-;" "C-," "C-."))
-;;                                 (unbind-key key flyspell-mode-map))))))
-
 ;;;;; Org-mode
 ;; disable company chinese extend.
-(with-eval-after-load 'org
+(after! org
   (setq company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
   (push 'company-dabbrev company-backends)
   (set-company-backend! 'org-mode
     'company-dabbrev 'company-yasnippet))
-;; ob-csharp
-;; (load! "ob-csharp")             ; It's org-babel functions for csharp evaluation.
 
-
-;; export to gfm
 (use-package! ox-gfm
   :after ox)
 
-;; (use-package! separate-inline
-;;   :hook ((org-mode . separate-inline-mode)
-;;          (org-mode . (lambda ()
-;;                        (add-hook 'separate-inline-mode-hook
-;;                                  'separate-inline-use-default-rules-for-org-local
-;;                                  nil 'make-it-local))))
-;;   )
+(after! org
+  (setq! org-id-method 'ts)
+  (setq! org-cycle-separator-lines 1)
+  (setq! org-link-descriptive nil)
+  (setq! org-cycle-separator-lines 1))
 
-(use-package! org
-  ;; :defer t
-  :config
-  ;; change uuid to timestamp
-  (setq org-id-method 'ts)
-  (add-hook 'org-mode-hook (lambda ()
-                             ;; (setq fill-column 120)
-                             (display-line-numbers-mode 0))))
-
-;; org-roam
-;; (use-package! org-roam
-;;   ;; :defer t
-;;   :config
-;;   (setq org-roam-complete-everywhere t)
-;;   (setq org-roam-db-node-include-function
-;;         (lambda ()
-;;           (not (member "ATTACH" (org-get-tags)))))
-;;   ;;org roam ugly hack for yas error
-;;   (set-file-template! "/roam/.+\\.org$" 'org-mode :ignore t))
-
-;; (map!
-;;  :map org-mode-map
-;;  "C-M-i"  #'completion-at-point
-;;  :map doom-leader-notes-map
-;;  (:prefix ("r" . "roam")
-;;   :desc "go back" "b" #'org-mark-ring-goto))
-
-;; org roam dynamic agenda file
-;; stolen from https://emacs-china.org/t/org-roam/15659
-;; (with-eval-after-load 'org-roam
-;;   (defvar dynamic-agenda-files nil
-;;     "dynamic generate agenda files list when changing org state")
-
-;;   (defun update-dynamic-agenda-hook ()
-;;     (let ((done (or (not org-state) ;; nil when no TODO list
-;;                     (member org-state org-done-keywords)))
-;;           (file (buffer-file-name))
-;;           (agenda (funcall (ad-get-orig-definition 'org-agenda-files)) ))
-;;       (unless (member file agenda)
-;;         (if done
-;;             (save-excursion
-;;               (goto-char (point-min))
-;;               ;; Delete file from dynamic files when all TODO entry changed to DONE
-;;               (unless (search-forward-regexp org-not-done-heading-regexp nil t)
-;;                 (customize-save-variable
-;;                  'dynamic-agenda-files
-;;                  (cl-delete-if (lambda (k) (string= k file))
-;;                                dynamic-agenda-files))))
-;;           ;; Add this file to dynamic agenda files
-;;           (unless (member file dynamic-agenda-files)
-;;             (customize-save-variable 'dynamic-agenda-files
-;;                                      (add-to-list 'dynamic-agenda-files file)))))))
-
-;;   (defun dynamic-agenda-files-advice (orig-val)
-;;     (cl-union orig-val dynamic-agenda-files :test #'equal))
-
-;;   (advice-add 'org-agenda-files :filter-return #'dynamic-agenda-files-advice)
-;;   (add-to-list 'org-after-todo-state-change-hook 'update-dynamic-agenda-hook t))
-
-(use-package! websocket
-  :defer t)
+(setq-hook! 'org-mode-hook
+  display-line-numbers-mode 0)
 
 ;;  org-latex-preview
 (add-hook 'org-mode-hook 'org-fragtog-mode)
 ;;set latex preview default process
 (setq org-preview-latex-default-process 'dvisvgm)
-(setq org-preview-latex-process-alist
-      '(
-        (dvipng :programs
-                ("latex" "dvipng")
-                :description "dvi > png"
-                :message "you need to install the programs: latex and dvipng."
-                :image-input-type "dvi"
-                :image-output-type "png"
-                :image-size-adjust
-                (0.7 . 0.7)
-                :latex-compiler
-                ("latex -interaction nonstopmode -output-directory %o %f")
-                :image-converter
-                ("dvipng -D %D -T tight -o %O %f")
-                :transparent-image-converter
-                ("dvipng -D %D -T tight -bg Transparent -o %O %f"))
-        (dvisvgm :programs
-                 ("latex" "dvisvgm")
-                 :description "dvi > svg"
-                 :message "you need to install the programs: latex and dvisvgm."
-                 :image-input-type "dvi"
-                 :image-output-type "svg"
-                 :image-size-adjust
-                 (1.0 . 1.0)
-                 :latex-compiler
-                 ("latex -interaction nonstopmode -output-format=dvi -output-directory %o %f")
-                 :image-converter
-                 ("dvisvgm %f -n -b min -c %S -o %O"))
-        (imagemagick :programs
-                     ("latex" "convert")
-                     :description "pdf > png" :message "you need to install the programs: latex and imagemagick." :image-input-type "pdf" :image-output-type "png" :image-size-adjust
-                     (1.0 . 1.0)
-                     :latex-compiler
-                     ("pdflatex -interaction nonstopmode -output-directory %o %f")
-                     :image-converter
-                     ("convert -density %D -trim -antialias %f -quality 100 %O"))))
-
 
 ;; org-latex-compilers = ("pdflatex" "xelatex" "lualatex"), which are the possible values for %latex
-(setq org-latex-pdf-process '("latexmk -f -pdf -%latex -shell-escape -interaction=nonstopmode -output-directory=%o %f"))
 (setq org-latex-compiler "xelatex")
 
-
-;; org-mode-pretty-src
-(with-eval-after-load 'org
-  (defvar-local rasmus/org-at-src-begin -1
-    "Variable that holds whether last position was a ")
-
-  (defvar rasmus/ob-header-symbol ?☰
-    "Symbol used for babel headers")
-
-  ;; (defun rasmus/org-prettify-src--update ()
-  ;;   (let ((case-fold-search t)
-  ;;         (re "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*")
-  ;;         found)
-  ;;     (save-excursion
-  ;;       (goto-char (point-min))
-  ;;       (while (re-search-forward re nil t)
-  ;;         (goto-char (match-end 0))
-  ;;         (let ((args (org-trim
-  ;;                      (buffer-substring-no-properties (point)
-  ;;                                                      (line-end-position)))))
-  ;;           (when (org-string-nw-p args)
-  ;;             (let ((new-cell (cons args rasmus/ob-header-symbol)))
-  ;;               (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
-  ;;               (cl-pushnew new-cell found :test #'equal)))))
-  ;;       (setq prettify-symbols-alist
-  ;;             (cl-set-difference prettify-symbols-alist
-  ;;                                (cl-set-difference
-  ;;                                 (cl-remove-if-not
-  ;;                                  (lambda (elm)
-  ;;                                    (eq (cdr elm) rasmus/ob-header-symbol))
-  ;;                                  prettify-symbols-alist)
-  ;;                                 found :test #'equal)))
-  ;;       ;; Clean up old font-lock-keywords.
-  ;;       (font-lock-remove-keywords nil prettify-symbols--keywords)
-  ;;       (setq prettify-symbols--keywords (prettify-symbols--make-keywords))
-  ;;       (font-lock-add-keywords nil prettify-symbols--keywords)
-  ;;       (while (re-search-forward re nil t)
-  ;;         (font-lock-flush (line-beginning-position) (line-end-position))))))
-
-  (defun rasmus/org-prettify-src ()
-    "Hide src options via `prettify-symbols-mode'.
-       `prettify-symbols-mode' is used because it has uncollpasing. It's
-       may not be efficient."
-    (let* ((case-fold-search t)
-           (at-src-block (save-excursion
-                           (beginning-of-line)
-                           (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
-      ;; Test if we moved out of a block.
-      (when (or (and rasmus/org-at-src-begin
-                     (not at-src-block))
-                ;; File was just opened.
-                (eq rasmus/org-at-src-begin -1))
-        ;; (rasmus/org-prettify-src--update)
-        )
-      ;; Remove composition if at line; doesn't work properly.
-      ;; (when at-src-block
-      ;;   (with-silent-modifications
-      ;;     (remove-text-properties (match-end 0)
-      ;;                             (1+ (line-end-position))
-      ;;                             '(composition))))
-      (setq rasmus/org-at-src-begin at-src-block)))
-
-  ;; This function helps to produce a single glyph out of a
-  ;; string. The glyph can then be used in prettify-symbols-alist.
-  ;; This function was provided by Ihor in the org-mode mailing list.
-  (defun yant/str-to-glyph (str)
-    "Transform string into glyph, displayed correctly."
-    (let ((composition nil))
-      (dolist (char (string-to-list str)
-                    (nreverse (cdr composition)))
-        (push char composition)
-        (push '(Br . Bl) composition))))
-
-  (defun rasmus/org-prettify-symbols ()
-    (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
-          (cl-reduce 'append
-                     (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-                             `(("#+begin_src" . ?➤) ;; ⎡ ➤ 🖝 ➟ ➤ ✎
-                               ;; multi-character strings can be used with something like this:
-                               ;; ("#+begin_src" . ,(yant/str-to-glyph "```"))
-                               ("#+end_src"   . ?➤) ;; ⎣ ✐
-                               ;; ("#+header:" . ,rasmus/ob-header-symbol)
-                               ("#+begin_quote" . ?«)
-                               ("#+end_quote" . ?»)))))
-    (turn-on-prettify-symbols-mode)
-    (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
-  (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
-
 ;;;;; lsp-mode and company-mode
-(use-package! lsp-mode
-  :config
-  (setq lsp-enable-file-watchers nil)         ;; performance matters
-  (setq lsp-keep-workspace-alive nil)         ;; auto kill lsp server
-  (setq lsp-enable-symbol-highlighting nil)
-  (setq lsp-auto-guess-root t)                ;; Yes, I'm using projectile
-  (setq lsp-modeline-code-actions-enable nil) ;; keep modeline clean
-  (setq lsp-headerline-breadcrumb-enable t)
-  (setq lsp-headerline-breadcrumb-segments '(symbols))
-  (setq lsp-headerline-breadcrumb-enable-diagnostics nil)
-  (setq lsp-ui-sideline-enable nil)
-  (setq lsp-enable-indentation t)           ;; don't change my code without my permission
-  (setq lsp-modeline-diagnostics-enable nil)  ;; as above
-  (setq lsp-eldoc-enable-hover t)          ;; disable eldoc hover
-  (setq lsp-log-io nil)                       ;; debug only,
-  (add-hook 'doom-first-input-hook #'lsp-deferred))
+(after! lsp-mode
+  (setq!
+   lsp-enable-file-watchers nil
+   lsp-keep-workspace-alive nil
+   lsp-enable-symbol-highlighting nil
+   lsp-auto-guess-root t
+   lsp-modeline-code-actions-enable nil
+   lsp-headerline-breadcrumb-enable t
+   lsp-headerline-breadcrumb-segments '(symbols)
+   lsp-headerline-breadcrumb-enable-diagnostics nil
+   lsp-enable-indentation t
+   lsp-modeline-diagnostics-enable nil
+   lsp-eldoc-enable-hover t
+   lsp-enable-snippet nil
+   lsp-log-io nil))
+
+(after! lsp-ui
+  (setq! lsp-ui-sideline-enable nil))
 
 ;;disable lsp-format-buffer in cc-mode, it doesn't running well according to .clang-format
 ;;usage: https://docs.doomemacs.org/latest/modules/editor/format/#:~:text=To%20disable%20this%20behavior%20in%20one%20mode%3A%20(setq%2Dhook!%20%27python%2Dmode%2Dhook%20%2Bformat%2Dwith%2Dlsp%20nil)
@@ -599,9 +302,21 @@
 (after! company
   (map! :map company-active-map "<tab>"  #'company-complete-selection)
   (map! :map company-active-map "TAB"  #'company-complete-selection))
-(map! :map lsp-mode-map  "<tab>"  #'company-indent-or-complete-common)
 
-;;;;; csharp
+(after! lsp-clangd
+  (setq lsp-clients-clangd-args
+        '("-j=3"
+          "--background-index"
+          "--clang-tidy"
+          "--completion-style=detailed"
+          "--header-insertion=never"
+          "--header-insertion-decorators=0")))
+
+(setq +lsp-company-backends '(company-yasnippet :separate company-capf))
+(after! orderless
+  (setq! orderless-component-separator "[ &·]+"))
+
+;;;;; csharp TODO
 (add-hook 'csharp-mode-hook #'(lambda ()
                                 (c-set-offset 'func-decl-cont 0)
                                 (c-set-offset 'statement-cont 0)
@@ -609,113 +324,19 @@
 
 ;;;;; +utils
 (use-package! info-colors
-  :commands (info-colors-fontify-node))
-(add-hook 'Info-selection-hook 'info-colors-fontify-node)
-(add-hook 'Info-mode-hook #'(lambda ()
-                              (add-to-list 'Info-directory-list
-                                           (expand-file-name "~/Documents/info"))
-                              (add-to-list 'Info-directory-list
-                                           (expand-file-name "/var/guix/profiles/per-user/root/current-guix/share/info/"))))
+  :hook (Info-selection . info-colors-fontify-node))
 
 (use-package! wakatime-mode
   :config
   (global-wakatime-mode))
 
-(use-package! systemd
-  :defer t)
-
-(use-package! treemacs
-  ;; :defer t
-  :config
-  (setq treemacs-width 25))
-
-;;;;; org-capture-templates and again
-(use-package! doct
-  :commands doct)
-
-;; https://github.com/VitalyAnkh/config/blob/adcd0ab0c679b108cfb9402b9e024556890379d5/doom/config.el#L2035
-(setq org-capture-templates
-      (doct `(("Personal todo" :keys "t"
-               :icon ("checklist" :set "octicon" :color "green")
-               :file +org-capture-todo-file
-               :prepend t
-               :headline "Inbox"
-               :type entry
-               :template ("* TODO %?"
-                          "%i %a"))
-              ;; ("Personal note" :keys "n"
-              ;;  :icon ("sticky-note-o" :set "faicon" :color "green")
-              ;;  :file +org-capture-todo-file
-              ;;  :prepend t
-              ;;  :headline "Inbox"
-              ;;  :type entry
-              ;;  :template ("* %?"
-              ;;             "%i %a"))
-              ;; ("Personal journal" :keys "j"
-              ;;  :icon ("checklist" :set "octicon" :color "yellow")
-              ;;  :file +org-capture-journal-file
-              ;;  :type entry
-              ;;  :prepend t
-              ;;  :target (file+olp+datatree +org-capture-journal-file)
-              ;;  :type entry
-              ;;  :template ("* %U"
-              ;;             "%i %a"
-              ;;             "%?"
-              ;;             ))
-              ("Email" :keys "e"
-               :icon ("envelope" :set "faicon" :color "blue")
-               :file +org-capture-todo-file
-               :prepend t
-               :headline "Inbox"
-               :type entry
-               :template ("* TODO %^{type|reply to|contact} %\\3 %? :email:"
-                          "Send an email %^{urgancy|soon|ASAP|anon|at some point|eventually} to %^{recipiant}"
-                          "about %^{topic}"
-                          "%U %i %a"))
-              ("Interesting" :keys "i"
-               :icon ("eye" :set "faicon" :color "lcyan")
-               :file +org-capture-todo-file
-               :prepend t
-               :headline "Interesting"
-               :type entry
-               :template ("* [ ] %{desc}%? :%{i-type}:"
-                          "%i %a")
-               :children (("Webpage" :keys "w"
-                           :icon ("globe" :set "faicon" :color "green")
-                           :desc "%(org-cliplink-capture) "
-                           :i-type "read:web")
-                          ("Article" :keys "a"
-                           :icon ("file-text" :set "octicon" :color "yellow")
-                           :desc ""
-                           :i-type "read:reaserch")
-                          ("Information" :keys "i"
-                           :icon ("info-circle" :set "faicon" :color "blue")
-                           :desc ""
-                           :i-type "read:info")
-                          ("Idea" :keys "I"
-                           :icon ("bubble_chart" :set "material" :color "silver")
-                           :desc ""
-                           :i-type "idea"))))))
-
-;; consult-org-roam
-;; (use-package! consult-org-roam
-;;   :after org-roam
-;;   :config
-;;   (consult-org-roam-mode t))
-
-;;;;; graphviz-dot-mode
-(use-package! graphviz-dot-mode
-  :commands graphviz-dot-mode
-  :mode ("\\.dot\\'" . graphviz-dot-mode)
-  :init
-  (after! org
-    (setcdr (assoc "dot" org-src-lang-modes)
-            'graphviz-dot)))
+(after! treemacs
+  (setq! treemacs-width 25))
 
 ;;;;; clang-fotmat+
 (use-package! clang-format+
+  :hook (c-mode-common . clang-format+-mode)
   :config
-  (add-hook 'c-mode-common-hook #'clang-format+-mode)
   (setq clang-format+-context 'modification)
   (setq clang-format+-always-enable t))
 
@@ -727,12 +348,9 @@
   (setq lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs")))
 
 ;;;;; org-protocol
-(use-package! org-protocol
-  :init (require 'org-protocol)
-  :config
+(after! org-protocol
   (add-to-list 'org-protocol-protocol-alist
                '("org-find-file" :protocol "find-file" :function org-protocol-find-file :kill-client nil))
-
   (defun org-protocol-find-file-fix-wsl-path (path)
     "If inside WSL, change Windows-style paths to WSL-style paths."
     (if (not (string-match-p "-[Mm]icrosoft" operating-system-release))
@@ -759,41 +377,17 @@
             (re-search-backward anchor-re nil t 1))))))
 
 ;;;;; something
-(use-package! graphviz-dot-mode
-  :ensure t
-  :config
-  (setq graphviz-dot-indent-width 4))
-
 (use-package! indent-bars
   :hook ((python-mode yaml-mode) . indent-bars-mode))
 
-(after! racket-mode
-  (add-hook 'racket-mode-hook #'racket-smart-open-bracket-mode))
-
-(use-package! doom-modeline
-  :config
-  (setq doom-modeline-env-enable-python nil))
+(after! doom-modeline
+  (setq! doom-modeline-env-enable-python nil))
 
 (add-hook 'scheme-mode-hook 'paredit-mode)
 (add-hook 'emacs-lisp-mode-hook 'paredit-mode)
 
 ;; undo-fu
-(use-package! undo-fu
-  :hook (doom-first-buffer . undo-fu-mode)
-  :config
-  (setq undo-limit 80000000))
-
-(use-package! copilot
-  :bind (:map copilot-completion-map
-              ("<tab>" . 'copilot-accept-completion)
-              ("TAB" . 'copilot-accept-completion)
-              ("C-TAB" . 'copilot-accept-completion-by-word)
-              ("C-<tab>" . 'copilot-accept-completion-by-word)))
-(add-to-list 'copilot-major-mode-alist '("python" . "python")
-             (add-to-list 'copilot-major-mode-alist '("c" . "c")))
-
-;; (with-eval-after-load 'org
-;;   (setq org-M-RET-may-split-line '((default . t))))
+(setq! undo-limit 80000000)
 
 (after! org-tree-slide
   (advice-remove 'org-tree-slide--display-tree-with-narrow
@@ -826,75 +420,17 @@
 (after! company
   (setq company-idle-delay 0.01))
 
-;; (defun start-lsp-pylance ()
-;;   "Start lsp pyright with pdm."
-;;   (require 'lsp-pyright)
-;;   (when (zerop (shell-command "pdm info"))
-;;     (setq-local
-;;      lsp-pyright-python-executable-cmd
-;;      (string-trim (shell-command-to-string
-;;                    "pdm info --python")))
-;;     ;; (setq-local flycheck-python-flake8-executable lsp-pyright-python-executable-cmd)
-;;     (setq-local python-shell-interpreter lsp-pyright-python-executable-cmd)
-;;     (let ((ppath (concat (string-trim (shell-command-to-string
-;;                                        "pdm info --package"))
-;;                          "/lib")))
-;;       (setq-local
-;;        lsp-pyright-extra-paths
-;;        (vector ppath)
-;;        python-shell-extra-pythonpaths (list ppath))))
-;;   (lsp))
-;; ;; (lsp-inlay-hints-mode 1)
-
-;; (defun nasy/lsp--render-string (str language)
-;;   "Render STR using `major-mode' corresponding to LANGUAGE.
-;;  When language is nil render as markup if `markdown-mode' is loaded."
-;;   (setq str (s-replace "\r" "" (or str "")))
-;;   (setq str (s-replace-regexp "<!--.*-->" "" (or str "")))
-;;   (if-let ((mode (-some (-lambda ((mode . lang))
-;;                           (when (and (equal lang language) (functionp mode))
-;;                             mode))
-;;                         lsp-language-id-configuration)))
-;;       (lsp--fontlock-with-mode str mode)
-;;     str))
-
-;; (use-package lsp-pylance
-;;   :init (require 'lsp-pylance)
-;;   :hook (python-mode . start-lsp-pylance)
-;;   )
-
-;; (after! lsp
-;;   (advice-add lsp--render-string :override
-;;               nasy/lsp--render-string))
-
-(defun kill-ring-save-no-newline ()
-  "Save the region to the kill ring without newline characters."
-  (interactive)
-  (kill-new (replace-regexp-in-string "\n" "" (filter-buffer-substring (region-beginning) (region-end)))))
-
-(bind-key "C-c M-w" 'kill-ring-save-no-newline)
-
-;; (use-package jieba
-;;   :commands jieba-mode
-;;   )
-
 (run-with-idle-timer 30 t #'recentf-save-list)
 
 ;;;;; cns
-;; (use-package! cns
-;;   :config
-;;   (let ((repodir (concat doom-local-dir "straight/repos/emacs-chinese-word-segmentation/")))
-;;     (setq cns-prog (concat repodir "cnws")
-;;           cns-dict-directory (concat repodir "cppjieba/dict")))
-;;   :hook
-;;   (find-file . cns-auto-enable))
+(use-package! cns
+  :config
+  (let ((repodir (concat doom-local-dir "straight/" straight-build-dir "/cns/")))
+    (setq cns-prog (concat repodir "cnws")
+          cns-dict-directory (concat repodir "cppjieba/dict")))
+  :hook
+  (find-file . cns-auto-enable))
 
-;;;;; nano-vertico
-;; (use-package! nano-vertico
-;;   :init
-;;   (nano-vertico-mode 1))
-
-(set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
 
 ;;;;; outli
 (use-package outli
@@ -904,25 +440,304 @@
   :hook ((prog-mode text-mode) . outli-mode)) ; or whichever modes you prefer
 
 
-(defun +setup-enable-imenu-support ()
-  (setf (map-elt imenu-generic-expression "Setup")
-        (list (rx line-start (0+ blank)
-                  "(setup" (1+ blank)
-                  (or (group-n 1 (1+ (or (syntax word)
-                                         (syntax symbol))))
-                      ;; Add here items that can define a feature:
-                      (seq "(:" (or "straight" "require" "package")
-                           (1+ blank)
-                           (group-n 1 (1+ (or (syntax word)
-                                              (syntax symbol)))))))
-              1)))
+;; (defun +setup-enable-imenu-support ()
+;;   (setf (map-elt imenu-generic-expression "Setup")
+;;         (list (rx line-start (0+ blank)
+;;                   "(setup" (1+ blank)
+;;                   (or (group-n 1 (1+ (or (syntax word)
+;;                                          (syntax symbol))))
+;;                       ;; Add here items that can define a feature:
+;;                       (seq "(:" (or "straight" "require" "package")
+;;                            (1+ blank)
+;;                            (group-n 1 (1+ (or (syntax word)
+;;                                               (syntax symbol)))))))
+;;               1)))
 
-(setup imenu
-  (:with-hook emacs-lisp-mode-hook
-    (:hook +setup-enable-imenu-support)))
+;; (setup imenu
+;;   (:with-hook emacs-lisp-mode-hook
+;;     (:hook +setup-enable-imenu-support)))
+(set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
+(after! nix-mode
+  (set-formatter! 'nixpkgs-fmt '("nixpkgs-fmt") :modes '(nix-mode)))
 
+;;;;; denote with org-capture
 (use-package! denote
   :config
-  (setq denote-directory (concat (getenv "HOME") "/documents/notes/")))
+  (setq denote-directory (concat (getenv "HOME") "/documents/notes/"))
+  (setq denote-sort-keywords nil)
+  (setq denote-known-keywords '(emacs note))
+  (setq denote-prompts '(keywords title)))
 
-(set-formatter! 'nixpkgs-fmt "nixpkgs-fmt" :modes (nix-mode))
+(defvar +org-capture-collections-file "collections.org"
+  "Default target for collections notes
+
+Collecting everyting you do not wanna miss
+
+Is relative to `org-directory' unless it is absolute. Is used in
+`org-capture-templates'.")
+
+
+(after! org-capture
+  (setq org-capture-templates
+        '(("j" "Journal" entry (file+olp+datetree +org-capture-journal-file)
+           "* %<%I:%M %p> %?")
+          ("t" "Personal todo" entry (file+headline +org-capture-todo-file "Inbox")
+           "* [ ] %?" :prepend t)
+          ("c" "Collect everything" entry (file+headline +org-capture-collections-file "Inbox")
+           "* %^G \n%x"))))
+
+(after! org-capture
+  (cl-pushnew '("n" "New note (with Denote)" plain
+                (file denote-last-path)
+                #'denote-org-capture
+                :no-save t
+                :immediate-finish nil
+                :kill-buffer t
+                :jump-to-captured t)
+              org-capture-templates
+              :test #'equal))
+
+(defun replace-dashes-with-stars (n)
+  "Replace dashes with stars at the beginning of each line.
+The number of stars will be increased by N for each tab before the dash."
+  (interactive "p")
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "^\\(\t*\\)-" nil t)
+      (replace-match (make-string (1+ (length (match-string 1))) ?*) t nil))))
+
+(defun insert-space-between-chinese-and-english ()
+  "Insert space between Chinese and English text in each line of the region.
+   Ignore lines starting with '#+'"
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (forward-line 1)
+      (beginning-of-line)
+      (when (not (looking-at "^\\s-*#\\+")) ; Ignore lines starting with #+
+        (while (re-search-forward "\\(?1:\\cC\\|\\cH\\|\\cK\\)\\(?2:[0-9A-Za-z]\\)\\|\\(?1:[0-9A-Za-z]\\)\\(?2:\\cC\\|\\cH\\|\\cK\\)" (line-end-position) t)
+          (replace-match "\\1 \\2" nil nil))))))
+
+(add-hook! org-mode
+  (setq-local line-spacing 0.1))
+
+;;;;; continue
+
+(defcustom unpackaged/lorem-ipsum-overlay-exclude nil
+  "List of regexps to exclude from `unpackaged/lorem-ipsum-overlay'."
+  :type '(repeat regexp))
+
+(cl-defun unpackaged/lorem-ipsum-overlay (&key replace-p use-map-p)
+  "Overlay all text in current buffer with \"lorem ipsum\" text.
+When called again, remove overlays.  Useful for taking
+screenshots without revealing buffer contents.
+
+If REPLACE-P is non-nil (interactively, with prefix and prompt),
+replace buffer contents rather than overlaying them.  When a
+buffer is very large and would have so many overlays that
+performance would be prohibitively slow, you may replace the
+buffer contents instead.  (Of course, be careful about saving the
+buffer after replacing its contents.)
+
+If USE-MAP-P is non-nil (interactively, with prefix and prompt),
+all instances of a real word are replaced with the same word;
+otherwise, each instance of a real word is replaced with a random
+word (further obscuring the text).
+
+Each piece of non-whitespace text in the buffer is compared with
+regexps in `unpackaged/lorem-ipsum-overlay-exclude', and ones
+that match are not overlaid.  Note that the regexps are compared
+against the entire non-whitespace token, up-to and including the
+preceding whitespace, but only the alphabetic part of the token
+is overlaid.  For example, in an Org buffer, a line that starts
+with:
+
+  #+TITLE: unpackaged.el
+
+could be matched against the exclude regexp (in `rx' syntax):
+
+  (rx (or bol bos blank) \"#+\" (1+ alnum) \":\" (or eol eos blank))
+
+And the line would be overlaid like:
+
+  #+TITLE: parturient.et"
+  (interactive (when current-prefix-arg
+                 (list :replace-p (yes-or-no-p "Replace contents (or just overlay)? ")
+                       :use-map-p (yes-or-no-p "Map words (or be completely random)? "))))
+  (require 'lorem-ipsum)
+  (let ((ovs (overlays-in (point-min) (point-max))))
+    (if (cl-loop for ov in ovs
+                 thereis (overlay-get ov :lorem-ipsum-overlay))
+        ;; Remove overlays.
+        (dolist (ov ovs)
+          (when (overlay-get ov :lorem-ipsum-overlay)
+            (delete-overlay ov)))
+      ;; Add overlays.
+      (let ((lorem-ipsum-words (--> lorem-ipsum-text
+                                    (-flatten it) (apply #'concat it)
+                                    (split-string it (rx (or space punct)) 'omit-nulls)))
+            (case-fold-search nil)
+            (map (make-hash-table :test #'equal)))
+        (cl-labels ((overlay-group (group)
+                      (let* ((beg (match-beginning group))
+                             (end (match-end group))
+                             (replacement-word (if use-map-p
+                                                   (lorem-word* (match-string-no-properties group))
+                                                 (lorem-word (match-string-no-properties group))))
+                             (ov (make-overlay beg end)))
+                        (when replacement-word
+                          (overlay-put ov :lorem-ipsum-overlay t)
+                          (overlay-put ov 'display replacement-word))))
+                    (replace-group (group)
+                      (let* ((beg (match-beginning group))
+                             (end (match-end group))
+                             (replacement-word (if use-map-p
+                                                   (lorem-word* (match-string-no-properties group))
+                                                 (lorem-word (match-string-no-properties group)))))
+                        (when replacement-word
+                          (setf (buffer-substring-no-properties beg end) replacement-word))))
+                    (lorem-word (word)
+                      (if-let* ((matches (lorem-matches (length word))))
+                          (apply-case word (downcase (seq-random-elt matches)))
+                        ;; Word too long: compose one.
+                        (apply-case word (downcase (compose-word (length word))))))
+                    (lorem-word* (word)
+                      (or (gethash word map)
+                          (puthash word
+                                   (if-let ((matches (lorem-matches (length word))))
+                                       (apply-case word (downcase (seq-random-elt matches)))
+                                     ;; Word too long: compose one.
+                                     (apply-case word (downcase (compose-word (length word)))))
+                                   map)))
+                    (lorem-matches (length &optional (comparator #'=))
+                      (cl-loop for liw in lorem-ipsum-words
+                               when (funcall comparator (length liw) length)
+                               collect liw))
+                    (apply-case (source target)
+                      (cl-loop for sc across-ref source
+                               for tc across-ref target
+                               when (not (string-match-p (rx lower) (char-to-string sc)))
+                               do (setf tc (string-to-char (upcase (char-to-string tc)))))
+                      target)
+                    (compose-word (length)
+                      (cl-loop while (> length 0)
+                               for word = (seq-random-elt (lorem-matches length #'<=))
+                               concat word
+                               do (cl-decf length (length word)))))
+          (save-excursion
+            (goto-char (point-min))
+            (while (re-search-forward (rx (group (1+ (or bol bos blank (not alpha)))
+                                                 (0+ (not (any alpha blank)))
+                                                 (group (1+ alpha))
+                                                 (0+ (not (any alpha blank)))))
+                                      nil t)
+              (unless (cl-member (match-string-no-properties 0) unpackaged/lorem-ipsum-overlay-exclude
+                                 :test (lambda (string regexp)
+                                         (string-match-p regexp string)))
+                (if replace-p
+                    (replace-group 2)
+                  (overlay-group 2)))
+              (goto-char (match-end 2)))))))))
+
+
+(after! lsp-java
+  (setq lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/snapshots/jdt-language-server-latest.tar.gz"))
+
+(after! projectile
+  (setq projectile-project-root-files-bottom-up '(".ccls-root" ".projectile"
+                                                  ".git" ".hg")))
+
+(after! projectile
+  (defun projectile-reset-current-project-cache ()
+    (interactive)
+    (let ((project-root (projectile-project-root)))
+      (puthash project-root
+               '()
+               projectile-projects-cache)))
+  (defun projectile-reset-all-project-cache ()
+    (interactive)
+    (setq projectile-projects-cache (make-hash-table :test 'equal))))
+
+(after! consult
+  (unless (featurep 'beframe)
+    (require 'beframe))
+  (defface beframe-buffer
+    '((t :inherit font-lock-string-face))
+    "Face for `consult' framed buffers.")
+  (defvar beframe--consult-source
+    `( :name     "Frame-specific buffers (current frame)"
+       :narrow   ?F
+       :category buffer
+       :face     beframe-buffer
+       :history  beframe-history
+       :items    ,#'beframe--buffer-names
+       :action   ,#'switch-to-buffer
+       :state    ,#'consult--buffer-state))
+  (add-to-list 'consult-buffer-sources 'beframe--consult-source))
+
+(after! beframe
+  (defadvice! +beframe-infer-frame-name (frame name)
+    :override #'beframe-infer-frame-name
+    (when (frame-list)
+      (let* ((buffer (car (frame-parameter frame 'buffer-list)))
+             (file-name (when (bufferp buffer) (buffer-file-name buffer)))
+             (buf-name (buffer-name buffer))
+             (dir (with-current-buffer buffer (or (vc-root-dir) default-directory)))
+             (projectp (and (bound-and-true-p project--list)
+                            (listp project--list)
+                            (member (list dir) project--list)))
+             (projectilep (and (bound-and-true-p projectile-known-projects)
+                               (listp projectile-known-projects)
+                               (member dir projectile-known-projects))))
+        (cond
+         ((and name (stringp name))
+          name)
+         ((and (or projectp projectilep) buf-name)
+          (format "%s" (file-name-nondirectory (directory-file-name dir))))
+         ((and (not (minibufferp)) file-name)
+          (format "%s %s" buf-name dir))
+         ((not (minibufferp))
+          buf-name)
+         (t
+          dir))))))
+
+(defun +generate--frame-format ()
+  (let* ((dir (or (vc-root-dir) default-directory))
+         (projectp (and (bound-and-true-p project--list)
+                        (listp project--list)
+                        (member (list dir) project--list)))
+         (projectilep (and (bound-and-true-p projectile-known-projects)
+                           (listp projectile-known-projects)
+                           (member dir projectile-known-projects))))
+    (cond
+     ((and (or projectilep projectp) (eq major-mode #'dired-mode))
+      `("@[" ,(abbreviate-file-name dir) "]"))
+     ((or projectilep projectp)
+      `("%b" " - @[" ,(abbreviate-file-name dir) "]"))
+     ((eq major-mode #'dired-mode)
+      `("[" ,(abbreviate-file-name dir) "]"))
+     ((doom-real-buffer-p (current-buffer))
+      `("%b" " - [" ,(abbreviate-file-name dir) "]"))
+     (t
+      `("%b" " - GNU Emacs at " system-name)))))
+
+(setq frame-title-format '(:eval (+generate--frame-format)))
+
+
+(after! consult
+  (defvar +consult-kill-buffer-source '(beframe--consult-source
+                                        consult--source-hidden-buffer
+                                        consult--source-modified-buffer
+                                        consult--source-buffer
+                                        consult--source-project-buffer-hidden))
+  (defun +consult-kill-buffer ()
+    (interactive)
+    (let ((selected (consult--multi +consult-kill-buffer-source
+                                    :prompt "Kill buffer: "
+                                    :history 'consult--buffer-history
+                                    :preview-key nil
+                                    :sort nil)))
+      (when (plist-get (cdr selected) :match)
+        (kill-buffer (car selected)))))
+  (map! "C-x k" #'+consult-kill-buffer))

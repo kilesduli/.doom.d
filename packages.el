@@ -3,8 +3,6 @@
 (package! meow)
 (package! disable-mouse)
 (package! org-fragtog)
-;; in ~/.doom.d/packages.el
-;;(package! doom-snippets :ignore t)
 (package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion"))
 (package! info-colors)
 (package! systemd)
@@ -29,18 +27,26 @@
 (package! setup)
 (package! copilot
   :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "dist")))
-(package! jieba
-  :recipe (:host github :repo "cireu/jieba.el"))
-(package! pylance-nasy :recipe (:host github :repo "nasyxx/emacs-site-lisp" :files ("lsp-pylance/lsp-pylance.el")))
-;;(package! cns
-;;  :recipe (:host github :repo "kanglmf/emacs-chinese-word-segmentation"
-;;           :pre-build ("make")
-;;           ))
-(package! nano-vertico
-  :recipe (:host github :repo "rougier/nano-vertico"))
+(package! cns
+  :recipe (:host github :repo "kanglmf/emacs-chinese-word-segmentation"
+           :pre-build ("make")
+           :files ("cppjieba" "cnws" "*.el")))
 (package! outli
   :recipe (:host github :repo "jdtsmith/outli"))
-(package! denote)
+(package! denote
+  :recipe (:host github :repo "protesilaos/denote"))
+(package! beframe
+  :recipe (:host github :repo "protesilaos/beframe"))
+(package! emacs-lorem-ipsum
+  :recipe (:host github :repo "jschaf/emacs-lorem-ipsum"))
+(package! denote-menu
+  :recipe (:host github :repo "namilus/denote-menu"))
+(package! rime
+  :recipe (:host github :repo "DogLooksGood/emacs-rime"
+           :pre-build ("make" "LIBRIME_ROOT=~/.nix-profile/" "EMACS_MODULE_HEADER_ROOT=~/.nix-profile/include" "lib")
+           :files ("librime-emacs.so" "*.el")))
+(unpin! consult)
+(unpin! lsp-java)
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)
 
