@@ -75,10 +75,8 @@
 (global-set-key  [C-mouse-wheel-down-event] 'text-scale-decrease)
 
 (map! :leader
-      :desc "help"                         "h"   help-map
       :after projectile :desc "project" "p" projectile-command-map
-      :after projectile :desc "project-search(fd)" "p s" #'+default/search-project
-      :after treemacs :desc "treemacs-select-window" "w t" #'treemacs-select-window)
+      :after projectile :desc "project-search(fd)" "p s" #'+default/search-project)
 
 (map! :leader
       (:prefix-map ("b" . "buffer")
@@ -516,7 +514,8 @@ The number of stars will be increased by N for each tab before the dash."
       (forward-line 1)
       (beginning-of-line)
       (when (not (looking-at "^\\s-*#\\+")) ; Ignore lines starting with #+
-        (while (re-search-forward "\\(?1:\\cC\\|\\cH\\|\\cK\\)\\(?2:[0-9A-Za-z]\\)\\|\\(?1:[0-9A-Za-z]\\)\\(?2:\\cC\\|\\cH\\|\\cK\\)" (line-end-position) t)
+        (while (progn (beginning-of-line)
+                      (re-search-forward "\\(?1:\\cC\\|\\cH\\|\\cK\\)\\(?2:[0-9A-Za-z]\\)\\|\\(?1:[0-9A-Za-z]\\)\\(?2:\\cC\\|\\cH\\|\\cK\\)" (line-end-position) t))
           (replace-match "\\1 \\2" nil nil))))))
 
 (add-hook! org-mode
@@ -739,5 +738,7 @@ And the line would be overlaid like:
                                     :preview-key nil
                                     :sort nil)))
       (when (plist-get (cdr selected) :match)
-        (kill-buffer (car selected)))))
-  (map! "C-x k" #'+consult-kill-buffer))
+        (kill-buffer (car selected))))))
+
+(autoload '+consult-kill-buffer "consult" :type t)
+(map! "C-x k" #'+consult-kill-buffer)
