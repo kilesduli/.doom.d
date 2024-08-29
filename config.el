@@ -21,14 +21,13 @@
 ;;
 
 ;;; Code:
+;;;; benchmark-init
+(unless (daemonp)
+  (use-package! benchmark-init
+    :config
+    ;; To disable collection of benchmark data after init is done.
+    (add-hook 'doom-first-input-hook 'benchmark-init/deactivate)))
 ;;;; Basic setup
-;;;;; benchmark-init
-(use-package! benchmark-init
-  :config
-  ;; To disable collection of benchmark data after init is done.
-  (add-hook 'doom-first-input-hook 'benchmark-init/deactivate))
-
-;;;;; settings
 (setq user-full-name "duli kiles"
       user-mail-address "duli4868@gmail.com")
 
@@ -38,33 +37,24 @@
       doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
       doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
 
-;; There are two ways to load a theme. Both assume the theme is installed and
-;; available. You can either set `doom-theme' or manually load a theme with the
-;; `load-theme' function. This is the default:
-;; doom-theme
 (setq doom-theme 'modus-operandi-tritanopia)
 
-;; If you use `org' and don't want your org files in the default location below,
-;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/documents/notes/")
-
-;; This determines the style of line numbers in effect. If set to `nil', line
-;; numbers are disabled. For relative line numbers, set this to `'relative'.
-(setq display-line-numbers-type 'relative)
 
 (setq auth-sources '("~/.authinfo.gpg")
       auth-source-cache-expiry nil
       scroll-preserve-screen-position 'always
       scroll-margin 2
       word-wrap-by-category t
-      delete-by-moving-to-trash t)
+      delete-by-moving-to-trash t
+      cursor-in-non-selected-windows t
+      truncate-lines nil
+      undo-limit 80000000
+      display-line-numbers-type 'relative)
 
-(setq truncate-lines nil)
-(setq cursor-in-non-selected-windows t)
-
-
-;; (add-to-list 'initial-frame-alist '(fullscreen . maximized))
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+(if (daemonp)
+    (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (add-to-list 'initial-frame-alist '(fullscreen . maximized)))
 
 (setq which-key-idle-delay 0.01)
 (setq which-key-idle-secondary-delay 0.01)
@@ -73,10 +63,6 @@
 
 (global-set-key  [C-mouse-wheel-up-event]  'text-scale-increase)
 (global-set-key  [C-mouse-wheel-down-event] 'text-scale-decrease)
-
-(map! :leader
-      :after projectile :desc "project" "p" projectile-command-map
-      :after projectile :desc "project-search(fd)" "p s" #'+default/search-project)
 
 (map! :leader
       (:prefix-map ("b" . "buffer")
@@ -106,20 +92,41 @@
        :desc "Pop up scratch buffer"       "x"   #'doom/open-scratch-buffer
        :desc "Switch to scratch buffer"    "X"   #'scratch-buffer
        :desc "Bury buffer"                 "z"   #'bury-buffer
-       :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers))
+       :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers)
 
-(map! :map doom-leader-file-map
+      :map doom-leader-file-map
       "o" #'find-file-other-window)
 
-;;;; package setup
-;;;;; Meow
-;;setup-doom-keybindings
-(map! :map meow-normal-state-keymap
-      doom-leader-key doom-leader-map)
-(map! :map meow-motion-state-keymap
-      doom-leader-key doom-leader-map)
-(map! :map meow-beacon-state-keymap
-      doom-leader-key nil)
+(defun +generate--frame-format ()
+  (let* ((dir (or (vc-root-dir) default-directory))
+         (projectp (and (bound-and-true-p project--list)
+                        (listp project--list)
+                        (member (list dir) project--list)))
+         (projectilep (and (bound-and-true-p projectile-known-projects)
+                           (listp projectile-known-projects)
+                           (member dir projectile-known-projects))))
+    (cond
+     ((and (or projectilep projectp) (eq major-mode #'dired-mode))
+      `("@[" ,(abbreviate-file-name dir) "]"))
+     ((or projectilep projectp)
+      `("%b" " - @[" ,(abbreviate-file-name dir) "]"))
+     ((eq major-mode #'dired-mode)
+      `("[" ,(abbreviate-file-name dir) "]"))
+     ((doom-real-buffer-p (current-buffer))
+      `("%b" " - [" ,(abbreviate-file-name dir) "]"))
+     (t
+      `("%b" " - GNU Emacs at " system-name)))))
+
+(setq frame-title-format '(:eval (+generate--frame-format)))
+
+;;;; Meow
+;; setup-doom-keybindings
+;; (map! :map meow-normal-state-keymap
+;;       doom-leader-key doom-leader-map)
+;; (map! :map meow-motion-state-keymap
+;;       doom-leader-key doom-leader-map)
+;; (map! :map meow-beacon-state-keymap
+;;       doom-leader-key nil)
 
 (use-package! meow
   :config
@@ -224,10 +231,11 @@
   ;; 如果你需要自动的 mode-line 设置（如果需要自定义见下文对 `meow-indicator' 说明）
   (meow-setup-indicator))
 
-;;;;; rime
+;;;; rime
 ;; emacs do not provide us a way to make keybinding live all over the time, but
 ;; use-package does. and don't need define a new minor mode. found in
 ;; https://emacs.stackexchange.com/questions/352/how-to-override-major-mode-bindings
+;; We could use use-package:bind-key*
 
 ;; rime setting
 (use-package! rime
@@ -243,149 +251,56 @@
      meow-keypad-mode-p
      meow-beacon-mode-p)))
 
-;;;;; Org-mode
+(after! rime
+  (when (daemonp)
+    (unless rime--lib-loaded
+      (unless (file-exists-p rime--module-path)
+        (rime-compile-module))
+      (rime--load-dynamic-module))))
+
+;;;; Org-mode
 ;; disable company chinese extend.
 (after! org
+  (unless (featurep 'company)
+    (require 'company))
   (setq company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
   (push 'company-dabbrev company-backends)
   (set-company-backend! 'org-mode
     'company-dabbrev 'company-yasnippet))
 
-(use-package! ox-gfm
-  :after ox)
+(after! ox
+  (require 'ox-gfm))
 
 (after! org
-  (setq! org-id-method 'ts)
-  (setq! org-cycle-separator-lines 1)
-  (setq! org-link-descriptive nil)
-  (setq! org-cycle-separator-lines 1))
+  (setq org-id-method 'ts)
+  (setq org-cycle-separator-lines 1)
+  (setq org-link-descriptive nil)
+  (setq org-cycle-separator-lines 1)
+  (setq org-latex-packages-alist '(("" "amssymb" t ("xelatex"))
+                                   ("" "amsmath" t ("xelatex")))))
 
-(setq-hook! 'org-mode-hook
-  display-line-numbers-mode 0)
+(add-hook! org-mode
+  (setq-local line-spacing 0.1)
+  (setq-local display-line-numbers-mode 0))
 
 ;;  org-latex-preview
 (add-hook 'org-mode-hook 'org-fragtog-mode)
+
 ;;set latex preview default process
-(setq org-preview-latex-default-process 'dvisvgm)
+(setq org-preview-latex-process-alist
+      '((xdv2svg
+         :programs ("xelatex" "dvisvgm")
+         :description "xdv > svg"
+         :message "you need to install the programs: latex and dvisvgm."
+         :image-input-type "xdv"
+         :image-output-type "svg"
+         :image-size-adjust (1.5 . 1.5)
+         :latex-compiler ("xelatex -interaction nonstopmode -no-pdf -output-directory %o %f")
+         :image-converter ("dvisvgm %f --no-fonts --exact-bbox --scale=%S --output=%O"))))
 
-;; org-latex-compilers = ("pdflatex" "xelatex" "lualatex"), which are the possible values for %latex
-(setq org-latex-compiler "xelatex")
-
-;;;;; lsp-mode and company-mode
-(after! lsp-mode
-  (setq!
-   lsp-enable-file-watchers nil
-   lsp-keep-workspace-alive nil
-   lsp-enable-symbol-highlighting nil
-   lsp-auto-guess-root t
-   lsp-modeline-code-actions-enable nil
-   lsp-headerline-breadcrumb-enable t
-   lsp-headerline-breadcrumb-segments '(symbols)
-   lsp-headerline-breadcrumb-enable-diagnostics nil
-   lsp-enable-indentation t
-   lsp-modeline-diagnostics-enable nil
-   lsp-eldoc-enable-hover t
-   lsp-enable-snippet nil
-   lsp-log-io nil))
-
-(after! lsp-ui
-  (setq! lsp-ui-sideline-enable nil))
-
-;;disable lsp-format-buffer in cc-mode, it doesn't running well according to .clang-format
-;;usage: https://docs.doomemacs.org/latest/modules/editor/format/#:~:text=To%20disable%20this%20behavior%20in%20one%20mode%3A%20(setq%2Dhook!%20%27python%2Dmode%2Dhook%20%2Bformat%2Dwith%2Dlsp%20nil)
-(setq-hook! 'c++-mode-hook +format-with-lsp nil)
-(setq-hook! 'c-mode-hook +format-with-lsp nil)
-
-;;set company tab complete motion
-(after! company
-  (map! :map company-active-map "<tab>"  #'company-complete-selection)
-  (map! :map company-active-map "TAB"  #'company-complete-selection))
-
-(after! lsp-clangd
-  (setq lsp-clients-clangd-args
-        '("-j=3"
-          "--background-index"
-          "--clang-tidy"
-          "--completion-style=detailed"
-          "--header-insertion=never"
-          "--header-insertion-decorators=0")))
-
-(setq +lsp-company-backends '(company-yasnippet :separate company-capf))
-(after! orderless
-  (setq! orderless-component-separator "[ &·]+"))
-
-;;;;; csharp TODO
-(add-hook 'csharp-mode-hook #'(lambda ()
-                                (c-set-offset 'func-decl-cont 0)
-                                (c-set-offset 'statement-cont 0)
-                                (c-set-offset 'topmost-intro-cont 0)))
-
-;;;;; +utils
-(use-package! info-colors
-  :hook (Info-selection . info-colors-fontify-node))
-
-(use-package! wakatime-mode
-  :config
-  (global-wakatime-mode))
-
-(after! treemacs
-  (setq! treemacs-width 25))
-
-;;;;; clang-fotmat+
-(use-package! clang-format+
-  :hook (c-mode-common . clang-format+-mode)
-  :config
-  (setq clang-format+-context 'modification)
-  (setq clang-format+-always-enable t))
-
-;;;;; python pyright
-(use-package! lsp-pyright
-  :after lsp-mode
-  :config
-  (setq lsp-pyright-use-library-code-for-types t)
-  (setq lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs")))
-
-;;;;; org-protocol
-(after! org-protocol
-  (add-to-list 'org-protocol-protocol-alist
-               '("org-find-file" :protocol "find-file" :function org-protocol-find-file :kill-client nil))
-  (defun org-protocol-find-file-fix-wsl-path (path)
-    "If inside WSL, change Windows-style paths to WSL-style paths."
-    (if (not (string-match-p "-[Mm]icrosoft" operating-system-release))
-        path
-      (save-match-data
-        (if (/= 0 (string-match "^\\([a-zA-Z]\\):\\(/.*\\)" path))
-            path
-          (let ((volume (match-string-no-properties 1 path))
-                (abspath (match-string-no-properties 2 path)))
-            (format "/mnt/%s%s" (downcase volume) abspath))))))
-  (defun org-protocol-find-file (fname)
-    "Process org-protocol://find-file?path= style URL."
-    (let* ((parsed (org-protocol-parse-parameters fname nil '(:path :anchor)))
-           (f (plist-get parsed :path))
-           (anchor (plist-get parsed :anchor))
-           (anchor-re (and anchor (concat "\\(-\\|\\*\\) " (regexp-quote anchor)))))
-      (find-file (org-protocol-find-file-fix-wsl-path f))
-      (raise-frame)
-      (select-frame-set-input-focus (selected-frame))
-      (unhighlight-regexp t)
-      (highlight-regexp anchor-re)
-      (when anchor
-        (or (re-search-forward anchor-re nil t 1)
-            (re-search-backward anchor-re nil t 1))))))
-
-;;;;; something
-(use-package! indent-bars
-  :hook ((python-mode yaml-mode) . indent-bars-mode))
-
-(after! doom-modeline
-  (setq! doom-modeline-env-enable-python nil))
-
-(add-hook 'scheme-mode-hook 'paredit-mode)
-(add-hook 'emacs-lisp-mode-hook 'paredit-mode)
-
-;; undo-fu
-(setq! undo-limit 80000000)
+(setq org-preview-latex-default-process 'xdv2svg)
+(setq org-latex-pdf-process
+      '("tectonic -X compile --outdir=%o -Z shell-escape -Z continue-on-errors %f"))
 
 (after! org-tree-slide
   (advice-remove 'org-tree-slide--display-tree-with-narrow
@@ -415,12 +330,107 @@
                 (point)))))))
       (apply fn args))))
 
+(defun +org-yank-image-filename-with-denote-id ()
+  (unless (featurep 'denote)
+    (require 'denote))
+  (if-let ((id (denote-retrieve-filename-identifier (buffer-file-name))))
+      (format (concat "C" id "-" (substring (org-id-uuid) 0 (min 8))))
+    (org-yank-image-autogen-filename)))
+
+(after! org
+  (setq org-yank-image-save-method (concat org-directory "assets"))
+  (setq org-yank-image-file-name-function #'+org-yank-image-filename-with-denote-id))
+
+;;;; lsp and company
+(after! lsp-mode
+  (setq!
+   lsp-enable-file-watchers nil
+   lsp-keep-workspace-alive nil
+   lsp-enable-symbol-highlighting nil
+   lsp-auto-guess-root t
+   lsp-modeline-code-actions-enable nil
+   lsp-headerline-breadcrumb-enable t
+   lsp-headerline-breadcrumb-segments '(symbols)
+   lsp-headerline-breadcrumb-enable-diagnostics nil
+   lsp-enable-indentation t
+   lsp-modeline-diagnostics-enable nil
+   lsp-eldoc-enable-hover t
+   lsp-enable-snippet nil
+   lsp-log-io nil))
+
+(after! lsp-ui
+  (setq! lsp-ui-sideline-enable nil))
+
+;;disable lsp-format-buffer in cc-mode, it doesn't running well according to .clang-format
+;;usage: https://docs.doomemacs.org/latest/modules/editor/format/#:~:text=To%20disable%20this%20behavior%20in%20one%20mode%3A%20(setq%2Dhook!%20%27python%2Dmode%2Dhook%20%2Bformat%2Dwith%2Dlsp%20nil)
+(setq-hook! 'c++-mode-hook +format-with-lsp nil)
+(setq-hook! 'c-mode-hook +format-with-lsp nil)
+
+;;set company tab complete motion
+(after! company
+  (map! :map company-active-map "<tab>"  #'company-complete-selection)
+  (map! :map company-active-map "TAB"  #'company-complete-selection))
+
 (after! company
   (setq company-idle-delay 0.01))
 
+(after! lsp-clangd
+  (setq lsp-clients-clangd-args
+        '("-j=3"
+          "--background-index"
+          "--clang-tidy"
+          "--completion-style=detailed"
+          "--header-insertion=never"
+          "--header-insertion-decorators=0")))
+
+(setq +lsp-company-backends '(company-yasnippet :separate company-capf))
+(after! orderless
+  (setq! orderless-component-separator "[ &·]+"))
+
+;;;;; python pyright
+(use-package! lsp-pyright
+  :after lsp-mode
+  :config
+  (setq lsp-pyright-use-library-code-for-types t)
+  (setq lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs")))
+
+;;;; TODO csharp
+(add-hook 'csharp-mode-hook #'(lambda ()
+                                (c-set-offset 'func-decl-cont 0)
+                                (c-set-offset 'statement-cont 0)
+                                (c-set-offset 'topmost-intro-cont 0)))
+
+;;;; +utils
+(use-package! info-colors
+  :hook (Info-selection . info-colors-fontify-node))
+
+(use-package! wakatime-mode
+  :config
+  (global-wakatime-mode))
+
+(after! treemacs
+  (setq! treemacs-width 25))
+
+;;;; clang-fotmat+
+(use-package! clang-format+
+  :hook (c-mode-common . clang-format+-mode)
+  :config
+  (setq clang-format+-context 'modification)
+  (setq clang-format+-always-enable t))
+
+;;;; something
+(use-package! indent-bars
+  :hook ((python-mode yaml-mode) . indent-bars-mode))
+
+(after! doom-modeline
+  (setq! doom-modeline-env-enable-python nil))
+
+(add-hook 'scheme-mode-hook 'paredit-mode)
+(add-hook 'emacs-lisp-mode-hook 'paredit-mode)
+
 (run-with-idle-timer 30 t #'recentf-save-list)
 
-;;;;; cns
+;;;; cns
 (use-package! cns
   :config
   (let ((repodir (concat doom-local-dir "straight/" straight-build-dir "/cns/")))
@@ -430,35 +440,19 @@
   (find-file . cns-auto-enable))
 
 
-;;;;; outli
+;;;; outli
 (use-package outli
   :bind (:map outli-mode-map ; convenience key to get back to containing heading
 	      ("C-c C-p" . (lambda () (interactive) (outline-back-to-heading))))
   :config
   :hook ((prog-mode text-mode) . outli-mode)) ; or whichever modes you prefer
 
-
-;; (defun +setup-enable-imenu-support ()
-;;   (setf (map-elt imenu-generic-expression "Setup")
-;;         (list (rx line-start (0+ blank)
-;;                   "(setup" (1+ blank)
-;;                   (or (group-n 1 (1+ (or (syntax word)
-;;                                          (syntax symbol))))
-;;                       ;; Add here items that can define a feature:
-;;                       (seq "(:" (or "straight" "require" "package")
-;;                            (1+ blank)
-;;                            (group-n 1 (1+ (or (syntax word)
-;;                                               (syntax symbol)))))))
-;;               1)))
-
-;; (setup imenu
-;;   (:with-hook emacs-lisp-mode-hook
-;;     (:hook +setup-enable-imenu-support)))
+;;;; nix
 (set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
 (after! nix-mode
   (set-formatter! 'nixpkgs-fmt '("nixpkgs-fmt") :modes '(nix-mode)))
 
-;;;;; denote with org-capture
+;;;; denote with org-capture
 (use-package! denote
   :config
   (setq denote-directory (concat (getenv "HOME") "/documents/notes/"))
@@ -474,17 +468,12 @@ Collecting everyting you do not wanna miss
 Is relative to `org-directory' unless it is absolute. Is used in
 `org-capture-templates'.")
 
-
 (after! org-capture
   (setq org-capture-templates
         '(("j" "Journal" entry (file+olp+datetree +org-capture-journal-file)
            "* %<%I:%M %p> %?")
           ("t" "Personal todo" entry (file+headline +org-capture-todo-file "Inbox")
-           "* [ ] %?" :prepend t)
-          ("c" "Collect everything" entry (file+headline +org-capture-collections-file "Inbox")
-           "* %^G \n%x"))))
-
-(after! org-capture
+           "* [ ] %?" :prepend t)))
   (cl-pushnew '("n" "New note (with Denote)" plain
                 (file denote-last-path)
                 #'denote-org-capture
@@ -518,8 +507,7 @@ The number of stars will be increased by N for each tab before the dash."
                       (re-search-forward "\\(?1:\\cC\\|\\cH\\|\\cK\\)\\(?2:[0-9A-Za-z]\\)\\|\\(?1:[0-9A-Za-z]\\)\\(?2:\\cC\\|\\cH\\|\\cK\\)" (line-end-position) t))
           (replace-match "\\1 \\2" nil nil))))))
 
-(add-hook! org-mode
-  (setq-local line-spacing 0.1))
+
 
 ;;;;; continue
 
@@ -675,53 +663,6 @@ And the line would be overlaid like:
        :state    ,#'consult--buffer-state))
   (add-to-list 'consult-buffer-sources 'beframe--consult-source))
 
-(after! beframe
-  (defadvice! +beframe-infer-frame-name (frame name)
-    :override #'beframe-infer-frame-name
-    (when (frame-list)
-      (let* ((buffer (car (frame-parameter frame 'buffer-list)))
-             (file-name (when (bufferp buffer) (buffer-file-name buffer)))
-             (buf-name (buffer-name buffer))
-             (dir (with-current-buffer buffer (or (vc-root-dir) default-directory)))
-             (projectp (and (bound-and-true-p project--list)
-                            (listp project--list)
-                            (member (list dir) project--list)))
-             (projectilep (and (bound-and-true-p projectile-known-projects)
-                               (listp projectile-known-projects)
-                               (member dir projectile-known-projects))))
-        (cond
-         ((and name (stringp name))
-          name)
-         ((and (or projectp projectilep) buf-name)
-          (format "%s" (file-name-nondirectory (directory-file-name dir))))
-         ((and (not (minibufferp)) file-name)
-          (format "%s %s" buf-name dir))
-         ((not (minibufferp))
-          buf-name)
-         (t
-          dir))))))
-
-(defun +generate--frame-format ()
-  (let* ((dir (or (vc-root-dir) default-directory))
-         (projectp (and (bound-and-true-p project--list)
-                        (listp project--list)
-                        (member (list dir) project--list)))
-         (projectilep (and (bound-and-true-p projectile-known-projects)
-                           (listp projectile-known-projects)
-                           (member dir projectile-known-projects))))
-    (cond
-     ((and (or projectilep projectp) (eq major-mode #'dired-mode))
-      `("@[" ,(abbreviate-file-name dir) "]"))
-     ((or projectilep projectp)
-      `("%b" " - @[" ,(abbreviate-file-name dir) "]"))
-     ((eq major-mode #'dired-mode)
-      `("[" ,(abbreviate-file-name dir) "]"))
-     ((doom-real-buffer-p (current-buffer))
-      `("%b" " - [" ,(abbreviate-file-name dir) "]"))
-     (t
-      `("%b" " - GNU Emacs at " system-name)))))
-
-(setq frame-title-format '(:eval (+generate--frame-format)))
 
 
 (after! consult
@@ -742,3 +683,89 @@ And the line would be overlaid like:
 
 (autoload '+consult-kill-buffer "consult" :type t)
 (map! "C-x k" #'+consult-kill-buffer)
+
+(use-package! copilot
+  :bind (:map copilot-completion-map
+              ("<tab>" . 'copilot-accept-completion)
+              ("TAB" . 'copilot-accept-completion)
+              ("C-TAB" . 'copilot-accept-completion-by-word)
+              ("C-<tab>" . 'copilot-accept-completion-by-word)))
+
+
+(defun lsp-booster--advice-json-parse (old-fn &rest args)
+  "Try to parse bytecode instead of json."
+  (or
+   (when (equal (following-char) ?#)
+     (let ((bytecode (read (current-buffer))))
+       (when (byte-code-function-p bytecode)
+         (funcall bytecode))))
+   (apply old-fn args)))
+(advice-add (if (progn (require 'json)
+                       (fboundp 'json-parse-buffer))
+                'json-parse-buffer
+              'json-read)
+            :around
+            #'lsp-booster--advice-json-parse)
+
+(defun lsp-booster--advice-final-command (old-fn cmd &optional test?)
+  "Prepend emacs-lsp-booster command to lsp CMD."
+  (let ((orig-result (funcall old-fn cmd test?)))
+    (if (and (not test?)                             ;; for check lsp-server-present?
+             (not (file-remote-p default-directory)) ;; see lsp-resolve-final-command, it would add extra shell wrapper
+             lsp-use-plists
+             (not (functionp 'json-rpc-connection))  ;; native json-rpc
+             (executable-find "emacs-lsp-booster"))
+        (progn
+          (message "Using emacs-lsp-booster for %s!" orig-result)
+          (cons "emacs-lsp-booster" orig-result))
+      orig-result)))
+(advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
+
+
+(after! emmet-mode
+  (unbind-key "<tab>" emmet-mode-keymap)
+  (map! :map emmet-mode-keymap
+        "C-<tab>" #'+web/indent-or-yas-or-emmet-expand))
+
+
+
+(after! dash
+  (defun -to-head (n list)
+    "Return a new list that move the element at Nth to the head of old LIST."
+    (declare (pure t) (side-effect-free t))
+    (if (> n (1- (length list)))
+        (error "Index %d out of the range of list %S" n list))
+    (let* ((head (-take n list))
+           (rest (-drop n list))
+           (target (pop rest)))
+      (cons target (nconc head rest))))
+
+  (defun -shuffle (list &optional rng)
+    "Return a new shuffled LIST, shuffling using RNG.
+
+The returned list is shuffled by using Fisher-Yates' Algorithm. See
+https://en.wikipedia.org/wiki/Fisher-Yates_shuffle for more details."
+    (declare (pure t) (side-effect-free t))
+    (let* ((len (length list))
+           (random-nums (-map (or rng #'random) (number-sequence len 1 -1)))
+           result)
+      (--each random-nums
+        (setq list (-to-head it list))
+        (push (pop list) result))
+      (nreverse result))))
+
+(use-package! annotate
+  :hook (prog-mode . annotate-mode)
+  :config
+  (setq annotate-file (concat (getenv "HOME") "/documents/notes/annotate")))
+
+(use-package! dogears
+  :config
+  (dogears-mode 1)
+  ;; These bindings are optional, of course:
+  :bind (:map global-map
+              ("M-g d" . dogears-go)
+              ("M-g M-b" . dogears-back)
+              ("M-g M-f" . dogears-forward)
+              ("M-g M-d" . dogears-list)
+              ("M-g M-D" . dogears-sidebar)))

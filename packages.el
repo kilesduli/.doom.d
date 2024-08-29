@@ -47,6 +47,8 @@
            :files ("librime-emacs.so" "*.el")))
 (unpin! consult)
 (unpin! lsp-java)
+(package! annotate)
+(package! dogears)
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)
 
