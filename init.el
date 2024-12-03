@@ -49,7 +49,7 @@
        (vc-gutter +pretty) ; vcs diff in the fringe
        vi-tilde-fringe     ; fringe tildes to mark beyond EOB
        ;;window-select     ; visually switch windows
-       ;;workspaces        ; tab emulation, persistence & separate workspaces
+       workspaces          ; tab emulation, persistence & separate workspaces
        ;;zen               ; distraction-free coding or writing
 
        :editor
@@ -99,8 +99,7 @@
         +dictionary
         +docsets)          ; navigate your code and its documentation
        lsp                 ; M-x vscode
-       (magit
-        +force)            ; a git porcelain for Emacs
+       (magit)             ; a git porcelain for Emacs
        make                ; run make tasks from Emacs
        ;;pass              ; password manager for nerds
        (pdf +pdf-tools)    ; pdf enhancements
@@ -158,7 +157,7 @@
        ;;lua               ; one-based indices? one-based indices
        markdown            ; writing docs for people to ignore
        ;;nim               ; python + lisp at the speed of c
-       nix                 ; I hereby declare "nix geht mehr!"
+       (nix +lsp)          ; I hereby declare "nix geht mehr!"
        ;;ocaml             ; an objective camel
        (org
         +pandoc
@@ -172,15 +171,17 @@
         +pyright
         )
        ;;qt                ; the 'cutest' gui framework ever
-       (racket +lsp
-               +xp)        ; a DSL for DSLs
+       (racket
+        +lsp
+        +xp
+        +hash-lang)        ; a DSL for DSLs
        ;;raku              ; the artist formerly known as perl6
        ;;rest              ; Emacs as a REST client
        ;;rst               ; ReST in peace
        ;;(ruby +rails)     ; 1.step {|i| p "Ruby is #{i.even? ? 'love' : 'life'}"}
        (rust +lsp)         ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
        ;;scala             ; java, but good
-       ;;(scheme +chez)      ; a fully conniving family of lisps
+       (scheme +chez +guile); a fully conniving family of lisps
        (sh +lsp)           ; she sells {ba,z,fi}sh shells on the C xor
        ;;sml
        ;;solidity          ; do you need a blockchain? No.

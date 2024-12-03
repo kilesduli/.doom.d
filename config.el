@@ -34,12 +34,39 @@
 (setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
       doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
       doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
-      doom-symbol-font (font-spec :family "LXGW Wenkai Mono" )
+      doom-symbol-font (font-spec :family "LXGW Wenkai Mono")
       doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
 
+(setq doom-modeline-height 44)
+
 (setq doom-theme 'modus-operandi-tritanopia)
+(add-hook! doom-load-theme
+  (custom-theme-set-faces
+   'user
+   '(org-level-1 ((t (:inherit modus-themes-heading-1 :extend t :weight normal))))
+   '(org-level-2 ((t (:inherit modus-themes-heading-2 :extend t :weight normal))))
+   '(org-level-3 ((t (:inherit modus-themes-heading-3 :extend t :weight normal))))
+   '(org-level-4 ((t (:inherit modus-themes-heading-4 :extend t :weight normal))))
+   '(org-level-5 ((t (:inherit modus-themes-heading-5 :extend t :weight normal))))
+   '(org-level-6 ((t (:inherit modus-themes-heading-6 :extend t :weight normal))))
+   '(org-level-7 ((t (:inherit modus-themes-heading-7 :extend t :weight normal))))
+   '(org-level-8 ((t (:inherit modus-themes-heading-8 :extend t :weight normal))))))
+
+(add-hook! doom-load-theme
+  (apply #'custom-theme-set-faces
+         'user
+         (cl-loop for i from 1 to 8
+                  collect (list (intern (format "org-level-%d" i))
+                                `((t (:inherit ,(intern (format "modus-themes-heading-%d" i))
+                                      :extend t
+                                      :weight normal)))))))
+
 
 (setq org-directory "~/documents/notes/")
+
+(setq-default cursor-in-non-selected-windows t
+              truncate-lines nil
+              undo-limit 80000000)
 
 (setq auth-sources '("~/.authinfo.gpg")
       auth-source-cache-expiry nil
@@ -47,10 +74,10 @@
       scroll-margin 2
       word-wrap-by-category t
       delete-by-moving-to-trash t
-      cursor-in-non-selected-windows t
-      truncate-lines nil
-      undo-limit 80000000
       display-line-numbers-type 'relative)
+
+(remove-hook! '(prog-mode-hook text-mode-hook conf-mode-hook)
+  #'display-line-numbers-mode)
 
 (if (daemonp)
     (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -63,6 +90,15 @@
 
 (global-set-key  [C-mouse-wheel-up-event]  'text-scale-increase)
 (global-set-key  [C-mouse-wheel-down-event] 'text-scale-decrease)
+(keymap-global-set "C-<mouse-wheel-up-event>"  'text-scale-increase)
+(keymap-global-set "C-<mouse-wheel-down-event>" 'text-scale-decrease)
+(map!
+ (:when (modulep! :ui workspaces)
+   :g "<f1>"   #'+workspace/switch-to-0
+   :g "<f2>"   #'+workspace/switch-to-1
+   :g "<f3>"   #'+workspace/switch-to-2
+   :g "<f4>"   #'+workspace/switch-to-3
+   :g "<f5>"   #'+workspace/switch-to-4))
 
 (map! :leader
       (:prefix-map ("b" . "buffer")
@@ -92,30 +128,10 @@
        :desc "Pop up scratch buffer"       "x"   #'doom/open-scratch-buffer
        :desc "Switch to scratch buffer"    "X"   #'scratch-buffer
        :desc "Bury buffer"                 "z"   #'bury-buffer
-       :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers)
+       :desc "Kill buried buffers"         "Z"   #'doom/kill-buried-buffers))
 
-      :map doom-leader-file-map
+(map! :map doom-leader-file-map
       "o" #'find-file-other-window)
-
-(defun +generate--frame-format ()
-  (let* ((dir (or (vc-root-dir) default-directory))
-         (projectp (and (bound-and-true-p project--list)
-                        (listp project--list)
-                        (member (list dir) project--list)))
-         (projectilep (and (bound-and-true-p projectile-known-projects)
-                           (listp projectile-known-projects)
-                           (member dir projectile-known-projects))))
-    (cond
-     ((and (or projectilep projectp) (eq major-mode #'dired-mode))
-      `("@[" ,(abbreviate-file-name dir) "]"))
-     ((or projectilep projectp)
-      `("%b" " - @[" ,(abbreviate-file-name dir) "]"))
-     ((eq major-mode #'dired-mode)
-      `("[" ,(abbreviate-file-name dir) "]"))
-     ((doom-real-buffer-p (current-buffer))
-      `("%b" " - [" ,(abbreviate-file-name dir) "]"))
-     (t
-      `("%b" " - GNU Emacs at " system-name)))))
 
 (setq frame-title-format '(:eval (+generate--frame-format)))
 
@@ -128,108 +144,108 @@
 ;; (map! :map meow-beacon-state-keymap
 ;;       doom-leader-key nil)
 
-(use-package! meow
-  :config
-  ;; (meow-global-mode 1)
-  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
-  ;; meow-setup 用于自定义按键绑定，可以直接使用下文中的示例
-  (meow-motion-overwrite-define-key
-   '("j" . meow-next)
-   '("k" . meow-prev)
-   '("<escape>" . keyboard-quit))
-  (meow-leader-define-key
-   ;; SPC j/k will run the original command in MOTION state.
-   '("j" . "H-j")
-   '("k" . "H-k") ;;因为j，k覆盖了按键，使原生按键可用得加SPC
-   ;; Use SPC (0-9) for digit arguments.
-   '("1" . meow-digit-argument)
-   '("2" . meow-digit-argument)
-   '("3" . meow-digit-argument)
-   '("4" . meow-digit-argument)
-   '("5" . meow-digit-argument)
-   '("6" . meow-digit-argument)
-   '("7" . meow-digit-argument)
-   '("8" . meow-digit-argument)
-   '("9" . meow-digit-argument)
-   '("0" . meow-digit-argument)
-   '("/" . meow-keypad-describe-key)
-   '("?" . meow-cheatsheet)
-   ;; '("SPC" . keyboard-escape-quit)
-   )
-  (meow-normal-define-key
-   '("0" . meow-expand-0)
-   '("9" . meow-expand-9)
-   '("8" . meow-expand-8)
-   '("7" . meow-expand-7)
-   '("6" . meow-expand-6)
-   '("5" . meow-expand-5)
-   '("4" . meow-expand-4)
-   '("3" . meow-expand-3)
-   '("2" . meow-expand-2)
-   '("1" . meow-expand-1)
-   '("-" . negative-argument)
-   '(";" . meow-reverse)
-   '("," . meow-inner-of-thing)
-   '("." . meow-bounds-of-thing)
-   '("[" . meow-beginning-of-thing)
-   '("]" . meow-end-of-thing)
-   '("a" . meow-append)
-   '("A" . meow-open-below)
-   '("b" . meow-back-word)
-   '("B" . meow-back-symbol)
-   '("c" . meow-change)
-   '("C" . meow-change-save)
-   '("d" . meow-C-d)
-   '("D" . meow-backward-delete)
-   '("e" . meow-next-word)
-   '("E" . meow-next-symbol)
-   '("f" . meow-find)
-   '("F" . meow-find-expand)
-   '("g" . meow-cancel)
-   '("G" . meow-grab)
-   '("h" . meow-left)
-   '("H" . meow-left-expand)
-   '("j" . meow-next)
-   '("J" . meow-next-expand)
-   '("k" . meow-prev)
-   '("K" . meow-prev-expand)
-   '("l" . meow-right)
-   '("L" . meow-right-expand)
-   '("I" . meow-open-above)
-   '("i" . meow-insert)
-   '("m" . meow-join)
-   '("n" . meow-search)
-   '("N" . meow-pop-search)
-   '("o" . meow-block)
-   '("O" . meow-to-block)
-   '("p" . meow-yank)
-   '("P" . meow-yank-pop)
-   '("q" . meow-quit)
-   '("Q" . meow-goto-line)
-   '("r" . meow-replace)
-   '("R" . meow-swap-grab)
-   '("s" . meow-kill)
-   '("t" . meow-till)
-   '("T" . meow-till-expand)
-   '("u" . meow-undo)
-   '("U" . meow-undo-in-selection)
-   '("v" . meow-visit)
-   '("V" . meow-kmacro-matches)
-   '("w" . meow-mark-word)
-   '("W" . meow-mark-symbol)
-   '("x" . meow-line)
-   '("X" . meow-kmacro-lines)
-   '("y" . meow-save)
-   '("Y" . meow-sync-grab)
-   '("z" . meow-pop-selection)
-   '("Z" . meow-pop-all-selection)
-   '("&" . meow-query-replace)
-   '("%" . meow-query-replace-regexp)
-   '("'" . repeat)
-   '("\\" . quoted-insert)
-   '("<escape>" . ignore))
-  ;; 如果你需要自动的 mode-line 设置（如果需要自定义见下文对 `meow-indicator' 说明）
-  (meow-setup-indicator))
+;; (use-package! meow
+;;   :config
+;;   ;; (meow-global-mode 1)
+;;   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+;;   ;; meow-setup 用于自定义按键绑定，可以直接使用下文中的示例
+;;   (meow-motion-overwrite-define-key
+;;    '("j" . meow-next)
+;;    '("k" . meow-prev)
+;;    '("<escape>" . keyboard-quit))
+;;   (meow-leader-define-key
+;;    ;; SPC j/k will run the original command in MOTION state.
+;;    '("j" . "H-j")
+;;    '("k" . "H-k") ;;因为j，k覆盖了按键，使原生按键可用得加SPC
+;;    ;; Use SPC (0-9) for digit arguments.
+;;    '("1" . meow-digit-argument)
+;;    '("2" . meow-digit-argument)
+;;    '("3" . meow-digit-argument)
+;;    '("4" . meow-digit-argument)
+;;    '("5" . meow-digit-argument)
+;;    '("6" . meow-digit-argument)
+;;    '("7" . meow-digit-argument)
+;;    '("8" . meow-digit-argument)
+;;    '("9" . meow-digit-argument)
+;;    '("0" . meow-digit-argument)
+;;    '("/" . meow-keypad-describe-key)
+;;    '("?" . meow-cheatsheet)
+;;    ;; '("SPC" . keyboard-escape-quit)
+;;    )
+;;   (meow-normal-define-key
+;;    '("0" . meow-expand-0)
+;;    '("9" . meow-expand-9)
+;;    '("8" . meow-expand-8)
+;;    '("7" . meow-expand-7)
+;;    '("6" . meow-expand-6)
+;;    '("5" . meow-expand-5)
+;;    '("4" . meow-expand-4)
+;;    '("3" . meow-expand-3)
+;;    '("2" . meow-expand-2)
+;;    '("1" . meow-expand-1)
+;;    '("-" . negative-argument)
+;;    '(";" . meow-reverse)
+;;    '("," . meow-inner-of-thing)
+;;    '("." . meow-bounds-of-thing)
+;;    '("[" . meow-beginning-of-thing)
+;;    '("]" . meow-end-of-thing)
+;;    '("a" . meow-append)
+;;    '("A" . meow-open-below)
+;;    '("b" . meow-back-word)
+;;    '("B" . meow-back-symbol)
+;;    '("c" . meow-change)
+;;    '("C" . meow-change-save)
+;;    '("d" . meow-C-d)
+;;    '("D" . meow-backward-delete)
+;;    '("e" . meow-next-word)
+;;    '("E" . meow-next-symbol)
+;;    '("f" . meow-find)
+;;    '("F" . meow-find-expand)
+;;    '("g" . meow-cancel)
+;;    '("G" . meow-grab)
+;;    '("h" . meow-left)
+;;    '("H" . meow-left-expand)
+;;    '("j" . meow-next)
+;;    '("J" . meow-next-expand)
+;;    '("k" . meow-prev)
+;;    '("K" . meow-prev-expand)
+;;    '("l" . meow-right)
+;;    '("L" . meow-right-expand)
+;;    '("I" . meow-open-above)
+;;    '("i" . meow-insert)
+;;    '("m" . meow-join)
+;;    '("n" . meow-search)
+;;    '("N" . meow-pop-search)
+;;    '("o" . meow-block)
+;;    '("O" . meow-to-block)
+;;    '("p" . meow-yank)
+;;    '("P" . meow-yank-pop)
+;;    '("q" . meow-quit)
+;;    '("Q" . meow-goto-line)
+;;    '("r" . meow-replace)
+;;    '("R" . meow-swap-grab)
+;;    '("s" . meow-kill)
+;;    '("t" . meow-till)
+;;    '("T" . meow-till-expand)
+;;    '("u" . meow-undo)
+;;    '("U" . meow-undo-in-selection)
+;;    '("v" . meow-visit)
+;;    '("V" . meow-kmacro-matches)
+;;    '("w" . meow-mark-word)
+;;    '("W" . meow-mark-symbol)
+;;    '("x" . meow-line)
+;;    '("X" . meow-kmacro-lines)
+;;    '("y" . meow-save)
+;;    '("Y" . meow-sync-grab)
+;;    '("z" . meow-pop-selection)
+;;    '("Z" . meow-pop-all-selection)
+;;    '("&" . meow-query-replace)
+;;    '("%" . meow-query-replace-regexp)
+;;    '("'" . repeat)
+;;    '("\\" . quoted-insert)
+;;    '("<escape>" . ignore))
+;;   ;; 如果你需要自动的 mode-line 设置（如果需要自定义见下文对 `meow-indicator' 说明）
+;;   (meow-setup-indicator))
 
 ;;;; rime
 ;; emacs do not provide us a way to make keybinding live all over the time, but
@@ -245,11 +261,12 @@
   (rime-share-data-dir "~/.local/share/rime-data")
   (rime-show-candidate 'posframe)
   ;; (rime-inline-predicates '(rime-predicate-space-after-cc-p))
-  (rime-disable-predicates
-   '(meow-normal-mode-p
-     meow-motion-mode-p
-     meow-keypad-mode-p
-     meow-beacon-mode-p)))
+  ;; (rime-disable-predicates
+  ;;  '(meow-normal-mode-p
+  ;;    meow-motion-mode-p
+  ;;    meow-keypad-mode-p
+  ;;    meow-beacon-mode-p))
+  )
 
 (after! rime
   (when (daemonp)
@@ -274,7 +291,6 @@
 (after! org
   (setq org-id-method 'ts)
   (setq org-cycle-separator-lines 1)
-  (setq org-link-descriptive nil)
   (setq org-cycle-separator-lines 1)
   (setq org-latex-packages-alist '(("" "amssymb" t ("xelatex"))
                                    ("" "amsmath" t ("xelatex")))))
@@ -330,16 +346,9 @@
                 (point)))))))
       (apply fn args))))
 
-(defun +org-yank-image-filename-with-denote-id ()
-  (unless (featurep 'denote)
-    (require 'denote))
-  (if-let ((id (denote-retrieve-filename-identifier (buffer-file-name))))
-      (format (concat "C" id "-" (substring (org-id-uuid) 0 (min 8))))
-    (org-yank-image-autogen-filename)))
-
 (after! org
   (setq org-yank-image-save-method (concat org-directory "assets"))
-  (setq org-yank-image-file-name-function #'+org-yank-image-filename-with-denote-id))
+  (setq org-yank-image-file-name-function #'+org-yank-image-with-denote-id-or-default))
 
 ;;;; lsp and company
 (after! lsp-mode
@@ -428,12 +437,10 @@
 (add-hook 'scheme-mode-hook 'paredit-mode)
 (add-hook 'emacs-lisp-mode-hook 'paredit-mode)
 
-(run-with-idle-timer 30 t #'recentf-save-list)
-
 ;;;; cns
 (use-package! cns
   :config
-  (let ((repodir (concat doom-local-dir "straight/" straight-build-dir "/cns/")))
+  (let ((repodir (concat doom-local-dir "straight/" (format "build-%s" emacs-version) "/cns/")))
     (setq cns-prog (concat repodir "cnws")
           cns-dict-directory (concat repodir "cppjieba/dict")))
   :hook
@@ -460,173 +467,32 @@
   (setq denote-known-keywords '(emacs note))
   (setq denote-prompts '(keywords title)))
 
-(defvar +org-capture-collections-file "collections.org"
-  "Default target for collections notes
-
-Collecting everyting you do not wanna miss
-
-Is relative to `org-directory' unless it is absolute. Is used in
-`org-capture-templates'.")
+(defvar +denote-journal-file (concat denote-directory (format-time-string "%Y0101T000000--") "journal__denote.org"))
+(defvar +denote-collections-file (concat denote-directory "19700101T000000--refile__denote.org"))
+(defvar +denote-todo-file (concat denote-directory "19700102T000000--todo__denote.org"))
 
 (after! org-capture
   (setq org-capture-templates
-        '(("j" "Journal" entry (file+olp+datetree +org-capture-journal-file)
+        '(("n" "New note (with Denote)" plain (file denote-last-path)
+           #'denote-org-capture
+           :no-save t
+           :immediate-finish nil
+           :kill-buffer t
+           :jump-to-captured t)
+          ("j" "Journal" entry (file+olp+datetree +denote-journal-file)
            "* %<%I:%M %p> %?")
-          ("t" "Personal todo" entry (file+headline +org-capture-todo-file "Inbox")
-           "* [ ] %?" :prepend t)))
-  (cl-pushnew '("n" "New note (with Denote)" plain
-                (file denote-last-path)
-                #'denote-org-capture
-                :no-save t
-                :immediate-finish nil
-                :kill-buffer t
-                :jump-to-captured t)
-              org-capture-templates
-              :test #'equal))
+          ("t" "Personal todo" entry (file+headline +denote-todo-file "Inbox")
+           "* [ ] %?" :prepend t)
+          ("c" "Collections" entry (file+headline +denote-collections-file "Inbox")
+           "* " :prepend t))))
 
-(defun replace-dashes-with-stars (n)
-  "Replace dashes with stars at the beginning of each line.
-The number of stars will be increased by N for each tab before the dash."
-  (interactive "p")
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward "^\\(\t*\\)-" nil t)
-      (replace-match (make-string (1+ (length (match-string 1))) ?*) t nil))))
+(map! :map doom-leader-notes-map
+      "r" #'+denote-random-note)
 
-(defun insert-space-between-chinese-and-english ()
-  "Insert space between Chinese and English text in each line of the region.
-   Ignore lines starting with '#+'"
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (not (eobp))
-      (forward-line 1)
-      (beginning-of-line)
-      (when (not (looking-at "^\\s-*#\\+")) ; Ignore lines starting with #+
-        (while (progn (beginning-of-line)
-                      (re-search-forward "\\(?1:\\cC\\|\\cH\\|\\cK\\)\\(?2:[0-9A-Za-z]\\)\\|\\(?1:[0-9A-Za-z]\\)\\(?2:\\cC\\|\\cH\\|\\cK\\)" (line-end-position) t))
-          (replace-match "\\1 \\2" nil nil))))))
-
+(setq org-agenda-files '("~/documents/notes/"))
 
 
 ;;;;; continue
-
-(defcustom unpackaged/lorem-ipsum-overlay-exclude nil
-  "List of regexps to exclude from `unpackaged/lorem-ipsum-overlay'."
-  :type '(repeat regexp))
-
-(cl-defun unpackaged/lorem-ipsum-overlay (&key replace-p use-map-p)
-  "Overlay all text in current buffer with \"lorem ipsum\" text.
-When called again, remove overlays.  Useful for taking
-screenshots without revealing buffer contents.
-
-If REPLACE-P is non-nil (interactively, with prefix and prompt),
-replace buffer contents rather than overlaying them.  When a
-buffer is very large and would have so many overlays that
-performance would be prohibitively slow, you may replace the
-buffer contents instead.  (Of course, be careful about saving the
-buffer after replacing its contents.)
-
-If USE-MAP-P is non-nil (interactively, with prefix and prompt),
-all instances of a real word are replaced with the same word;
-otherwise, each instance of a real word is replaced with a random
-word (further obscuring the text).
-
-Each piece of non-whitespace text in the buffer is compared with
-regexps in `unpackaged/lorem-ipsum-overlay-exclude', and ones
-that match are not overlaid.  Note that the regexps are compared
-against the entire non-whitespace token, up-to and including the
-preceding whitespace, but only the alphabetic part of the token
-is overlaid.  For example, in an Org buffer, a line that starts
-with:
-
-  #+TITLE: unpackaged.el
-
-could be matched against the exclude regexp (in `rx' syntax):
-
-  (rx (or bol bos blank) \"#+\" (1+ alnum) \":\" (or eol eos blank))
-
-And the line would be overlaid like:
-
-  #+TITLE: parturient.et"
-  (interactive (when current-prefix-arg
-                 (list :replace-p (yes-or-no-p "Replace contents (or just overlay)? ")
-                       :use-map-p (yes-or-no-p "Map words (or be completely random)? "))))
-  (require 'lorem-ipsum)
-  (let ((ovs (overlays-in (point-min) (point-max))))
-    (if (cl-loop for ov in ovs
-                 thereis (overlay-get ov :lorem-ipsum-overlay))
-        ;; Remove overlays.
-        (dolist (ov ovs)
-          (when (overlay-get ov :lorem-ipsum-overlay)
-            (delete-overlay ov)))
-      ;; Add overlays.
-      (let ((lorem-ipsum-words (--> lorem-ipsum-text
-                                    (-flatten it) (apply #'concat it)
-                                    (split-string it (rx (or space punct)) 'omit-nulls)))
-            (case-fold-search nil)
-            (map (make-hash-table :test #'equal)))
-        (cl-labels ((overlay-group (group)
-                      (let* ((beg (match-beginning group))
-                             (end (match-end group))
-                             (replacement-word (if use-map-p
-                                                   (lorem-word* (match-string-no-properties group))
-                                                 (lorem-word (match-string-no-properties group))))
-                             (ov (make-overlay beg end)))
-                        (when replacement-word
-                          (overlay-put ov :lorem-ipsum-overlay t)
-                          (overlay-put ov 'display replacement-word))))
-                    (replace-group (group)
-                      (let* ((beg (match-beginning group))
-                             (end (match-end group))
-                             (replacement-word (if use-map-p
-                                                   (lorem-word* (match-string-no-properties group))
-                                                 (lorem-word (match-string-no-properties group)))))
-                        (when replacement-word
-                          (setf (buffer-substring-no-properties beg end) replacement-word))))
-                    (lorem-word (word)
-                      (if-let* ((matches (lorem-matches (length word))))
-                          (apply-case word (downcase (seq-random-elt matches)))
-                        ;; Word too long: compose one.
-                        (apply-case word (downcase (compose-word (length word))))))
-                    (lorem-word* (word)
-                      (or (gethash word map)
-                          (puthash word
-                                   (if-let ((matches (lorem-matches (length word))))
-                                       (apply-case word (downcase (seq-random-elt matches)))
-                                     ;; Word too long: compose one.
-                                     (apply-case word (downcase (compose-word (length word)))))
-                                   map)))
-                    (lorem-matches (length &optional (comparator #'=))
-                      (cl-loop for liw in lorem-ipsum-words
-                               when (funcall comparator (length liw) length)
-                               collect liw))
-                    (apply-case (source target)
-                      (cl-loop for sc across-ref source
-                               for tc across-ref target
-                               when (not (string-match-p (rx lower) (char-to-string sc)))
-                               do (setf tc (string-to-char (upcase (char-to-string tc)))))
-                      target)
-                    (compose-word (length)
-                      (cl-loop while (> length 0)
-                               for word = (seq-random-elt (lorem-matches length #'<=))
-                               concat word
-                               do (cl-decf length (length word)))))
-          (save-excursion
-            (goto-char (point-min))
-            (while (re-search-forward (rx (group (1+ (or bol bos blank (not alpha)))
-                                                 (0+ (not (any alpha blank)))
-                                                 (group (1+ alpha))
-                                                 (0+ (not (any alpha blank)))))
-                                      nil t)
-              (unless (cl-member (match-string-no-properties 0) unpackaged/lorem-ipsum-overlay-exclude
-                                 :test (lambda (string regexp)
-                                         (string-match-p regexp string)))
-                (if replace-p
-                    (replace-group 2)
-                  (overlay-group 2)))
-              (goto-char (match-end 2)))))))))
-
 
 (after! lsp-java
   (setq lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/snapshots/jdt-language-server-latest.tar.gz"))
@@ -636,53 +502,45 @@ And the line would be overlaid like:
                                                   ".git" ".hg")))
 
 (after! projectile
-  (defun projectile-reset-current-project-cache ()
-    (interactive)
-    (let ((project-root (projectile-project-root)))
-      (puthash project-root
-               '()
-               projectile-projects-cache)))
-  (defun projectile-reset-all-project-cache ()
-    (interactive)
-    (setq projectile-projects-cache (make-hash-table :test 'equal))))
+)
 
-(after! consult
-  (unless (featurep 'beframe)
-    (require 'beframe))
-  (defface beframe-buffer
-    '((t :inherit font-lock-string-face))
-    "Face for `consult' framed buffers.")
-  (defvar beframe--consult-source
-    `( :name     "Frame-specific buffers (current frame)"
-       :narrow   ?F
-       :category buffer
-       :face     beframe-buffer
-       :history  beframe-history
-       :items    ,#'beframe--buffer-names
-       :action   ,#'switch-to-buffer
-       :state    ,#'consult--buffer-state))
-  (add-to-list 'consult-buffer-sources 'beframe--consult-source))
+;; (after! consult
+;;   (unless (featurep 'beframe)
+;;     (require 'beframe))
+;;   (defface beframe-buffer
+;;     '((t :inherit font-lock-string-face))
+;;     "Face for `consult' framed buffers.")
+;;   (defvar beframe--consult-source
+;;     `( :name     "Frame-specific buffers (current frame)"
+;;        :narrow   ?F
+;;        :category buffer
+;;        :face     beframe-buffer
+;;        :history  beframe-history
+;;        :items    ,#'beframe--buffer-names
+;;        :action   ,#'switch-to-buffer
+;;        :state    ,#'consult--buffer-state))
+;;   (add-to-list 'consult-buffer-sources 'beframe--consult-source))
 
 
 
-(after! consult
-  (defvar +consult-kill-buffer-source '(beframe--consult-source
-                                        consult--source-hidden-buffer
-                                        consult--source-modified-buffer
-                                        consult--source-buffer
-                                        consult--source-project-buffer-hidden))
-  (defun +consult-kill-buffer ()
-    (interactive)
-    (let ((selected (consult--multi +consult-kill-buffer-source
-                                    :prompt "Kill buffer: "
-                                    :history 'consult--buffer-history
-                                    :preview-key nil
-                                    :sort nil)))
-      (when (plist-get (cdr selected) :match)
-        (kill-buffer (car selected))))))
 
-(autoload '+consult-kill-buffer "consult" :type t)
-(map! "C-x k" #'+consult-kill-buffer)
+;; (after! consult
+;;   (defvar +consult-kill-buffer-source '(beframe--consult-source
+;;                                         consult--source-hidden-buffer
+;;                                         consult--source-modified-buffer
+;;                                         consult--source-buffer
+;;                                         consult--source-project-buffer-hidden))
+;;   (defun +consult-kill-buffer ()
+;;     (interactive)
+;;     (let ((selected (consult--multi +consult-kill-buffer-source
+;;                                     :prompt "Kill buffer: "
+;;                                     :history 'consult--buffer-history
+;;                                     :preview-key nil
+;;                                     :sort nil)))
+;;       (when (plist-get (cdr selected) :match)
+;;         (kill-buffer (car selected))))))
+;; (autoload '+consult-kill-buffer "consult" :type t)
+;; (map! "C-x k" #'+consult-kill-buffer)
 
 (use-package! copilot
   :bind (:map copilot-completion-map
@@ -727,41 +585,13 @@ And the line would be overlaid like:
   (map! :map emmet-mode-keymap
         "C-<tab>" #'+web/indent-or-yas-or-emmet-expand))
 
-
-
-(after! dash
-  (defun -to-head (n list)
-    "Return a new list that move the element at Nth to the head of old LIST."
-    (declare (pure t) (side-effect-free t))
-    (if (> n (1- (length list)))
-        (error "Index %d out of the range of list %S" n list))
-    (let* ((head (-take n list))
-           (rest (-drop n list))
-           (target (pop rest)))
-      (cons target (nconc head rest))))
-
-  (defun -shuffle (list &optional rng)
-    "Return a new shuffled LIST, shuffling using RNG.
-
-The returned list is shuffled by using Fisher-Yates' Algorithm. See
-https://en.wikipedia.org/wiki/Fisher-Yates_shuffle for more details."
-    (declare (pure t) (side-effect-free t))
-    (let* ((len (length list))
-           (random-nums (-map (or rng #'random) (number-sequence len 1 -1)))
-           result)
-      (--each random-nums
-        (setq list (-to-head it list))
-        (push (pop list) result))
-      (nreverse result))))
-
 (use-package! annotate
   :hook (prog-mode . annotate-mode)
   :config
   (setq annotate-file (concat (getenv "HOME") "/documents/notes/annotate")))
 
 (use-package! dogears
-  :config
-  (dogears-mode 1)
+  :hook (after-init . dogears-mode)
   ;; These bindings are optional, of course:
   :bind (:map global-map
               ("M-g d" . dogears-go)
@@ -769,3 +599,38 @@ https://en.wikipedia.org/wiki/Fisher-Yates_shuffle for more details."
               ("M-g M-f" . dogears-forward)
               ("M-g M-d" . dogears-list)
               ("M-g M-D" . dogears-sidebar)))
+
+(add-to-list 'display-buffer-alist
+             `(,(rx string-start "*Async Shell Command*" string-end)
+               (display-buffer-no-window)))
+(load! "serenity-org-okular.el")
+
+(setf (cdr (assoc "\\.pdf\\'" org-file-apps)) "nixGL sioyek %s")
+(add-to-list 'org-file-apps '("\\.pdf::\\([0-9]+\\)\\'" . "nixGL sioyek %s --page %1"))
+
+(after! lsp-pyright
+  (setq lsp-pyright-langserver-command "basedpyright"))
+
+
+(use-package! typst-ts-mode
+  :config
+  :custom
+  (typst-ts-watch-options "--open")
+  (typst-ts-mode-enable-raw-blocks-highlight t)
+  :config
+  (keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu))
+
+(put 'narrow-to-region 'disabled nil)
+(put 'org-agenda-file-to-front 'disabled t)
+(put 'org-remove-file 'disabled t)
+
+;; fix guix
+(after! tramp
+  (add-to-list 'tramp-remote-path "/run/current-system/profile/bin"))
+
+(add-to-list 'auto-mode-alist (cons "\\.zuo\\'" 'racket-mode))
+
+(setq inferior-lisp-program "/usr/bin/sbcl")
+
+(set-company-backend! 'sly-mrepl-mode
+  'company-capf 'company-dabbrev)

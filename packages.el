@@ -1,6 +1,6 @@
 ;; -*- no-byte-compile: t; -*-
 ;;; $DOOMDIR/packages.el
-(package! meow)
+;;(package! meow)
 (package! disable-mouse)
 (package! org-fragtog)
 (package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion"))
@@ -49,6 +49,18 @@
 (unpin! lsp-java)
 (package! annotate)
 (package! dogears)
+(unpin! org-noter)
+(package! uniline
+  :recipe (:host github :repo "tbanel/uniline"))
+(package! emacs-buffer-name-relative
+  :recipe (:host codeberg :repo "ideasman42/emacs-buffer-name-relative"))
+(package! typst
+  :recipe (:host codeberg :repo "meow_king/typst-ts-mode"))
+(package! treesit-langs
+  :recipe (:host github :repo "emacs-tree-sitter/treesit-langs"))
+(package! org-super-agenda
+  :recipe (:host github :repo "alphapapa/org-super-agenda"))
+
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)
 
