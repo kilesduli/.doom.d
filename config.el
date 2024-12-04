@@ -277,13 +277,10 @@
 
 ;;;; Org-mode
 ;; disable company chinese extend.
-(after! org
-  (unless (featurep 'company)
-    (require 'company))
-  (setq company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
-  (push 'company-dabbrev company-backends)
-  (set-company-backend! 'org-mode
-    'company-dabbrev 'company-yasnippet))
+(set-company-backend! 'org-mode
+  'company-dabbrev 'company-yasnippet)
+(setq-hook! 'org-mode-hook
+  company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
 
 (after! ox
   (require 'ox-gfm))
@@ -632,5 +629,3 @@
 
 (setq inferior-lisp-program "/usr/bin/sbcl")
 
-(set-company-backend! 'sly-mrepl-mode
-  'company-capf 'company-dabbrev)
