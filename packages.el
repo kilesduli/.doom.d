@@ -49,6 +49,7 @@
 (unpin! lsp-java)
 (package! annotate)
 (package! dogears)
+(package! zotero)
 (unpin! org-noter)
 (package! uniline
   :recipe (:host github :repo "tbanel/uniline"))
@@ -63,6 +64,15 @@
 ;; FIXME: temp pin a stable version
 (package! transient
   :recipe (:host github :repo "magit/transient") :pin "4634815a11a2fb30a38079e306fc363c88a787c7")
+(package! ekg
+  :recipe (:host github :repo "ahyatt/ekg"))
+(package! org-ql
+  :recipe (:host github :repo "alphapapa/org-ql"))
+(package! telega)
+(package! gptel)
+(package! speed-type)
+;; (package! slime)
+
 ;; If you want to replace it with yasnippet's default snippets
 ;;(package! yasnippet-snippets)
 

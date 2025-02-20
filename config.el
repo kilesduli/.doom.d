@@ -31,26 +31,20 @@
 (setq user-full-name "duli kiles"
       user-mail-address "duli4868@gmail.com")
 
-(setq doom-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
+(setq doom-font (font-spec :family "MonoLisa duli Modified" :weight 'light :size 30)
       doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
       doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
       doom-symbol-font (font-spec :family "LXGW Wenkai Mono")
       doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
 
 (setq doom-modeline-height 44)
-
 (setq doom-theme 'modus-operandi-tritanopia)
-(add-hook! doom-load-theme
-  (custom-theme-set-faces
-   'user
-   '(org-level-1 ((t (:inherit modus-themes-heading-1 :extend t :weight normal))))
-   '(org-level-2 ((t (:inherit modus-themes-heading-2 :extend t :weight normal))))
-   '(org-level-3 ((t (:inherit modus-themes-heading-3 :extend t :weight normal))))
-   '(org-level-4 ((t (:inherit modus-themes-heading-4 :extend t :weight normal))))
-   '(org-level-5 ((t (:inherit modus-themes-heading-5 :extend t :weight normal))))
-   '(org-level-6 ((t (:inherit modus-themes-heading-6 :extend t :weight normal))))
-   '(org-level-7 ((t (:inherit modus-themes-heading-7 :extend t :weight normal))))
-   '(org-level-8 ((t (:inherit modus-themes-heading-8 :extend t :weight normal))))))
+
+(set-fontset-font t 'emoji
+                  '("Noto Color Emoji" . "iso10646-1") nil 'prepend)
+
+(setq xft-ignore-color-fonts nil)
+(setq face-ignored-fonts nil)
 
 (add-hook! doom-load-theme
   (apply #'custom-theme-set-faces
@@ -61,6 +55,7 @@
                                       :extend t
                                       :weight normal)))))))
 
+(remove-hook! doom-first-buffer #'gcmh-mode)
 
 (setq org-directory "~/documents/notes/")
 
@@ -68,10 +63,13 @@
               truncate-lines nil
               undo-limit 80000000)
 
+(after! undo-fu (setq undo-limit 80000000))
+
 (setq auth-sources '("~/.authinfo.gpg")
       auth-source-cache-expiry nil
       scroll-preserve-screen-position 'always
-      scroll-margin 2
+      scroll-margin 0
+      scroll-conservatively 101
       word-wrap-by-category t
       delete-by-moving-to-trash t
       display-line-numbers-type 'relative)
@@ -86,7 +84,7 @@
 (setq which-key-idle-delay 0.01)
 (setq which-key-idle-secondary-delay 0.01)
 
-(pixel-scroll-precision-mode 1)
+;;(pixel-scroll-precision-mode 1)
 
 (global-set-key  [C-mouse-wheel-up-event]  'text-scale-increase)
 (global-set-key  [C-mouse-wheel-down-event] 'text-scale-decrease)
@@ -290,7 +288,11 @@
   (setq org-cycle-separator-lines 1)
   (setq org-cycle-separator-lines 1)
   (setq org-latex-packages-alist '(("" "amssymb" t ("xelatex"))
-                                   ("" "amsmath" t ("xelatex")))))
+                                   ("" "amsmath" t ("xelatex"))))
+  (setq org-todo-keywords '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "STRT(s)" "WAIT(w)" "HOLD(h)" "IDEA(i)"
+                             "|" "DONE(d)" "KILL(k)")
+                            (sequence "[ ](T)" "[-](S)" "[?](W)" "|" "[X](D)")
+                            (sequence "YEAR FLAG" "CONTINUOUS FLAG" "|" "MISSION COMPLETE"))))
 
 (add-hook! org-mode
   (setq-local line-spacing 0.1)
@@ -345,7 +347,8 @@
 
 (after! org
   (setq org-yank-image-save-method (concat org-directory "assets"))
-  (setq org-yank-image-file-name-function #'+org-yank-image-with-denote-id-or-default))
+  (setq org-yank-image-file-name-function #'+org-yank-image-with-denote-id-or-default)
+  (setcdr (assoc 'file org-link-frame-setup) 'find-file-other-window))
 
 ;;;; lsp and company
 (after! lsp-mode
@@ -382,10 +385,10 @@
 
 (after! lsp-clangd
   (setq lsp-clients-clangd-args
-        '("-j=3"
+        '("-j=8"
           "--background-index"
           "--clang-tidy"
-          "--completion-style=detailed"
+          "--completion -style=detailed"
           "--header-insertion=never"
           "--header-insertion-decorators=0")))
 
@@ -433,6 +436,7 @@
 
 (add-hook 'scheme-mode-hook 'paredit-mode)
 (add-hook 'emacs-lisp-mode-hook 'paredit-mode)
+(add-hook 'lisp-mode-hook 'paredit-mode)
 
 ;;;; cns
 (use-package! cns
@@ -457,15 +461,35 @@
   (set-formatter! 'nixpkgs-fmt '("nixpkgs-fmt") :modes '(nix-mode)))
 
 ;;;; denote with org-capture
+(defun +denote-downcase-str (STR)
+  (downcase STR))
+
 (use-package! denote
   :config
   (setq denote-directory (concat (getenv "HOME") "/documents/notes/"))
+  (setq denote-dired-directories (list denote-directory))
   (setq denote-sort-keywords nil)
   (setq denote-known-keywords '(emacs note))
-  (setq denote-prompts '(keywords title)))
+  (setq denote-prompts '(keywords title))
+  (setq denote-file-name-slug-functions
+        '((title . denote-sluggify-title)
+          (keyword . +denote-downcase-str) ; make multi word keyword works
+          (signature . denote-sluggify-signature))))
+
+(use-package denote-menu
+  :bind
+  (:map denote-menu-mode-map
+        ("c"   . #'denote-menu-clear-filters)
+        ("/ r" . #'denote-menu-filter)
+        ("/ k" . #'denote-menu-filter-by-keyword)
+        ("/ o" . #'denote-menu-filter-out-keyword)
+        ("e"   . #'denote-menu-export-to-dired)))
+
+(map! :map doom-leader-notes-map
+      "r" #'+denote-random-note)
 
 (defvar +denote-journal-file (concat denote-directory (format-time-string "%Y0101T000000--") "journal__denote.org"))
-(defvar +denote-collections-file (concat denote-directory "19700101T000000--refile__denote.org"))
+(defvar +denote-refile-file (concat denote-directory "19700101T000000--refile__denote.org"))
 (defvar +denote-todo-file (concat denote-directory "19700102T000000--todo__denote.org"))
 
 (after! org-capture
@@ -480,11 +504,8 @@
            "* %<%I:%M %p> %?")
           ("t" "Personal todo" entry (file+headline +denote-todo-file "Inbox")
            "* [ ] %?" :prepend t)
-          ("c" "Collections" entry (file+headline +denote-collections-file "Inbox")
-           "* " :prepend t))))
-
-(map! :map doom-leader-notes-map
-      "r" #'+denote-random-note)
+          ("c" "Collections (need refile)" entry (file+headline +denote-refile-file "Inbox")
+           "* %?" :prepend t))))
 
 (setq org-agenda-files '("~/documents/notes/"))
 
@@ -497,9 +518,6 @@
 (after! projectile
   (setq projectile-project-root-files-bottom-up '(".ccls-root" ".projectile"
                                                   ".git" ".hg")))
-
-(after! projectile
-)
 
 ;; (after! consult
 ;;   (unless (featurep 'beframe)
@@ -583,7 +601,7 @@
         "C-<tab>" #'+web/indent-or-yas-or-emmet-expand))
 
 (use-package! annotate
-  :hook (prog-mode . annotate-mode)
+  ;; :hook (prog-mode . annotate-mode)
   :config
   (setq annotate-file (concat (getenv "HOME") "/documents/notes/annotate")))
 
@@ -595,7 +613,23 @@
               ("M-g M-b" . dogears-back)
               ("M-g M-f" . dogears-forward)
               ("M-g M-d" . dogears-list)
-              ("M-g M-D" . dogears-sidebar)))
+              ("M-g M-D" . dogears-sidebar))
+  :config
+  (setq dogears-idle 1
+        dogears-limit 200
+        dogears-position-delta 20)
+  (setq dogears-functions '(find-file recenter-top-bottom
+                            other-window switch-to-buffer
+                            aw-select toggle-window-split
+                            windmove-do-window-select
+                            pager-page-down pager-page-up
+                            tab-bar-select-tab
+                            pop-to-mark-command
+                            pop-global-mark
+                            goto-last-change
+                            xref-go-back
+                            xref-find-definitions
+                            xref-find-references)))
 
 (add-to-list 'display-buffer-alist
              `(,(rx string-start "*Async Shell Command*" string-end)
@@ -626,6 +660,37 @@
   (add-to-list 'tramp-remote-path "/run/current-system/profile/bin"))
 
 (add-to-list 'auto-mode-alist (cons "\\.zuo\\'" 'racket-mode))
+(add-to-list 'auto-mode-alist (cons ".sbclrc" 'lisp-mode))
 
 (setq inferior-lisp-program "/usr/bin/sbcl")
 
+(after! sly
+  (setq sly-description-autofocus 't))
+
+(after! comint
+  (setq comint-buffer-maximum-size 81920))
+
+(after! lsp-rust
+  (setq lsp-rust-analyzer-lru-capacity 1024))
+
+(use-package! ekg
+  :config
+  (setq ekg-notes-display-images nil))
+
+(use-package! telega
+  :config
+  (setq telega-server-libs-prefix "~/.nix-profile"))
+
+
+(after! org-crypt
+  (setq org-crypt-key "01FC4F4457FB76A78E17C1CEDDF3E86600E4955A"))
+
+(after! gptel
+  (setq gptel-model 'MiniMax-Text-01
+        gptel-backend
+        (gptel-make-openai "minimax"          ;Any name you want
+          :host "api.minimax.chat"
+          :endpoint "/v1/text/chatcompletion_v2"
+          :stream t
+          :key (gptel-api-key-from-auth-source "api.minimax.chat" "apikey")
+          :models '(MiniMax-Text-01 abab6.5s-chat))))
