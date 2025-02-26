@@ -56,6 +56,11 @@
                                       :weight normal)))))))
 
 (remove-hook! doom-first-buffer #'gcmh-mode)
+(add-hook! doom-after-init
+  (setq gc-cons-threshold (* 16 1024 1024))
+  (setq gc-cons-percentage 0.2))
+(fset '+lsp-optimization-mode (lambda (&rest _)))
+
 
 (setq org-directory "~/documents/notes/")
 
@@ -253,6 +258,9 @@
 
 ;; rime setting
 (use-package! rime
+  :bind
+  (:map rime-mode-map
+        ("S-<delete>" . 'rime-send-keybinding))
   :custom
   (default-input-method "rime")
   (rime-user-data-dir "~/.local/share/emacs-rime")
@@ -285,7 +293,6 @@
 
 (after! org
   (setq org-id-method 'ts)
-  (setq org-cycle-separator-lines 1)
   (setq org-cycle-separator-lines 1)
   (setq org-latex-packages-alist '(("" "amssymb" t ("xelatex"))
                                    ("" "amsmath" t ("xelatex"))))
@@ -350,6 +357,11 @@
   (setq org-yank-image-file-name-function #'+org-yank-image-with-denote-id-or-default)
   (setcdr (assoc 'file org-link-frame-setup) 'find-file-other-window))
 
+(defadvice! +denote-link-ol-store (OLDFUN &optional interactive?)
+  :around #'denote-link-ol-store
+  (when interactive?
+    (apply OLDFUN)))
+
 ;;;; lsp and company
 (after! lsp-mode
   (setq!
@@ -388,7 +400,7 @@
         '("-j=8"
           "--background-index"
           "--clang-tidy"
-          "--completion -style=detailed"
+          "--completion-style=detailed"
           "--header-insertion=never"
           "--header-insertion-decorators=0")))
 
@@ -517,7 +529,8 @@
 
 (after! projectile
   (setq projectile-project-root-files-bottom-up '(".ccls-root" ".projectile"
-                                                  ".git" ".hg")))
+                                                  ".git" ".hg"))
+  (advice-remove #'projectile-dirconfig-file #'doom--projectile-dirconfig-file-a))
 
 ;; (after! consult
 ;;   (unless (featurep 'beframe)
