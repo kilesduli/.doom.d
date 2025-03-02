@@ -21,31 +21,70 @@
 ;;
 
 ;;; Code:
-;;;; benchmark-init
+;;;; indent macro definition
+(defmacro progn-package (_ &rest body)
+  (declare (indent 1))
+  `(progn ,@body))
+
+;;;; benchmark init
 (unless (daemonp)
   (use-package! benchmark-init
     :config
     ;; To disable collection of benchmark data after init is done.
     (add-hook 'doom-first-input-hook 'benchmark-init/deactivate)))
-;;;; Basic setup
-(setq user-full-name "duli kiles"
-      user-mail-address "duli4868@gmail.com")
 
+;;;; doom-hacks fix
+;;;;; remove gcmh-mode in doomemacs
+(remove-hook! doom-first-buffer #'gcmh-mode)
+(add-hook! doom-after-init
+  (setq gc-cons-threshold (* 16 1024 1024))
+  (setq gc-cons-percentage 0.2))
+(fset '+lsp-optimization-mode (lambda (&rest _)))
+
+;;;;; projectile (remove .project to fix jdtls)
+(after! projectile
+  (setq projectile-project-root-files-bottom-up '(".ccls-root" ".projectile"
+                                                  ".git" ".hg"))
+  (advice-remove #'projectile-dirconfig-file #'doom--projectile-dirconfig-file-a))
+
+;;;; Font defintion
 (setq doom-font (font-spec :family "MonoLisa duli Modified" :weight 'light :size 30)
       doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
       doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
       doom-symbol-font (font-spec :family "LXGW Wenkai Mono")
       doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
 
-(setq doom-modeline-height 44)
-(setq doom-theme 'modus-operandi-tritanopia)
+;;;; Basic settings and more
+(setq user-full-name "duli kiles"
+      user-mail-address "duli4868@gmail.com")
 
-(set-fontset-font t 'emoji
-                  '("Noto Color Emoji" . "iso10646-1") nil 'prepend)
+(setq auth-sources '("~/.authinfo.gpg")
+      auth-source-cache-expiry nil
+      cursor-in-non-selected-windows t
+      truncate-lines nil
+      scroll-preserve-screen-position 'always
+      scroll-margin 0
+      scroll-conservatively 101
+      word-wrap-by-category t
+      delete-by-moving-to-trash t)
 
-(setq xft-ignore-color-fonts nil)
-(setq face-ignored-fonts nil)
+(put 'narrow-to-region 'disabled nil)
 
+(pixel-scroll-precision-mode 1)
+
+;;;; doom theme and modeline hight
+(setq doom-theme 'modus-operandi-tritanopia
+      doom-modeline-height 44)
+
+;;;; emoji settings(libxft)
+;;Fallback to xft, if we not using cairo
+(when (boundp 'xft-ignore-color-fonts)
+  (setq xft-ignore-color-fonts nil
+        face-ignored-fonts nil)
+  (set-fontset-font t 'emoji
+                    '("Noto Color Emoji" . "iso10646-1") nil 'prepend))
+
+;;;; org-level-{1..9} faces
 (add-hook! doom-load-theme
   (apply #'custom-theme-set-faces
          'user
@@ -54,43 +93,22 @@
                                 `((t (:inherit ,(intern (format "modus-themes-heading-%d" i))
                                       :extend t
                                       :weight normal)))))))
-
-(remove-hook! doom-first-buffer #'gcmh-mode)
-(add-hook! doom-after-init
-  (setq gc-cons-threshold (* 16 1024 1024))
-  (setq gc-cons-percentage 0.2))
-(fset '+lsp-optimization-mode (lambda (&rest _)))
-
-
-(setq org-directory "~/documents/notes/")
-
-(setq-default cursor-in-non-selected-windows t
-              truncate-lines nil
-              undo-limit 80000000)
-
-(after! undo-fu (setq undo-limit 80000000))
-
-(setq auth-sources '("~/.authinfo.gpg")
-      auth-source-cache-expiry nil
-      scroll-preserve-screen-position 'always
-      scroll-margin 0
-      scroll-conservatively 101
-      word-wrap-by-category t
-      delete-by-moving-to-trash t
-      display-line-numbers-type 'relative)
-
+;;;; disable display-line-numbers-mode
 (remove-hook! '(prog-mode-hook text-mode-hook conf-mode-hook)
   #'display-line-numbers-mode)
+(setq display-line-numbers-type 'relative)
 
+;;;; fullscreen setup
 (if (daemonp)
     (add-to-list 'default-frame-alist '(fullscreen . maximized))
   (add-to-list 'initial-frame-alist '(fullscreen . maximized)))
 
-(setq which-key-idle-delay 0.01)
-(setq which-key-idle-secondary-delay 0.01)
+;;;; which-key delay
+(after! which-key
+  (setq which-key-idle-delay 0.01)
+  (setq which-key-idle-secondary-delay 0.01))
 
-;;(pixel-scroll-precision-mode 1)
-
+;;;; keymap set (C-c b, workspaces, ....)
 (global-set-key  [C-mouse-wheel-up-event]  'text-scale-increase)
 (global-set-key  [C-mouse-wheel-down-event] 'text-scale-decrease)
 (keymap-global-set "C-<mouse-wheel-up-event>"  'text-scale-increase)
@@ -250,15 +268,18 @@
 ;;   ;; 如果你需要自动的 mode-line 设置（如果需要自定义见下文对 `meow-indicator' 说明）
 ;;   (meow-setup-indicator))
 
-;;;; rime
+;;;; emacs-rime
 ;; emacs do not provide us a way to make keybinding live all over the time, but
 ;; use-package does. and don't need define a new minor mode. found in
 ;; https://emacs.stackexchange.com/questions/352/how-to-override-major-mode-bindings
 ;; We could use use-package:bind-key*
+;;
+;; Now it is default C-\
 
 ;; rime setting
 (use-package! rime
   :bind
+  ;; make delete words works
   (:map rime-mode-map
         ("S-<delete>" . 'rime-send-keybinding))
   :custom
@@ -282,47 +303,61 @@
       (rime--load-dynamic-module))))
 
 ;;;; Org-mode
-;; disable company chinese extend.
-(set-company-backend! 'org-mode
-  'company-dabbrev 'company-yasnippet)
-(setq-hook! 'org-mode-hook
-  company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
-
-(after! ox
-  (require 'ox-gfm))
-
 (after! org
-  (setq org-id-method 'ts)
-  (setq org-cycle-separator-lines 1)
-  (setq org-latex-packages-alist '(("" "amssymb" t ("xelatex"))
-                                   ("" "amsmath" t ("xelatex"))))
-  (setq org-todo-keywords '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "STRT(s)" "WAIT(w)" "HOLD(h)" "IDEA(i)"
+  (setq org-directory "~/documents/notes"
+
+        org-id-method 'ts ;; do not use uuid
+        org-cycle-separator-lines 1
+
+        ;; yank-media
+        org-yank-image-save-method (concat org-directory "/assets")
+        org-yank-image-file-name-function #'+org-yank-image-with-denote-id-or-default
+
+        org-todo-keywords '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "STRT(s)" "WAIT(w)" "HOLD(h)" "IDEA(i)"
                              "|" "DONE(d)" "KILL(k)")
                             (sequence "[ ](T)" "[-](S)" "[?](W)" "|" "[X](D)")
-                            (sequence "YEAR FLAG" "CONTINUOUS FLAG" "|" "MISSION COMPLETE"))))
+                            (sequence "YEAR FLAG" "CONTINUOUS FLAG" "|" "MISSION COMPLETE"))
 
-(add-hook! org-mode
-  (setq-local line-spacing 0.1)
-  (setq-local display-line-numbers-mode 0))
+        ;; org-latex
+        org-preview-latex-default-process 'xdv2svg
+        org-latex-packages-alist '(("" "amssymb" t ("xelatex"))
+                                   ("" "amsmath" t ("xelatex")))
+        org-preview-latex-process-alist '((xdv2svg
+                                           :programs ("xelatex" "dvisvgm")
+                                           :description "xdv > svg"
+                                           :message "you need to install the programs: latex and dvisvgm."
+                                           :image-input-type "xdv"
+                                           :image-output-type "svg"
+                                           :image-size-adjust (1.5 . 1.5)
+                                           :latex-compiler ("xelatex -interaction nonstopmode -no-pdf -output-directory %o %f")
+                                           :image-converter ("dvisvgm %f --no-fonts --exact-bbox --scale=%S --output=%O"))))
+  ;; org-latex
+  (add-hook! org-mode #'org-fragtog-mode)
 
-;;  org-latex-preview
-(add-hook 'org-mode-hook 'org-fragtog-mode)
+  (after! ox-latex
+    (setq org-latex-pdf-process '("tectonic -X compile --outdir=%o -Z shell-escape -Z continue-on-errors %f")))
 
-;;set latex preview default process
-(setq org-preview-latex-process-alist
-      '((xdv2svg
-         :programs ("xelatex" "dvisvgm")
-         :description "xdv > svg"
-         :message "you need to install the programs: latex and dvisvgm."
-         :image-input-type "xdv"
-         :image-output-type "svg"
-         :image-size-adjust (1.5 . 1.5)
-         :latex-compiler ("xelatex -interaction nonstopmode -no-pdf -output-directory %o %f")
-         :image-converter ("dvisvgm %f --no-fonts --exact-bbox --scale=%S --output=%O"))))
+  ;; org company-dabbrev
+  (set-company-backend! 'org-mode
+    'company-dabbrev 'company-yasnippet)
+  (setq-hook! org-mode
+    company-dabbrev-char-regexp "[\\.0-9a-zA-Z-_'/]")
 
-(setq org-preview-latex-default-process 'xdv2svg)
-(setq org-latex-pdf-process
-      '("tectonic -X compile --outdir=%o -Z shell-escape -Z continue-on-errors %f"))
+  (setq-hook! org-mode
+    ;; display-line-numbers-mode 0
+    line-spacing 0.1)
+
+  ;; open file in org-mode
+  (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file-other-window)
+
+  ;; open file:path way defintion
+  (setf (cdr (assoc "\\.pdf\\'" org-file-apps)) "nixGL sioyek %s")
+  (add-to-list 'org-file-apps '("\\.pdf::\\([0-9]+\\)\\'" . "nixGL sioyek %s --page %1"))
+
+  ;; disable org-agenda dynamic add and remove
+  (put 'org-agenda-file-to-front 'disabled t)
+  (put 'org-remove-file 'disabled t)
+  )
 
 (after! org-tree-slide
   (advice-remove 'org-tree-slide--display-tree-with-narrow
@@ -351,142 +386,20 @@
                   (backward-char 1))
                 (point)))))))
       (apply fn args))))
-
-(after! org
-  (setq org-yank-image-save-method (concat org-directory "assets"))
-  (setq org-yank-image-file-name-function #'+org-yank-image-with-denote-id-or-default)
-  (setcdr (assoc 'file org-link-frame-setup) 'find-file-other-window))
-
-(defadvice! +denote-link-ol-store (OLDFUN &optional interactive?)
-  :around #'denote-link-ol-store
-  (when interactive?
-    (apply OLDFUN)))
-
-;;;; lsp and company
-(after! lsp-mode
-  (setq!
-   lsp-enable-file-watchers nil
-   lsp-keep-workspace-alive nil
-   lsp-enable-symbol-highlighting nil
-   lsp-auto-guess-root t
-   lsp-modeline-code-actions-enable nil
-   lsp-headerline-breadcrumb-enable t
-   lsp-headerline-breadcrumb-segments '(symbols)
-   lsp-headerline-breadcrumb-enable-diagnostics nil
-   lsp-enable-indentation t
-   lsp-modeline-diagnostics-enable nil
-   lsp-eldoc-enable-hover t
-   lsp-enable-snippet nil
-   lsp-log-io nil))
-
-(after! lsp-ui
-  (setq! lsp-ui-sideline-enable nil))
-
-;;disable lsp-format-buffer in cc-mode, it doesn't running well according to .clang-format
-;;usage: https://docs.doomemacs.org/latest/modules/editor/format/#:~:text=To%20disable%20this%20behavior%20in%20one%20mode%3A%20(setq%2Dhook!%20%27python%2Dmode%2Dhook%20%2Bformat%2Dwith%2Dlsp%20nil)
-(setq-hook! 'c++-mode-hook +format-with-lsp nil)
-(setq-hook! 'c-mode-hook +format-with-lsp nil)
-
-;;set company tab complete motion
-(after! company
-  (map! :map company-active-map "<tab>"  #'company-complete-selection)
-  (map! :map company-active-map "TAB"  #'company-complete-selection))
-
-(after! company
-  (setq company-idle-delay 0.01))
-
-(after! lsp-clangd
-  (setq lsp-clients-clangd-args
-        '("-j=8"
-          "--background-index"
-          "--clang-tidy"
-          "--completion-style=detailed"
-          "--header-insertion=never"
-          "--header-insertion-decorators=0")))
-
-(setq +lsp-company-backends '(company-yasnippet :separate company-capf))
-(after! orderless
-  (setq! orderless-component-separator "[ &·]+"))
-
-;;;;; python pyright
-(use-package! lsp-pyright
-  :after lsp-mode
-  :config
-  (setq lsp-pyright-use-library-code-for-types t)
-  (setq lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs")))
-
-;;;; TODO csharp
-(add-hook 'csharp-mode-hook #'(lambda ()
-                                (c-set-offset 'func-decl-cont 0)
-                                (c-set-offset 'statement-cont 0)
-                                (c-set-offset 'topmost-intro-cont 0)))
-
-;;;; +utils
-(use-package! info-colors
-  :hook (Info-selection . info-colors-fontify-node))
-
-(use-package! wakatime-mode
-  :config
-  (global-wakatime-mode))
-
-(after! treemacs
-  (setq! treemacs-width 25))
-
-;;;; clang-fotmat+
-(use-package! clang-format+
-  :hook (c-mode-common . clang-format+-mode)
-  :config
-  (setq clang-format+-context 'modification)
-  (setq clang-format+-always-enable t))
-
-;;;; something
-(use-package! indent-bars
-  :hook ((python-mode yaml-mode) . indent-bars-mode))
-
-(after! doom-modeline
-  (setq! doom-modeline-env-enable-python nil))
-
-(add-hook 'scheme-mode-hook 'paredit-mode)
-(add-hook 'emacs-lisp-mode-hook 'paredit-mode)
-(add-hook 'lisp-mode-hook 'paredit-mode)
-
-;;;; cns
-(use-package! cns
-  :config
-  (let ((repodir (concat doom-local-dir "straight/" (format "build-%s" emacs-version) "/cns/")))
-    (setq cns-prog (concat repodir "cnws")
-          cns-dict-directory (concat repodir "cppjieba/dict")))
-  :hook
-  (find-file . cns-auto-enable))
-
-
-;;;; outli
-(use-package outli
-  :bind (:map outli-mode-map ; convenience key to get back to containing heading
-	      ("C-c C-p" . (lambda () (interactive) (outline-back-to-heading))))
-  :config
-  :hook ((prog-mode text-mode) . outli-mode)) ; or whichever modes you prefer
-
-;;;; nix
-(set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
-(after! nix-mode
-  (set-formatter! 'nixpkgs-fmt '("nixpkgs-fmt") :modes '(nix-mode)))
-
-;;;; denote with org-capture
+;;;;; denote with org-capture
 (defun +denote-downcase-str (STR)
   (downcase STR))
 
 (use-package! denote
   :config
-  (setq denote-directory (concat (getenv "HOME") "/documents/notes/"))
-  (setq denote-dired-directories (list denote-directory))
-  (setq denote-sort-keywords nil)
-  (setq denote-known-keywords '(emacs note))
-  (setq denote-prompts '(keywords title))
-  (setq denote-file-name-slug-functions
-        '((title . denote-sluggify-title)
-          (keyword . +denote-downcase-str) ; make multi word keyword works
-          (signature . denote-sluggify-signature))))
+  (setq denote-directory (concat (getenv "HOME") "/documents/notes/")
+        denote-dired-directories (list denote-directory)
+        denote-sort-keywords nil
+        denote-known-keywords '(emacs note)
+        denote-prompts '(keywords title)
+        denote-file-name-slug-functions  '((title . denote-sluggify-title)
+                                           (keyword . +denote-downcase-str) ; make multi word keyword works
+                                           (signature . denote-sluggify-signature))))
 
 (use-package denote-menu
   :bind
@@ -497,8 +410,8 @@
         ("/ o" . #'denote-menu-filter-out-keyword)
         ("e"   . #'denote-menu-export-to-dired)))
 
-(map! :map doom-leader-notes-map
-      "r" #'+denote-random-note)
+;; (map! :map doom-leader-notes-map
+;;       "r" #'+denote-random-note)
 
 (defvar +denote-journal-file (concat denote-directory (format-time-string "%Y0101T000000--") "journal__denote.org"))
 (defvar +denote-refile-file (concat denote-directory "19700101T000000--refile__denote.org"))
@@ -507,7 +420,7 @@
 (after! org-capture
   (setq org-capture-templates
         '(("n" "New note (with Denote)" plain (file denote-last-path)
-           #'denote-org-capture
+           #'denote-org-captZure
            :no-save t
            :immediate-finish nil
            :kill-buffer t
@@ -520,17 +433,149 @@
            "* %?" :prepend t))))
 
 (setq org-agenda-files '("~/documents/notes/"))
+(setq org-roam-directory (concat (getenv "HOME") "/roam"))
 
+;;;; lsp and company and orderless and programing
+(after! lsp-mode
+  (setq lsp-enable-file-watchers nil
+        lsp-keep-workspace-alive nil
+        lsp-enable-symbol-highlighting nil
+        lsp-auto-guess-root t
+        lsp-modeline-code-actions-enable nil
+        lsp-headerline-breadcrumb-enable t
+        lsp-headerline-breadcrumb-segments '(symbols)
+        lsp-headerline-breadcrumb-enable-diagnostics nil
+        lsp-enable-indentation t
+        lsp-modeline-diagnostics-enable nil
+        lsp-eldoc-enable-hover t
+        lsp-enable-snippet nil
+        lsp-log-io nil
+        lsp-ui-sideline-enable nil
 
-;;;;; continue
+        lsp-clients-clangd-args '("-j=8"
+                                  "--background-index"
+                                  "--clang-tidy"
+                                  "--completion-style=detailed"
+                                  "--header-insertion=never"
+                                  "--header-insertion-decorators=0"))
 
+  (setq +lsp-company-backends '(company-yasnippet :separate company-capf))
+
+  ;; TODO
+  ;; (setq-hook! '(c-mode-hook c++-mode-hook) +format-with-lsp nil)
+  )
+
+(after! company
+  (setq company-idle-delay 0.01)
+  (map! :map company-active-map "<tab>"  #'company-complete-selection)
+  (map! :map company-active-map "TAB"  #'company-complete-selection))
+
+(after! orderless
+  (setq orderless-component-separator "[ &·]+"))
+
+(set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
+
+;;;;; lsp-java
 (after! lsp-java
   (setq lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/snapshots/jdt-language-server-latest.tar.gz"))
 
-(after! projectile
-  (setq projectile-project-root-files-bottom-up '(".ccls-root" ".projectile"
-                                                  ".git" ".hg"))
-  (advice-remove #'projectile-dirconfig-file #'doom--projectile-dirconfig-file-a))
+;;;;; lsp-rust
+(after! lsp-rust
+  (setq lsp-rust-analyzer-lru-capacity 1024))
+
+;;;;; lsp-booster
+(advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
+
+;;;;; lsp-pyright
+(use-package! lsp-pyright
+  :after lsp-mode
+  :config
+  (setq lsp-pyright-use-library-code-for-types t
+        lsp-pyright-stub-path (concat (getenv "HOME") "/Clone/python-type-stubs")
+        lsp-pyright-langserver-command "basedpyright"))
+
+;;;; TODO csharp
+(after! csharp-mode
+  (add-hook! csharp-mode
+    (c-set-offset 'func-decl-cont 0)
+    (c-set-offset 'statement-cont 0)
+    (c-set-offset 'topmost-intro-cont 0)))
+
+;;;; +utils and something
+(use-package! info-colors
+  :hook (Info-selection . info-colors-fontify-node))
+
+(use-package! wakatime-mode
+  :config
+  (global-wakatime-mode))
+
+(after! 'treemacs
+  (setq! treemacs-width 25))
+
+(use-package! indent-bars
+  :hook ((python-mode yaml-mode) . indent-bars-mode))
+
+(after! doom-modeline
+  (setq! doom-modeline-env-enable-python nil))
+
+(add-hook! '(scheme-mode-hook emacs-lisp-mode-hook lisp-mode-hook)
+           #'paredit-mode)
+
+;;;; clang-fotmat+
+(use-package! clang-format+
+  :hook (c-mode-common . clang-format+-mode)
+  :config
+  (setq clang-format+-context 'modification
+        clang-format+-always-enable t))
+
+;;;; cns
+(use-package! cns
+  :config
+  (let ((repodir (concat doom-local-dir "straight/" (format "build-%s" emacs-version) "/cns/")))
+    (setq cns-prog (concat repodir "cnws")
+          cns-dict-directory (concat repodir "cppjieba/dict")))
+  :hook
+  (find-file . cns-auto-enable))
+
+;;;; outli
+(use-package outli
+  :hook ((prog-mode text-mode) . outli-mode)
+  :bind
+  (:map outli-mode-map
+        ("C-c C-p" . (lambda () (interactive) (outline-back-to-heading)))))
+
+;;;; nix
+(after! nix-mode
+  (set-formatter! 'nixpkgs-fmt '("nixpkgs-fmt") :modes '(nix-mode)))
+
+;;;; copilot
+(use-package! copilot
+  :bind (:map copilot-completion-map
+              ("<tab>" . 'copilot-accept-completion)
+              ("TAB" . 'copilot-accept-completion)
+              ("C-TAB" . 'copilot-accept-completion-by-word)
+              ("C-<tab>" . 'copilot-accept-completion-by-word)))
+
+;;;; typst-mode
+(use-package typst-ts-mode
+  :custom
+  (typst-ts-watch-options "--open")
+  (typst-ts-mode-enable-raw-blocks-highlight t)
+  :config
+  (keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu))
+
+;;;; gptel
+(after! gptel
+  (setq gptel-model 'MiniMax-Text-01
+        gptel-backend
+        (gptel-make-openai "minimax"    ;Any name you want
+          :host "api.minimax.chat"
+          :endpoint "/v1/text/chatcompletion_v2"
+          :stream t
+          :key (gptel-api-key-from-auth-source "api.minimax.chat" "apikey")
+          :models '(MiniMax-Text-01 abab6.5s-chat))))
+
+;;; continue here
 
 ;; (after! consult
 ;;   (unless (featurep 'beframe)
@@ -570,44 +615,6 @@
 ;; (autoload '+consult-kill-buffer "consult" :type t)
 ;; (map! "C-x k" #'+consult-kill-buffer)
 
-(use-package! copilot
-  :bind (:map copilot-completion-map
-              ("<tab>" . 'copilot-accept-completion)
-              ("TAB" . 'copilot-accept-completion)
-              ("C-TAB" . 'copilot-accept-completion-by-word)
-              ("C-<tab>" . 'copilot-accept-completion-by-word)))
-
-
-(defun lsp-booster--advice-json-parse (old-fn &rest args)
-  "Try to parse bytecode instead of json."
-  (or
-   (when (equal (following-char) ?#)
-     (let ((bytecode (read (current-buffer))))
-       (when (byte-code-function-p bytecode)
-         (funcall bytecode))))
-   (apply old-fn args)))
-(advice-add (if (progn (require 'json)
-                       (fboundp 'json-parse-buffer))
-                'json-parse-buffer
-              'json-read)
-            :around
-            #'lsp-booster--advice-json-parse)
-
-(defun lsp-booster--advice-final-command (old-fn cmd &optional test?)
-  "Prepend emacs-lsp-booster command to lsp CMD."
-  (let ((orig-result (funcall old-fn cmd test?)))
-    (if (and (not test?)                             ;; for check lsp-server-present?
-             (not (file-remote-p default-directory)) ;; see lsp-resolve-final-command, it would add extra shell wrapper
-             lsp-use-plists
-             (not (functionp 'json-rpc-connection))  ;; native json-rpc
-             (executable-find "emacs-lsp-booster"))
-        (progn
-          (message "Using emacs-lsp-booster for %s!" orig-result)
-          (cons "emacs-lsp-booster" orig-result))
-      orig-result)))
-(advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
-
-
 (after! emmet-mode
   (unbind-key "<tab>" emmet-mode-keymap)
   (map! :map emmet-mode-keymap
@@ -630,8 +637,8 @@
   :config
   (setq dogears-idle 1
         dogears-limit 200
-        dogears-position-delta 20)
-  (setq dogears-functions '(find-file recenter-top-bottom
+        dogears-position-delta 20
+        dogears-functions '(find-file recenter-top-bottom
                             other-window switch-to-buffer
                             aw-select toggle-window-split
                             windmove-do-window-select
@@ -647,26 +654,9 @@
 (add-to-list 'display-buffer-alist
              `(,(rx string-start "*Async Shell Command*" string-end)
                (display-buffer-no-window)))
+
 (load! "serenity-org-okular.el")
 
-(setf (cdr (assoc "\\.pdf\\'" org-file-apps)) "nixGL sioyek %s")
-(add-to-list 'org-file-apps '("\\.pdf::\\([0-9]+\\)\\'" . "nixGL sioyek %s --page %1"))
-
-(after! lsp-pyright
-  (setq lsp-pyright-langserver-command "basedpyright"))
-
-
-(use-package! typst-ts-mode
-  :config
-  :custom
-  (typst-ts-watch-options "--open")
-  (typst-ts-mode-enable-raw-blocks-highlight t)
-  :config
-  (keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu))
-
-(put 'narrow-to-region 'disabled nil)
-(put 'org-agenda-file-to-front 'disabled t)
-(put 'org-remove-file 'disabled t)
 
 ;; fix guix
 (after! tramp
@@ -683,9 +673,6 @@
 (after! comint
   (setq comint-buffer-maximum-size 81920))
 
-(after! lsp-rust
-  (setq lsp-rust-analyzer-lru-capacity 1024))
-
 (use-package! ekg
   :config
   (setq ekg-notes-display-images nil))
@@ -693,17 +680,3 @@
 (use-package! telega
   :config
   (setq telega-server-libs-prefix "~/.nix-profile"))
-
-
-(after! org-crypt
-  (setq org-crypt-key "01FC4F4457FB76A78E17C1CEDDF3E86600E4955A"))
-
-(after! gptel
-  (setq gptel-model 'MiniMax-Text-01
-        gptel-backend
-        (gptel-make-openai "minimax"          ;Any name you want
-          :host "api.minimax.chat"
-          :endpoint "/v1/text/chatcompletion_v2"
-          :stream t
-          :key (gptel-api-key-from-auth-source "api.minimax.chat" "apikey")
-          :models '(MiniMax-Text-01 abab6.5s-chat))))
