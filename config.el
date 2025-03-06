@@ -357,7 +357,9 @@
   ;; disable org-agenda dynamic add and remove
   (put 'org-agenda-file-to-front 'disabled t)
   (put 'org-remove-file 'disabled t)
-  )
+
+  ;; set org-encrypt key
+  (setq org-crypt-key "01FC4F4457FB76A78E17C1CEDDF3E86600E4955A"))
 
 (after! org-tree-slide
   (advice-remove 'org-tree-slide--display-tree-with-narrow
@@ -395,7 +397,7 @@
   (setq denote-directory (concat (getenv "HOME") "/documents/notes/")
         denote-dired-directories (list denote-directory)
         denote-sort-keywords nil
-        denote-known-keywords '(emacs note)
+        denote-known-keywords '("emacs" "note")
         denote-prompts '(keywords title)
         denote-file-name-slug-functions  '((title . denote-sluggify-title)
                                            (keyword . +denote-downcase-str) ; make multi word keyword works
@@ -413,14 +415,14 @@
 ;; (map! :map doom-leader-notes-map
 ;;       "r" #'+denote-random-note)
 
-(defvar +denote-journal-file (concat denote-directory (format-time-string "%Y0101T000000--") "journal__denote.org"))
-(defvar +denote-refile-file (concat denote-directory "19700101T000000--refile__denote.org"))
-(defvar +denote-todo-file (concat denote-directory "19700102T000000--todo__denote.org"))
+(defvar +denote-journal-file (concat denote-directory (format-time-string "%Y0101T000000--") "journal__denote_journal.org"))
+(defvar +denote-refile-file (concat denote-directory "19700101T000000--refile__denote_refile.org"))
+(defvar +denote-todo-file (concat denote-directory "19700102T000000--todo__denote_todo.org"))
 
 (after! org-capture
   (setq org-capture-templates
         '(("n" "New note (with Denote)" plain (file denote-last-path)
-           #'denote-org-captZure
+           #'denote-org-capture
            :no-save t
            :immediate-finish nil
            :kill-buffer t
