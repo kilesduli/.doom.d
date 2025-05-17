@@ -8,7 +8,6 @@
 (package! rotate)
 (package! ox-gfm)
 (unpin! org)
-(package! doct)
 (package! wakatime-mode :recipe
   (:host github :repo "Borwe/wakatime-mode"))
 (package! ob-csharp :recipe (:host github :repo "samwdp/ob-csharp"))
@@ -60,9 +59,6 @@
   :recipe (:host github :repo "emacs-tree-sitter/treesit-langs"))
 (package! org-super-agenda
   :recipe (:host github :repo "alphapapa/org-super-agenda"))
-;; FIXME: temp pin a stable version
-(package! transient
-  :recipe (:host github :repo "magit/transient") :pin "4634815a11a2fb30a38079e306fc363c88a787c7")
 (package! ekg
   :recipe (:host github :repo "ahyatt/ekg"))
 (package! org-ql
