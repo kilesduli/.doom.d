@@ -1,6 +1,5 @@
 ;; -*- no-byte-compile: t; -*-
 ;;; $DOOMDIR/packages.el
-;;(package! meow)
 (package! disable-mouse)
 (package! org-fragtog)
 (package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion"))
