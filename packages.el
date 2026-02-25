@@ -19,6 +19,7 @@
 (unpin! lsp-ui)
 (package! ef-themes)
 (package! kaolin-themes)
+(package! standard-themes)
 (package! htmlz-mode :recipe (:host github :repo "kilesduli/htmlz-mode"))
 (package! indent-bars :recipe (:host github :repo "jdtsmith/indent-bars"))
 (package! anaconda-mode :disable t)
@@ -66,6 +67,34 @@
 (package! telega)
 (package! gptel)
 (package! speed-type)
+(package! org-tidy)
+(package! denote-journal)
+(package! denote-org)
+(package! denote-sequence)
+(package! consult-denote)
+(package! nasm-mode)
+(package! org-transclusion)
+(package! eca
+  :recipe (:host github :repo "editor-code-assistant/eca-emacs"))
+(package! vui)
+(package! vulpea)
+(package! vulpea-journal
+  :recipe (:host github :repo "d12frosted/vulpea-journal"))
+(package! oauth2)
+(package! mermaid-mode)
+(package! ob-mermaid)
+(package! consult
+  :pin "6eaf346b73c2a6f2898d1085e14b510902436ffe")
+
+(package! shell-maker)
+(package! acp)
+(package! agent-shell)
+
+
+
+;; (package! org-supertag
+;;   :recipe (:host github :repo "yibie/org-supertag"))
+
 ;; (package! slime)
 
 ;; If you want to replace it with yasnippet's default snippets
@@ -74,7 +103,6 @@
 ;; To install a package with Doom you must declare them here and run 'doom sync'
 ;; on the command line, then restart Emacs for the changes to take effect -- or
 ;; use 'M-x doom/reload'.
-
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
                                         ;(package! some-package)
