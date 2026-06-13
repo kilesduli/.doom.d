@@ -91,7 +91,7 @@
        ;;ansible
        ;;biblio            ; Writes a PhD for you (citation needed)
        ;;collab            ; buffers with friends
-       (debugger +lsp)     ; FIXME stepping through code, to help you add bugs
+       (debugger #_+lsp)   ; FIXME stepping through code, to help you add bugs
        direnv
        ;;docker
        editorconfig        ; let someone else argue about tabs vs spaces
@@ -101,16 +101,15 @@
         +dictionary
         +docsets)          ; navigate your code and its documentation
        ;;llm               ; when I said you needed friends, I didn't mean...
-       lsp                 ; M-x vscode
+       ;;lsp               ; M-x vscode
        (magit)             ; a git porcelain for Emacs
        make                ; run make tasks from Emacs
        ;;pass              ; password manager for nerds
-       ;;(pdf +pdf-tools)    ; pdf enhancements
+       ;;(pdf +pdf-tools)  ; pdf enhancements
        ;;terraform         ; infrastructure as code
        ;;tmux              ; an API for interacting with tmux
        ;;tree-sitter       ; syntax and parsing, sitting in a tree...
        ;;upload            ; map local to remote projects via ssh/ftp
-
        :os
        (:if (featurep :system 'macos) macos)   ; improve compatibility with macOS
        tty                 ; improve the terminal Emacs experience
@@ -118,13 +117,13 @@
        :lang
        ;;agda              ; types of types of types of types...
        ;;beancount         ; mind the GAAP
-       (cc +lsp)           ; C > C++ == 1
-       (clojure +lsp)      ; java with a lisp
+       (cc #_+lsp)         ; C > C++ == 1
+       (clojure #_+lsp)    ; java with a lisp
        common-lisp         ; if you've seen one lisp, you've seen them all
        ;;coq               ; proofs-as-programs
        ;;crystal           ; ruby at the speed of c
        (csharp
-        +lsp
+        #_+lsp
         +unity)            ; unity, .NET, and mono shenanigans
        data                ; config/data formats
        ;;(dart +flutter)   ; paint ui and not much else
@@ -140,15 +139,15 @@
        ;;fsharp            ; ML stands for Microsoft's Language
        ;;fstar             ; (dependent) types and (monadic) effects and Z3
        ;;gdscript          ; the language you waited for
-       (go +lsp)           ; the hipster dialect
+       (go #_+lsp)           ; the hipster dialect
        ;;(graphql +lsp)    ; Give queries a REST
-       (haskell +lsp)      ; a language that's lazier than I am
+       (haskell #_+lsp)      ; a language that's lazier than I am
        ;;hy                ; readability of scheme w/ speed of python
        ;;idris             ; a language you can depend on
        json                ; At least it ain't XML
        ;;janet             ; Fun fact: Janet is me!
-       (java +lsp)         ; the poster child for carpal tunnel syndrome
-       (javascript +lsp)   ; all(hope(abandon(ye(who(enter(here))))))
+       (java #_+lsp)       ; the poster child for carpal tunnel syndrome
+       (javascript #_+lsp) ; all(hope(abandon(ye(who(enter(here))))))
        ;;julia             ; a better, faster MATLAB
        kotlin              ; a better, slicker Java(Script)
        (latex
@@ -160,7 +159,7 @@
        ;;lua               ; one-based indices? one-based indices
        markdown            ; writing docs for people to ignore
        ;;nim               ; python + lisp at the speed of c
-       (nix +lsp)          ; I hereby declare "nix geht mehr!"
+       (nix #_+lsp)        ; I hereby declare "nix geht mehr!"
        ;;ocaml             ; an objective camel
        (org
         +pandoc
@@ -171,30 +170,30 @@
        ;;graphviz          ; diagrams for confusing yourself even more
        ;;purescript        ; javascript, but functional
        (python             ; beautiful is better than ugly
-        +lsp
-        +pyright
+        ;;+lsp
+        ;;+pyright
         )
        ;;qt                ; the 'cutest' gui framework ever
        (racket
-        +lsp
+        ;;+lsp
         +xp
         +hash-lang)        ; a DSL for DSLs
        ;;raku              ; the artist formerly known as perl6
        ;;rest              ; Emacs as a REST client
        ;;rst               ; ReST in peace
        ;;(ruby +rails)     ; 1.step {|i| p "Ruby is #{i.even? ? 'love' : 'life'}"}
-       (rust +lsp)         ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
+       (rust #_+lsp)         ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
        ;;scala             ; java, but good
        (scheme
         +chez
         +guile
         +gauche)           ; a fully conniving family of lisps
-       (sh +lsp)           ; she sells {ba,z,fi}sh shells on the C xor
+       (sh #_+lsp)           ; she sells {ba,z,fi}sh shells on the C xor
        ;;sml
        ;;solidity          ; do you need a blockchain? No.
        ;;swift             ; who asked for emoji variables?
        ;;terra             ; Earth and Moon in alignment for performance.
-       (web +lsp)          ; the tubes
+       (web #_+lsp)          ; the tubes
        yaml                ; JSON, but readable
        zig                 ; C, but simpler
 
@@ -212,4 +211,4 @@
 
        :config
        ;;literate
-       (default +bindings +smartparens))
+       (default +bindings))

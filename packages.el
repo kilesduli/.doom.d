@@ -15,8 +15,6 @@
 (package! clang-format+
   :recipe (:host github :repo "SavchenkoValeriy/emacs-clang-format-plus"))
 (package! benchmark-init)
-(unpin! lsp-mode)
-(unpin! lsp-ui)
 (package! ef-themes)
 (package! kaolin-themes)
 (package! standard-themes)
@@ -45,7 +43,6 @@
            :pre-build ("make" "LIBRIME_ROOT=~/.nix-profile/" "EMACS_MODULE_HEADER_ROOT=~/.nix-profile/include" "lib")
            :files ("librime-emacs.so" "*.el")))
 (unpin! consult)
-(unpin! lsp-java)
 (package! annotate)
 (package! dogears)
 (package! zotero)
@@ -54,8 +51,8 @@
   :recipe (:host github :repo "tbanel/uniline"))
 (package! emacs-buffer-name-relative
   :recipe (:host codeberg :repo "ideasman42/emacs-buffer-name-relative"))
-(package! typst
-  :recipe (:host codeberg :repo "meow_king/typst-ts-mode"))
+;; (package! typst
+;;   :recipe (:host codeberg :repo "meow_king/typst-ts-mode"))
 (package! treesit-langs
   :recipe (:host github :repo "emacs-tree-sitter/treesit-langs"))
 (package! org-super-agenda
@@ -89,6 +86,17 @@
 (package! shell-maker)
 (package! acp)
 (package! agent-shell)
+(package! vala-mode)
+(package! advice-patch)
+(package! odin-mode
+  :recipe (:host github :repo "mattt-b/odin-mode"))
+(package! jai-mode
+  :recipe (:host github :repo "elp-revive/jai-mode"))
+(package! lsp-proxy
+  :recipe (:host github :repo "jadestrong/lsp-proxy"
+                 :files ("*.el")))
+(package! paredit
+  :recipe (:host github :repo "emacsmirror/paredit"))
 
 
 

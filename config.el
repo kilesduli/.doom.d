@@ -33,6 +33,10 @@
     ;; To disable collection of benchmark data after init is done.
     (add-hook 'doom-first-input-hook 'benchmark-init/deactivate)))
 
+(remove-hook 'doom-first-buffer-hook #'global-flycheck-mode)
+(smartparens-global-mode -1)
+(global-flycheck-mode -1)
+
 ;;;; use menu key as <hyper>
 (keymap-global-unset "<menu>" 'remove)
 (keymap-set function-key-map "<menu>" #'event-apply-hyper-modifier)
@@ -78,11 +82,12 @@
   (advice-remove #'projectile-dirconfig-file #'doom--projectile-dirconfig-file-a))
 
 ;;;; Font defintion
-(setq doom-font (font-spec :family "MonoLisa duli Modified" :weight 'light :size 30)
+
+(setq doom-font (font-spec :family "MonoLisa duli Modified" :weight 'regular :size 32)
       doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
-      doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 30)
-      doom-symbol-font (font-spec :family "LXGW Wenkai Mono")
-      doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 30))
+      doom-big-font (font-spec :family "JetBrains Mono" :weight 'light :size 32)
+      doom-symbol-font (font-spec :family "LXGW Wenkai")
+      doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 32))
 
 ;;;; Basic settings and more
 (setq user-full-name "duli kiles"
@@ -108,6 +113,29 @@
 ;;;; doom theme and modeline hight
 (setq doom-theme 'modus-operandi-tritanopia
       doom-modeline-height 44)
+
+(add-hook! doom-load-theme
+  (custom-theme-set-faces 'user
+                          `(font-lock-builtin-face ((t (:foreground "#d73a49"))))
+                          `(font-lock-comment-face ((t (:foreground "#6a737d"))))
+                          `(font-lock-comment-delimiter-face ((t (:foreground "#6a737d"))))
+                          `(font-lock-constant-face ((t (:foreground "#005cc5"))))
+                          `(font-lock-doc-face ((t (:foreground "#032f62"))))
+                          `(font-lock-function-name-face ((t (:foreground "#6f42c1"))))
+                          `(font-lock-keyword-face ((t (:foreground "#d73a49"))))
+                          `(font-lock-negation-char-face ((t (:foreground "#d73a49"))))
+                          `(font-lock-preprocessor-face ((t (:foreground "#d73a49"))))
+                          `(font-lock-regexp-grouping-construct ((t (:foreground "#d73a49"))))
+                          `(font-lock-regexp-grouping-backslash ((t (:foreground "#6a737d"))))
+                          `(font-lock-string-face ((t (:foreground "#032f62"))))
+                          `(font-lock-type-face ((t (:foreground "#005cc5"))))
+                          `(font-lock-variable-name-face ((t (:foreground "#24292e"))))
+                          `(font-lock-warning-face ((t (:foreground "#24292e"))))
+                          `(org-date ((t (:foreground "#24292e" :underline t))))
+                          `(org-document-title ((t (:foreground "#24292e"))))
+                          `(org-block ((t (:background unspecified))))
+                          `(org-block-begin-line ((t (:background unspecified))))
+                          `(org-block-end-line ((t (:background unspecified))))))
 
 ;;;; undo-limit
 (after! undo-fu
@@ -283,7 +311,7 @@
   (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file-other-window)
 
   ;; open file:path way defintion
-  (setf (cdr (assoc "\\.pdf\\'" org-file-apps)) "fixGL sioyek %s")
+  (setf (cdr (assoc "\\.pdf\\'" org-file-apps)) "sioyek %s")
   (add-to-list 'org-file-apps '("\\.pdf::\\([0-9]+\\)\\'" . "fixGL sioyek %s --page %1"))
 
   ;; disable org-agenda dynamic add and remove
@@ -334,7 +362,7 @@
         denote-file-name-slug-functions  '((title . denote-sluggify-title)
                                            (keyword . +denote-downcase-str) ; make multi word keyword works
                                            (signature . denote-sluggify-signature)))
-;;  (denote-rename-buffer-mode t)
+  ;;  (denote-rename-buffer-mode t)
   )
 
 (map! :map org-mode-map
@@ -351,30 +379,69 @@
   :config
   (setq denote-journal-title-format "%B%e %Y %A"))
 
-(defun denote-journal-mdy-title-format-with-env (&rest r)
+(defun denote-journal-mdy-title-format-with-env (&optional r)
   (let ((system-time-locale "en_US.UTF-8"))
-    (format-time-string "%B %d, %Y")))
+    (format-time-string "%B %d, %Y" (if r (date-to-time r) nil))))
 (advice-add #'denote-journal-daily--title-format :override #'denote-journal-mdy-title-format-with-env)
 
-(keymap-global-set "H-<f12>" #'aa/capture-empty-denote)
 
-(defun aa/capture-empty-denote (&optional goto)
+(keymap-global-set "H-c" #'aa/capture-note)
+(keymap-global-set "H-=" #'(lambda (arg)
+                             (interactive "P")
+                             (let (denote-rename-confirmations)
+                               (funcall #'denote-rename-file-signature))))
+
+
+(cl-defun av/org-capture-with-metadata (&key title keywords directory date template signature)
+  (pcase-let* ((`(,title ,keywords _ ,directory ,date ,identifier ,template ,signature)
+                (denote--creation-prepare-note-data title keywords 'org directory date nil template signature))
+               (front-matter (denote--format-front-matter title date keywords identifier signature 'org))
+               (template-string (cond ((stringp template) template)
+                                      ((functionp template) (funcall template))
+                                      (t (user-error "Invalid template")))))
+    (setq denote-last-path
+          (denote-format-file-name directory identifier keywords title ".org" signature))
+    (when (file-regular-p denote-last-path)
+      (user-error "A file named `%s' already exists" denote-last-path))
+    (denote--keywords-add-to-history keywords)
+    (concat front-matter template-string denote-org-capture-specifiers)))
+
+(defun aa/capture-note (&optional goto)
   (interactive "P")
-  (dlet ((org-capture-templates '(("N" "New Empty note (with Denote)" plain (file denote-last-path)
+  (dlet ((org-capture-templates '(("N" "New capture note (with Denote)" plain (file denote-last-path)
                                    #'(lambda ()
-                                       (dlet (denote-prompts
-                                              (denote-org-capture-specifiers "%?"))
-                                         (denote-org-capture)))
+                                       (let ((denote-org-capture-specifiers "%?"))
+                                         (av/org-capture-with-metadata
+                                          :directory (concat (expand-file-name org-directory) "/capture")
+                                          :keywords '("unorganized"))))
                                    :no-save t
                                    :immediate-finish nil
                                    :kill-buffer t
                                    :jump-to-captured t))))
     (org-capture goto "N")))
 
+(defun aa/turn-unorganized-to-journal (&optional op)
+  (interactive "P")
+  (when (denote-file-has-denoted-filename-p (buffer-file-name))
+    (let (denote-rename-confirmations)
+      (when-let ((file (denote-rename-file (buffer-file-name)
+                                           (denote-journal-mdy-title-format-with-env (denote-extract-id-from-string (buffer-file-name)))
+                                           '("journal")
+                                           'keep-current
+                                           'keep-current
+                                           'keep-current))
+                 (new-path (string-replace "capture" "journal" file)))
+        (rename-file file new-path)
+        (set-visited-file-name new-path t t)))))
+
+(defun aa/visit-whole-day-journal (&optional op)
+  (interactive "P")
+  )
+
 ;; Disable C-, to prevent accidental triggers due to its proximity to C-k.
 (add-hook 'org-capture-mode-hook
           (lambda ()
-            (keymap-local-unset "C-," )
+            (keymap-local-unset "C-,")
             (keymap-local-unset "C-.")))
 
 (defvar av/denote-link-display-help-echo 't)
@@ -401,7 +468,6 @@
 ;; (map! :map doom-leader-notes-map
 ;;       "r" #'+denote-random-note)
 
-(defvar +denote-journal-file (concat denote-directory (format-time-string "%Y0101T000000--") "journal__denote_journal.org"))
 (defvar +denote-refile-file (concat denote-directory "19700101T000000--refile__denote_refile.org"))
 (defvar +denote-todo-file (concat denote-directory "19700102T000000--todo__denote_todo.org"))
 (defvar +denote-readlist-file (concat denote-directory "19700103T000000--readlist__denote_readlist.org"))
@@ -414,13 +480,9 @@
            :immediate-finish nil
            :kill-buffer t
            :jump-to-captured t)
-          ("j" "Journal" entry (file+olp+datetree +denote-journal-file)
-           "* %<%I:%M %p> %?")
           ("t" "Personal todo" entry (file+headline +denote-todo-file "Inbox")
            "* [ ] %?" :prepend t)
           ("c" "Collections (need refile)" entry (file+headline +denote-refile-file "Inbox")
-           "* %?" :prepend t)
-          ("r" "Capture readlist" entry (file+headline +denote-readlist-file "Inbox")
            "* %?" :prepend t)
           ("p" "Templates for projects")
           ("pt" "Project-local todo" entry  ; {project-root}/todo.org
@@ -436,66 +498,24 @@
 (setq org-agenda-files '("~/documents/notes/" "~/documents/notes/journal/"))
 (setq org-roam-directory (concat (getenv "HOME") "/roam"))
 
-;;;; lsp and company and orderless and programing
-(setq lsp-use-plists t)
-(after! lsp-mode
-  (setq lsp-enable-file-watchers nil
-        lsp-keep-workspace-alive nil
-        lsp-enable-symbol-highlighting nil
-        lsp-auto-guess-root t
-        lsp-modeline-code-actions-enable nil
-        lsp-headerline-breadcrumb-enable t
-        lsp-headerline-breadcrumb-segments '(symbols)
-        lsp-headerline-breadcrumb-enable-diagnostics nil
-        lsp-enable-indentation t
-        lsp-modeline-diagnostics-enable nil
-        lsp-eldoc-enable-hover t
-        lsp-enable-snippet nil
-        lsp-log-io nil
-        lsp-ui-sideline-enable nil
 
-        lsp-clients-clangd-args '("--background-index"
-                                  "--clang-tidy"
-                                  "--completion-style=detailed"
-                                  "--header-insertion=never"
-                                  "--header-insertion-decorators=0"))
+;;;;; lsp-pyright
+;; (use-package! lsp-pyright
+;;   :after lsp-mode
+;;   :config
+;;   (setq lsp-pyright-use-library-code-for-types t
+;;         lsp-pyright-stub-path (concat (getenv "HOME") "/clone/python-type-stubs")
+;;         lsp-pyright-langserver-command "basedpyright"))
 
-  (setq +lsp-company-backends '(company-yasnippet :separate company-capf))
-
-  ;; TODO
-  ;; (setq-hook! '(c-mode-hook c++-mode-hook) +format-with-lsp nil)
-  )
-
+;;;; company and orderless
 (after! company
-  (setq company-idle-delay 0.01)
+  (setq company-idle-delay 0)
+  (setq company-tooltip-idle-delay 0)
   (map! :map company-active-map "<tab>"  #'company-complete-selection)
   (map! :map company-active-map "TAB"  #'company-complete-selection))
 
 (after! orderless
   (setq orderless-component-separator "[ &·]+"))
-
-(set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
-
-;;;;; lsp-java
-(after! lsp-java
-  (setq lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/snapshots/jdt-language-server-latest.tar.gz"))
-
-;;;;; lsp-rust
-(after! lsp-rust
-  (setq lsp-rust-analyzer-lru-capacity 1024)
-  (setq lsp-rust-analyzer-cargo-watch-enable t)
-  (setq lsp-rust-analyzer-diagnostics-enable t))
-
-;;;;; lsp-booster
-(advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
-
-;;;;; lsp-pyright
-(use-package! lsp-pyright
-  :after lsp-mode
-  :config
-  (setq lsp-pyright-use-library-code-for-types t
-        lsp-pyright-stub-path (concat (getenv "HOME") "/clone/python-type-stubs")
-        lsp-pyright-langserver-command "basedpyright"))
 
 ;;;; TODO csharp
 (after! csharp-mode
@@ -561,12 +581,12 @@
               ("C-<tab>" . 'copilot-accept-completion-by-word)))
 
 ;;;; typst-mode
-(use-package typst-ts-mode
-  :custom
-  (typst-ts-watch-options "--open")
-  (typst-ts-mode-enable-raw-blocks-highlight t)
-  :config
-  (keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu))
+;; (use-package typst-ts-mode
+;;   :custom
+;;   (typst-ts-watch-options "--open")
+;;   (typst-ts-mode-enable-raw-blocks-highlight t)
+;;   :config
+;;   (keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu))
 
 ;;;; gptel
 (after! doom-modeline
@@ -612,12 +632,12 @@
               ("C-<tab>" . 'copilot-accept-completion-by-word)))
 
 ;;;; typst-mode
-(use-package typst-ts-mode
-  :custom
-  (typst-ts-watch-options "--open")
-  (typst-ts-mode-enable-raw-blocks-highlight t)
-  :config
-  (keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu))
+;; (use-package typst-ts-mode
+;;   :custom
+;;   (typst-ts-watch-options "--open")
+;;   (typst-ts-mode-enable-raw-blocks-highlight t)
+;;   :config
+;;   (keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu))
 
 ;;;; gptel
 (after! gptel
@@ -920,6 +940,7 @@ interactive command with similar behavior."
 (setq smtpmail-smtp-service 587)
 (setq smtpmail-stream-type 'starttls)
 (setq smtpmail-smtp-user "duli4868@gmail.com")
+
 (setq smtpmail-auth-supported '(xoauth2 cram-md5 plain login))
 (setq smtpmail-servers-requiring-authorization ".*")
 
@@ -972,3 +993,237 @@ interactive command with similar behavior."
 (add-to-list 'exec-path "/home/duli/develop/rpc-ssh/target/release")
 
 (defvar rpc-ssh-command "rpc-ssh-cli --config /home/duli/develop/rpc-ssh/cli.toml")
+
+
+(define-derived-mode denote-dash-mode tabulated-list-mode "Denote Menu"
+  "Major mode for browsing a list of Denote files."
+  :interactive nil
+  (if denote-menu-show-file-signature
+      (setq tabulated-list-format `[("Date" ,denote-menu-date-column-width t)
+                                    ("Signature" ,denote-menu-signature-column-width nil)
+                                    ("Title" ,denote-menu-title-column-width nil)
+                                    ("Keywords" ,denote-menu-keywords-column-width nil)])
+
+    (setq tabulated-list-format `[("Date" ,denote-menu-date-column-width t)
+                                  ("Title" ,denote-menu-title-column-width nil)
+                                  ("Keywords" ,denote-menu-keywords-column-width nil)]))
+
+
+  (setq tabulated-list-sort-key '("Date" . t))
+  (tabulated-list-init-header)
+  (tabulated-list-print))
+
+
+;; TODO new function turn capture note to journal note
+
+
+(eval-after-load 'ob-core
+  (lambda ()
+    (advice-patch 'org-babel-hide-result-toggle
+                  '(or
+                    (memq t
+                          (mapcar
+                           (lambda (overlay)
+                             (eq (overlay-get overlay 'invisible)
+                                 'org-babel-hide-result))
+                           (overlays-at start)))
+                    (eq force 'off))
+                  '(memq t
+                    (mapcar
+                     (lambda (overlay)
+                       (eq (overlay-get overlay 'invisible)
+                           'org-babel-hide-result))
+                     (overlays-at start))))))
+
+(defun my/block-visibility-according-to-property ()
+  (org-block-map
+   (lambda ()
+     (pcase (cdr (assq :visibility (nth 2 (org-babel-get-src-block-info))))
+       ("fold"
+        (org-fold-hide-block-toggle 'hide)
+        (when-let ((location (org-babel-where-is-src-block-result)))
+          (goto-char location)
+          (org-babel-hide-result-toggle 'hide)))
+       ("all"
+        (org-fold-hide-block-toggle 'off)
+        (when-let ((location (org-babel-where-is-src-block-result)))
+          (goto-char location)
+          (org-babel-hide-result-toggle 'off)))
+       ("block"
+        (org-fold-hide-block-toggle 'off)
+        (when-let ((location (org-babel-where-is-src-block-result)))
+          (goto-char location)
+          (org-babel-hide-result-toggle 'hide)))
+       ("results"
+        (org-fold-hide-block-toggle 'hide)
+        (when-let ((location (org-babel-where-is-src-block-result)))
+          (goto-char location)
+          (org-babel-hide-result-toggle 'off)))))))
+
+(defvar my/org-cycle-hide-result-startup nil)
+(advice-add 'org-cycle-set-startup-visibility
+            :after
+            (lambda ()
+              (unless (eq org-startup-folded 'showeverything)
+                (when my/org-cycle-hide-result-startup
+                  (org-babel-result-hide-all))
+                (my/block-visibility-according-to-property))))
+
+(defun av/all-denote-file-names ()
+  (mapcar
+   (lambda (elt) (string-remove-prefix (denote-directory) elt))
+   (denote-directory-files)))
+
+(defun av/filter-journal-by-dates (&optional date-str)
+  (let ((date-str (or date-str (format-time-string "%Y%m%d" (current-time)))))
+    (seq-filter
+     (lambda (elt) (string-prefix-p
+                    (concat (car-safe (denote-directories)) "journal/" date-str)
+                    elt))
+     (denote-directory-files))))
+
+(defvar av/merge-journal-section-templates
+  '((:line "--[" time "]--" (:when title "[" title "]"))
+    (:blank)
+    (:line content)))
+
+(defun av/apply-journal-template (form env)
+  (cond
+   ((stringp form) form)
+   ((and (symbolp form)
+         (not (keywordp form)))
+    (let ((value (alist-get form env 'not-in)))
+      (if (eq 'not-in value)
+          (error "key is not in the env")
+        value)))
+   ((eq :blank (car-safe form))
+    (if (null (cdr form))
+        "\n"
+      (error "(:blank) has no rest argument")))
+   ((eq :line (car-safe form))
+    (if (cdr form)
+        (concat (mapconcat (lambda (form) (av/apply-journal-template form env))
+                           (cdr form))
+                "\n")
+      (error "(:line ...) should have CDR content. Please use (:blank) represent blank line")))
+   ((eq :when (car-safe form))
+    (unless (cdr form)
+      (error "(:when COND ...) must have cond"))
+    (let* ((rest (cdr form))
+           (cond (car-safe rest))
+           (cond (av/apply-journal-template cond env)))
+      (when cond
+        (setq rest (cdr rest))
+        (when rest
+          (mapconcat (lambda (form) (av/apply-journal-template form env))
+                     rest)))))
+   ((listp form)
+    (mapconcat (lambda (form) (av/apply-journal-template form env))
+               form))
+   (t (error (format "%s not valid template element" form)))))
+
+
+(defun av/format-journal-section (time title content)
+  (av/apply-journal-template av/merge-journal-section-templates
+                             `((time . ,time)
+                               (title . ,title)
+                               (content . ,content))))
+
+(defun av/denote-file-content-without-front-matter (ab-path)
+  (with-temp-buffer
+    (insert-file-contents ab-path)
+    (goto-char (point-min))
+    (while (looking-at "^#\\+.*$")
+      (forward-line 1))
+    (buffer-substring (point) (point-max))))
+
+(defun av/merge-journal-content (journals)
+  (let (result)
+    (dolist (journal journals result)
+      (let* ((identifier (denote-retrieve-filename-identifier journal))
+             (time-of-identifier (date-to-time identifier))
+             (time-of-day (format-time-string "%H:%M" time-of-identifier))
+             (title (let ((title (denote-retrieve-filename-title journal)))
+                      (when (eq title (downcase (format-time-string "%B-%d-%Y" time-of-identifier)))
+                        title)))
+             (content (string-remove-prefix "\n" (av/denote-file-content-without-front-matter journal))))
+        (push (cons identifier (av/format-journal-section time-of-day title content)) result)))))
+
+;; TODO use nlp parse date
+(defun av/get-all-journal-date-for-prompt ()
+  (delete-dups
+   (mapcar (lambda (elt)
+             (substring (string-remove-prefix (concat (car-safe (denote-directories)) "journal/")
+                                              elt)
+                        0 8))
+           (av/filter-journal-by-dates ""))))
+
+(defun av/journal-view-prompt ()
+  (completing-read "Choose a date:"
+                   (av/get-all-journal-date-for-prompt)))
+
+(defun aa/journal-view (&optional date-str)
+  (interactive
+   (list (av/journal-view-prompt)))
+  (let* ((journal-sections (av/merge-journal-content (av/filter-journal-by-dates date-str)))
+         (journal-sections (mapcar #'cdr (sort journal-sections (lambda (x y)
+                                                                  (string-lessp (car x) (car y))))))
+         (front-matter (denote--format-front-matter (denote-journal-mdy-title-format-with-env date-str)
+                                                    (date-to-time (concat date-str "T235959"))
+                                                    nil
+                                                    (concat date-str "T235959")
+                                                    "" 'org))
+         (journal (progn (push front-matter journal-sections) (mapconcat #'identity journal-sections)))
+         (main-buffer (get-buffer-create (concat "*" (denote-journal-mdy-title-format-with-env date-str) "*")))
+         (side-display-action `((display-buffer-in-side-window)
+                                (dedicated . t)
+                                (side . left)
+                                (slot . 0))))
+    (let ((main-window (display-buffer main-buffer '((display-buffer-full-frame))))
+          (side-window (display-buffer (find-file-noselect "~/aa.log") side-display-action)))
+      (with-current-buffer main-buffer
+        (erase-buffer)
+        (org-mode)
+        (insert journal)
+        (add-hook 'kill-buffer-hook
+                  (lambda ()
+                    (when (window-live-p side-window)
+                      (delete-window side-window)))
+                  nil
+                  t)))))
+
+(use-package! lsp-proxy
+  :config
+  (setq lsp-proxy-diagnostics-provider :none)
+  (setq lsp-proxy-user-languages-config (expand-file-name (concat doom-user-dir "lsp-proxy.toml")))
+  (set-lookup-handlers! 'lsp-proxy-mode
+    :definition '(lsp-proxy-find-definition :async t)
+    :references '(lsp-proxy-find-references :async t)
+    :implementations '(lsp-proxy-find-implementations :async t)
+    :type-definition '(lsp-proxy-find-type-definition :async t)
+    :documentation '(lsp-proxy-describe-thing-at-point :async t))
+  (map! :map doom-leader-code-map
+        "a" #'lsp-proxy-execute-code-action))
+
+(set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
+
+;; let default empty
+(setopt compile-command "")
+(setq savehist-ignored-variables '(compile-history))
+
+;; make all repl toggle resume cursor
+(set-popup-rule!
+  (lambda (bufname _)
+    (when-let ((buf (get-buffer bufname)))
+      (equal '(:repl t)
+             (condition-case nil
+                 (buffer-local-value '+eval-repl-plist buf)
+               (void-variable nil)))))
+  :size 0.25
+  :quit nil
+  :select t)
+
+;; make height higher
+(set-popup-rule!
+  '"^\\*compilation"
+  :vslot -2 :size 0.42 :autosave t :quit t :ttl 0)
