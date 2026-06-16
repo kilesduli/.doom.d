@@ -20,6 +20,11 @@
 ;; - `doom-serif-font' -- for the `fixed-pitch-serif' face
 ;;
 
+;; Function Varible named rules
+;; - `aa/' is for interactive function
+;; - `ff/' is for non interactive function
+;; - `vv/' is for defvar defvar-local
+
 ;;; Code:
 ;;;; indent macro definition
 (defmacro progn-package (_ &rest body)
@@ -46,7 +51,6 @@
 (add-hook! doom-after-init
   (setq gc-cons-threshold (* 16 1024 1024))
   (setq gc-cons-percentage 0.2))
-(fset '+lsp-optimization-mode (lambda (&rest _)))
 
 ;; We wanna default emacs behaviour. Use M-j add new comment line.
 ;; This is more compatible
@@ -221,7 +225,7 @@
 (map! :map doom-leader-file-map
       "o" #'find-file-other-window)
 
-(setq frame-title-format '(:eval (+generate--frame-format)))
+(setq frame-title-format '(:eval (ff/generate--frame-format)))
 
 ;;;; emacs-rime
 ;; emacs do not provide us a way to make keybinding live all over the time, but
@@ -268,7 +272,7 @@
 
         ;; yank-media
         org-yank-image-save-method (concat org-directory "/assets")
-        org-yank-image-file-name-function #'+org-yank-image-with-denote-id-or-default
+        org-yank-image-file-name-function #'ff/org-yank-image-with-denote-id-or-default
 
         org-todo-keywords '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "STRT(s)" "WAIT(w)" "HOLD(h)" "IDEA(i)"
                              "|" "DONE(d)" "KILL(k)" "CANCEL(c)")
@@ -349,7 +353,7 @@
                 (point)))))))
       (apply fn args))))
 ;;;;; denote with org-capture
-(defun +denote-downcase-str (STR)
+(defun ff/denote-downcase-str (STR)
   (downcase STR))
 
 (use-package! denote
@@ -360,7 +364,7 @@
         denote-known-keywords '("emacs" "note" "game" "refile" "rewrite")
         denote-prompts '(keywords title)
         denote-file-name-slug-functions  '((title . denote-sluggify-title)
-                                           (keyword . +denote-downcase-str) ; make multi word keyword works
+                                           (keyword . ff/denote-downcase-str) ; make multi word keyword works
                                            (signature . denote-sluggify-signature)))
   ;;  (denote-rename-buffer-mode t)
   )
@@ -379,10 +383,10 @@
   :config
   (setq denote-journal-title-format "%B%e %Y %A"))
 
-(defun denote-journal-mdy-title-format-with-env (&optional r)
+(defun ff/denote-journal-mdy-title-format-with-env (&optional r)
   (let ((system-time-locale "en_US.UTF-8"))
     (format-time-string "%B %d, %Y" (if r (date-to-time r) nil))))
-(advice-add #'denote-journal-daily--title-format :override #'denote-journal-mdy-title-format-with-env)
+(advice-add #'denote-journal-daily--title-format :override #'ff/denote-journal-mdy-title-format-with-env)
 
 
 (keymap-global-set "H-c" #'aa/capture-note)
@@ -392,7 +396,7 @@
                                (funcall #'denote-rename-file-signature))))
 
 
-(cl-defun av/org-capture-with-metadata (&key title keywords directory date template signature)
+(cl-defun ff/org-capture-with-metadata (&key title keywords directory date template signature)
   (pcase-let* ((`(,title ,keywords _ ,directory ,date ,identifier ,template ,signature)
                 (denote--creation-prepare-note-data title keywords 'org directory date nil template signature))
                (front-matter (denote--format-front-matter title date keywords identifier signature 'org))
@@ -411,7 +415,7 @@
   (dlet ((org-capture-templates '(("N" "New capture note (with Denote)" plain (file denote-last-path)
                                    #'(lambda ()
                                        (let ((denote-org-capture-specifiers "%?"))
-                                         (av/org-capture-with-metadata
+                                         (ff/org-capture-with-metadata
                                           :directory (concat (expand-file-name org-directory) "/capture")
                                           :keywords '("unorganized"))))
                                    :no-save t
@@ -444,16 +448,16 @@
             (keymap-local-unset "C-,")
             (keymap-local-unset "C-.")))
 
-(defvar av/denote-link-display-help-echo 't)
-(setq av/denote-link-display-help-echo nil)
+(defvar vv/denote-link-display-help-echo 't)
+(setq ff/denote-link-display-help-echo nil)
 ;; fix help-echo
-(defun an/denote-link-ol-help-echo (_window _object position)
+(defun ff/denote-link-ol-help-echo (_window _object position)
   "Echo the full file path of the identifier at POSITION."
-  (when av/denote-link-display-help-echo
+  (when vv/denote-link-display-help-echo
     (let* ((data (denote--link-at-point-get-data position))
            (target (caar data)))
       (denote-get-path-by-id target))))
-(advice-add #'denote-link-ol-help-echo :override #'an/denote-link-ol-help-echo)
+(advice-add #'denote-link-ol-help-echo :override #'ff/denote-link-ol-help-echo)
 
 
 (use-package denote-menu
@@ -499,14 +503,6 @@
 (setq org-roam-directory (concat (getenv "HOME") "/roam"))
 
 
-;;;;; lsp-pyright
-;; (use-package! lsp-pyright
-;;   :after lsp-mode
-;;   :config
-;;   (setq lsp-pyright-use-library-code-for-types t
-;;         lsp-pyright-stub-path (concat (getenv "HOME") "/clone/python-type-stubs")
-;;         lsp-pyright-langserver-command "basedpyright"))
-
 ;;;; company and orderless
 (after! company
   (setq company-idle-delay 0)
@@ -533,13 +529,13 @@
   (global-wakatime-mode))
 
 (after! 'treemacs
-  (setq! treemacs-width 25))
+  (setopt treemacs-width 25))
 
 (use-package! indent-bars
   :hook ((python-mode yaml-mode) . indent-bars-mode))
 
 (after! doom-modeline
-  (setq! doom-modeline-env-enable-python nil))
+  (setopt doom-modeline-env-enable-python nil))
 
 (add-hook! '(scheme-mode-hook emacs-lisp-mode-hook lisp-mode-hook)
            #'paredit-mode)
@@ -590,7 +586,7 @@
 
 ;;;; gptel
 (after! doom-modeline
-  (setq! doom-modeline-env-enable-python nil))
+  (setopt doom-modeline-env-enable-python nil))
 
 (add-hook! '(scheme-mode-hook emacs-lisp-mode-hook lisp-mode-hook)
            #'paredit-mode)
@@ -653,51 +649,165 @@
     :host "api.linkapi.ai"
     :key (gptel-api-key-from-auth-source "api.linkapi.ai" "apikey")
     :models +gptel--linkapi-gemini-models))
+;;;; compile @f advice
+(advice-add 'compile :before #'(lambda (&rest r) (setq vv/compile-interactive-flag (called-interactively-p 'interactive))))
+(advice-add 'recompile :before #'(lambda (&rest r) (setq vv/compile-interactive-flag t (called-interactively-p 'interactive))))
+(advice-add 'compilation-start :filter-args #'ff/compile-expand-placeholders)
+
+;;;; rust-mode copy from doom module
+;; no more rustic-mode
+(use-package! rust-mode
+  :defer t
+  :config
+  (setq rust-indent-method-chain t)
+  :init
+  (add-hook 'rust-mode-local-vars-hook #'lsp! 'append)
+  (when  (modulep! :tools lsp -eglot)
+    (defadvice! +rust--dont-cache-results-from-ra-a (&rest _)
+      :after #'lsp-eldoc-function
+      (when (derived-mode-p 'rust-mode 'rust-ts-mode)
+        (setq lsp--hover-saved-bounds nil))))
+  (after! lsp-rust
+    (cl-defmethod lsp-clients-extract-signature-on-hover (contents (_server-id (eql rust-analyzer)))
+      (let* ((value (if lsp-use-plists (plist-get contents :value) (gethash "value" contents)))
+             (groups (--partition-by (s-blank? it) (s-lines (s-trim value))))
+             (mod-group (cond ((s-equals? "```rust" (car (-fifth-item groups))) (-third-item groups))
+                              ((s-equals? "```rust" (car (-third-item groups))) (-first-item groups))
+                              (t nil)))
+             (cmt (if (null mod-group) "" (concat " // " (cadr mod-group))))
+             (sig-group (cond ((s-equals? "```rust" (car (-fifth-item groups))) (-fifth-item groups))
+                              ((s-equals? "```rust" (car (-third-item groups))) (-third-item groups))
+                              (t (-first-item groups))))
+             (sig (->> sig-group
+                       (--drop-while (s-equals? "```rust" it))
+                       (--take-while (not (s-equals? "```" it)))
+                       (--map (s-replace-regexp "//.*" "" it))
+                       (--map (s-trim it))
+                       (s-join " "))))
+        (lsp--render-element (concat "```rust\n" sig cmt "\n```"))))))
+
+;;;; lsp-mode (modulep lsp)
+(setq lsp-use-plists t)
+(when (modulep! :tools lsp -eglot)
+  (after! lsp-pyright
+    (setq lsp-pyright-use-library-code-for-types t
+          lsp-pyright-stub-path (concat (getenv "HOME") "/clone/python-type-stubs")
+          lsp-pyright-langserver-command "basedpyright"))
+
+  (after! lsp-rust
+    (setq lsp-rust-all-features t
+          lsp-rust-all-targets t
+          lsp-rust-features "all"
+          lsp-rust-analyzer-checkonsave-features nil
+          lsp-rust-analyzer-completion-term-search-enable t
+          ;; lsp-rust-completion-full-function-signatures t
+          lsp-rust-analyzer-lru-capacity 1024
+          lsp-rust-analyzer-diagnostics-enable nil
+          lsp-rust-analyzer-rustfmt-rangeformatting-enable t))
+
+  (after! lsp-mode
+    (setq lsp-enable-file-watchers nil
+          lsp-keep-workspace-alive nil
+          lsp-enable-symbol-highlighting nil
+          lsp-auto-guess-root t
+          lsp-modeline-code-actions-enable nil
+          lsp-headerline-breadcrumb-enable t
+          lsp-headerline-breadcrumb-segments '(symbols)
+          lsp-headerline-breadcrumb-enable-diagnostics nil
+          lsp-enable-indentation t
+          lsp-modeline-diagnostics-enable nil
+          lsp-eldoc-enable-hover t
+          lsp-enable-snippet nil
+          lsp-log-io nil
+          lsp-ui-sideline-enable nil
+
+          lsp-clients-clangd-args '("--background-index"
+                                    "--clang-tidy"
+                                    "--completion-style=detailed"
+                                    "--header-insertion=never"
+                                    "--header-insertion-decorators=0")
+          lsp-diagnostics-disabled-modes '(rustic-mode rust-mode rust-ts-mode go-mode go-ts-mode)
+          lsp-signature-auto-activate nil)
+
+    (setq +lsp-company-backends '(company-yasnippet :separate company-capf))))
+
+;;;; eglot (modulep lsp +eglot)
+(when (modulep! :tools lsp +eglot)
+  (setq-default eglot-workspace-configuration
+                '((:rust-analyzer . (:cargo (:allFeatures t :allTargets t :features "full")
+                                     :checkOnSave :json-false
+                                     :completion (:termSearch (:enable t)
+                                                  :fullFunctionSignatures (:enable t))
+                                     :hover (:memoryLayout (:size "both")
+                                             :show (:traitAssocItems 5)
+                                             :documentation (:keywords (:enable :json-false)))
+                                     :inlayHints(;:bindingModeHints (:enable t)
+                                                 :lifetimeElisionHints (:enable "skip_trivial" :useParameterNames t)
+                                                 :closureReturnTypeHints (:enable "always")
+                                                 :discriminantHints (:enable t)
+                                                 :genericParameterHints (:lifetime (:enable t)))
+                                     :semanticHighlighting (:operator (:specialization (:enable t))
+                                                            :punctuation (:enable t :specialization (:enable t)))
+                                     :workspace (:symbol (:search (:kind "all_symbols"
+                                                                   :scope "workspace_and_dependencies")))
+                                     :lru (:capacity 1024)
+                                     :diagnostics (:enable :json-false))))))
+  ;; (after! rustic-lsp
+  ;;   (fset 'rustic-setup-eglot (lambda (&rest _)))
+  ;;   (after! eglot
+  ;;     (add-to-list 'eglot-server-programs
+  ;;                  `(rust-mode . ("rust-analyzer" :initializationOptions
+  ;;                                 ( :procMacro (:enable t)
+  ;;                                              :cargo ( :buildScripts (:enable t)
+  ;;                                                                     :features "all")
+  ;;                                              :rustfmt ( :rangeFormatting ( :enable t))))))))
+
+
 
 ;;; continue here
 
-;; (after! consult
-;;   (unless (featurep 'beframe)
-;;     (require 'beframe))
-;;   (defface beframe-buffer
-;;     '((t :inherit font-lock-string-face))
-;;     "Face for `consult' framed buffers.")
-;;   (defvar beframe--consult-source
-;;     `( :name     "Frame-specific buffers (current frame)"
-;;        :narrow   ?F
-;;        :category buffer
-;;        :face     beframe-buffer
-;;        :history  beframe-history
-;;        :items    ,#'beframe--buffer-names
-;;        :action   ,#'switch-to-buffer
-;;        :state    ,#'consult--buffer-state))
-;;   (add-to-list 'consult-buffer-sources 'beframe--consult-source))
+  ;; (after! consult
+  ;;   (unless (featurep 'beframe)
+  ;;     (require 'beframe))
+  ;;   (defface beframe-buffer
+  ;;     '((t :inherit font-lock-string-face))
+  ;;     "Face for `consult' framed buffers.")
+  ;;   (defvar beframe--consult-source
+  ;;     `( :name     "Frame-specific buffers (current frame)"
+  ;;        :narrow   ?F
+  ;;        :category buffer
+  ;;        :face     beframe-buffer
+  ;;        :history  beframe-history
+  ;;        :items    ,#'beframe--buffer-names
+  ;;        :action   ,#'switch-to-buffer
+  ;;        :state    ,#'consult--buffer-state))
+  ;;   (add-to-list 'consult-buffer-sources 'beframe--consult-source))
 
 
 
 
-;; (after! consult
-;;   (defvar +consult-kill-buffer-source '(beframe--consult-source
-;;                                         consult--source-hidden-buffer
-;;                                         consult--source-modified-buffer
-;;                                         consult--source-buffer
-;;                                         consult--source-project-buffer-hidden))
-;;   (defun +consult-kill-buffer ()
-;;     (interactive)
-;;     (let ((selected (consult--multi +consult-kill-buffer-source
-;;                                     :prompt "Kill buffer: "
-;;                                     :history 'consult--buffer-history
-;;                                     :preview-key nil
-;;                                     :sort nil)))
-;;       (when (plist-get (cdr selected) :match)
-;;         (kill-buffer (car selected))))))
-;; (autoload '+consult-kill-buffer "consult" :type t)
-;; (map! "C-x k" #'+consult-kill-buffer)
+  ;; (after! consult
+  ;;   (defvar +consult-kill-buffer-source '(beframe--consult-source
+  ;;                                         consult--source-hidden-buffer
+  ;;                                         consult--source-modified-buffer
+  ;;                                         consult--source-buffer
+  ;;                                         consult--source-project-buffer-hidden))
+  ;;   (defun +consult-kill-buffer ()
+  ;;     (interactive)
+  ;;     (let ((selected (consult--multi +consult-kill-buffer-source
+  ;;                                     :prompt "Kill buffer: "
+  ;;                                     :history 'consult--buffer-history
+  ;;                                     :preview-key nil
+  ;;                                     :sort nil)))
+  ;;       (when (plist-get (cdr selected) :match)
+  ;;         (kill-buffer (car selected))))))
+  ;; (autoload '+consult-kill-buffer "consult" :type t)
+  ;; (map! "C-x k" #'+consult-kill-buffer)
 
-(after! emmet-mode
-  (unbind-key "<tab>" emmet-mode-keymap)
-  (map! :map emmet-mode-keymap
-        "C-<tab>" #'+web/indent-or-yas-or-emmet-expand))
+  (after! emmet-mode
+    (unbind-key "<tab>" emmet-mode-keymap)
+    (map! :map emmet-mode-keymap
+          "C-<tab>" #'+web/indent-or-yas-or-emmet-expand))
 
 (use-package! annotate
   ;; :hook (prog-mode . annotate-mode)
@@ -775,9 +885,6 @@
 ;; Use C-j visit stage file, instead of 
 ;; (after! magit-diff
 ;;   (setq magit-diff-visit-prefer-worktree t))
-
-(setq! org-supertag-sync-directories '("~/documents/notes"))
-
 
 (defun org-yank-generic (command arg)
   "Perform some yank-like command.
@@ -889,21 +996,21 @@ interactive command with similar behavior."
 (advice-add 'org-fold-core-region :after #'+org-fold-core-region)
 
 (after! org-transclusion
-  (cl-pushnew 'denote-org-transclusion-add
+  (cl-pushnew 'ff/denote-org-transclusion-add
               org-transclusion-add-functions)
   (cl-pushnew 'keyword org-transclusion-exclude-elements))
 
 
-(defun an/denote-open-link-function (path)
+(defun ff/denote-open-link-function (path)
   (cl-flet ((has-dired-mode-p (elt)
               (equal 'dired-mode (buffer-local-value 'major-mode elt))))
     (message "%s" (seq-some has-dired-mode-p (window-list)))
     (if (seq-some has-dired-mode-p (window-list))
         (funcall #'find-file path)
       (funcall #'find-file-other-window path))))
-(setq denote-open-link-function #'an/denote-open-link-function)
+(setq denote-open-link-function #'ff/denote-open-link-function)
 
-(defun an/denote-link-ol-follow (f link)
+(defun ff/denote-link-ol-follow (f link)
   (cl-flet ((has-dired-mode-p (elt)
               (equal 'dired-mode (buffer-local-value 'major-mode (window-buffer elt)))))
     (if (seq-some #'has-dired-mode-p (window-list))
@@ -911,7 +1018,7 @@ interactive command with similar behavior."
           (funcall f link))
       (dlet ((org-link-frame-setup-function '((file . find-file-other-window))))
         (funcall f link)))))
-(advice-add #'denote-link-ol-follow :around #'an/denote-link-ol-follow)
+(advice-add #'denote-link-ol-follow :around #'ff/denote-link-ol-follow)
 
 ;; (defun screenshot-svg ()
 ;;   "Save a screenshot of the current frame as an SVG image.
@@ -1035,7 +1142,7 @@ interactive command with similar behavior."
                            'org-babel-hide-result))
                      (overlays-at start))))))
 
-(defun my/block-visibility-according-to-property ()
+(defun ff/block-visibility-according-to-property ()
   (org-block-map
    (lambda ()
      (pcase (cdr (assq :visibility (nth 2 (org-babel-get-src-block-info))))
@@ -1060,21 +1167,21 @@ interactive command with similar behavior."
           (goto-char location)
           (org-babel-hide-result-toggle 'off)))))))
 
-(defvar my/org-cycle-hide-result-startup nil)
+(defvar vv/org-cycle-hide-result-startup nil)
 (advice-add 'org-cycle-set-startup-visibility
             :after
             (lambda ()
               (unless (eq org-startup-folded 'showeverything)
-                (when my/org-cycle-hide-result-startup
+                (when vv/org-cycle-hide-result-startup
                   (org-babel-result-hide-all))
-                (my/block-visibility-according-to-property))))
+                (ff/block-visibility-according-to-property))))
 
-(defun av/all-denote-file-names ()
+(defun ff/all-denote-file-names ()
   (mapcar
    (lambda (elt) (string-remove-prefix (denote-directory) elt))
    (denote-directory-files)))
 
-(defun av/filter-journal-by-dates (&optional date-str)
+(defun ff/filter-journal-by-dates (&optional date-str)
   (let ((date-str (or date-str (format-time-string "%Y%m%d" (current-time)))))
     (seq-filter
      (lambda (elt) (string-prefix-p
@@ -1082,12 +1189,12 @@ interactive command with similar behavior."
                     elt))
      (denote-directory-files))))
 
-(defvar av/merge-journal-section-templates
+(defvar vv/merge-journal-section-templates
   '((:line "--[" time "]--" (:when title "[" title "]"))
     (:blank)
     (:line content)))
 
-(defun av/apply-journal-template (form env)
+(defun ff/apply-journal-template (form env)
   (cond
    ((stringp form) form)
    ((and (symbolp form)
@@ -1102,7 +1209,7 @@ interactive command with similar behavior."
       (error "(:blank) has no rest argument")))
    ((eq :line (car-safe form))
     (if (cdr form)
-        (concat (mapconcat (lambda (form) (av/apply-journal-template form env))
+        (concat (mapconcat (lambda (form) (ff/apply-journal-template form env))
                            (cdr form))
                 "\n")
       (error "(:line ...) should have CDR content. Please use (:blank) represent blank line")))
@@ -1111,25 +1218,25 @@ interactive command with similar behavior."
       (error "(:when COND ...) must have cond"))
     (let* ((rest (cdr form))
            (cond (car-safe rest))
-           (cond (av/apply-journal-template cond env)))
+           (cond (ff/apply-journal-template cond env)))
       (when cond
         (setq rest (cdr rest))
         (when rest
-          (mapconcat (lambda (form) (av/apply-journal-template form env))
+          (mapconcat (lambda (form) (ff/apply-journal-template form env))
                      rest)))))
    ((listp form)
-    (mapconcat (lambda (form) (av/apply-journal-template form env))
+    (mapconcat (lambda (form) (ff/apply-journal-template form env))
                form))
    (t (error (format "%s not valid template element" form)))))
 
 
-(defun av/format-journal-section (time title content)
-  (av/apply-journal-template av/merge-journal-section-templates
+(defun ff/format-journal-section (time title content)
+  (ff/apply-journal-template vv/merge-journal-section-templates
                              `((time . ,time)
                                (title . ,title)
                                (content . ,content))))
 
-(defun av/denote-file-content-without-front-matter (ab-path)
+(defun ff/denote-file-content-without-front-matter (ab-path)
   (with-temp-buffer
     (insert-file-contents ab-path)
     (goto-char (point-min))
@@ -1137,7 +1244,7 @@ interactive command with similar behavior."
       (forward-line 1))
     (buffer-substring (point) (point-max))))
 
-(defun av/merge-journal-content (journals)
+(defun ff/merge-journal-content (journals)
   (let (result)
     (dolist (journal journals result)
       (let* ((identifier (denote-retrieve-filename-identifier journal))
@@ -1146,26 +1253,26 @@ interactive command with similar behavior."
              (title (let ((title (denote-retrieve-filename-title journal)))
                       (when (eq title (downcase (format-time-string "%B-%d-%Y" time-of-identifier)))
                         title)))
-             (content (string-remove-prefix "\n" (av/denote-file-content-without-front-matter journal))))
-        (push (cons identifier (av/format-journal-section time-of-day title content)) result)))))
+             (content (string-remove-prefix "\n" (ff/denote-file-content-without-front-matter journal))))
+        (push (cons identifier (ff/format-journal-section time-of-day title content)) result)))))
 
 ;; TODO use nlp parse date
-(defun av/get-all-journal-date-for-prompt ()
+(defun ff/get-all-journal-date-for-prompt ()
   (delete-dups
    (mapcar (lambda (elt)
              (substring (string-remove-prefix (concat (car-safe (denote-directories)) "journal/")
                                               elt)
                         0 8))
-           (av/filter-journal-by-dates ""))))
+           (ff/filter-journal-by-dates ""))))
 
-(defun av/journal-view-prompt ()
+(defun ff/journal-view-prompt ()
   (completing-read "Choose a date:"
-                   (av/get-all-journal-date-for-prompt)))
+                   (ff/get-all-journal-date-for-prompt)))
 
 (defun aa/journal-view (&optional date-str)
   (interactive
-   (list (av/journal-view-prompt)))
-  (let* ((journal-sections (av/merge-journal-content (av/filter-journal-by-dates date-str)))
+   (list (ff/journal-view-prompt)))
+  (let* ((journal-sections (ff/merge-journal-content (ff/filter-journal-by-dates date-str)))
          (journal-sections (mapcar #'cdr (sort journal-sections (lambda (x y)
                                                                   (string-lessp (car x) (car y))))))
          (front-matter (denote--format-front-matter (denote-journal-mdy-title-format-with-env date-str)
@@ -1192,38 +1299,13 @@ interactive command with similar behavior."
                   nil
                   t)))))
 
-(use-package! lsp-proxy
-  :config
-  (setq lsp-proxy-diagnostics-provider :none)
-  (setq lsp-proxy-user-languages-config (expand-file-name (concat doom-user-dir "lsp-proxy.toml")))
-  (set-lookup-handlers! 'lsp-proxy-mode
-    :definition '(lsp-proxy-find-definition :async t)
-    :references '(lsp-proxy-find-references :async t)
-    :implementations '(lsp-proxy-find-implementations :async t)
-    :type-definition '(lsp-proxy-find-type-definition :async t)
-    :documentation '(lsp-proxy-describe-thing-at-point :async t))
-  (map! :map doom-leader-code-map
-        "a" #'lsp-proxy-execute-code-action))
-
 (set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
 
 ;; let default empty
 (setopt compile-command "")
 (setq savehist-ignored-variables '(compile-history))
 
-;; make all repl toggle resume cursor
-(set-popup-rule!
-  (lambda (bufname _)
-    (when-let ((buf (get-buffer bufname)))
-      (equal '(:repl t)
-             (condition-case nil
-                 (buffer-local-value '+eval-repl-plist buf)
-               (void-variable nil)))))
-  :size 0.25
-  :quit nil
-  :select t)
-
 ;; make height higher
 (set-popup-rule!
   '"^\\*compilation"
-  :vslot -2 :size 0.42 :autosave t :quit t :ttl 0)
+  :vslot -2 :size 0.36 :autosave t :quit t :ttl 0)

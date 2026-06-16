@@ -92,11 +92,13 @@
   :recipe (:host github :repo "mattt-b/odin-mode"))
 (package! jai-mode
   :recipe (:host github :repo "elp-revive/jai-mode"))
-(package! lsp-proxy
-  :recipe (:host github :repo "jadestrong/lsp-proxy"
-                 :files ("*.el")))
 (package! paredit
   :recipe (:host github :repo "emacsmirror/paredit"))
+(unless (modulep! :lang rust)
+  (package! rust-mode))
+(when (or (modulep! :tools lsp +eglot) nil)
+  (package! eglot-x
+    :recipe (:host github :repo "nemethf/eglot-x")))
 
 
 

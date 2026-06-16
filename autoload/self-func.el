@@ -1,7 +1,7 @@
 ;;; autoload/self-func.el -*- lexical-binding: t; -*-
 
 ;;;###autoload
-(defun +generate--frame-format ()
+(defun ff/generate--frame-format ()
   (let* ((dir (or (vc-root-dir) default-directory))
          (projectp (and (bound-and-true-p project--list)
                         (listp project--list)
@@ -20,13 +20,13 @@
       `("%b" " - GNU Emacs at " system-name)))))
 
 ;;;###autoload
-(defun +org-yank-image-with-denote-id-or-default ()
+(defun ff/org-yank-image-with-denote-id-or-default ()
   (if-let ((id (denote-retrieve-filename-identifier (buffer-file-name))))
       (format (concat "C" id "-" (substring (org-id-uuid) 0 (min 8))))
     (org-yank-image-autogen-filename)))
 
 ;;;###autoload
-(defun insert-space-between-chinese-and-english ()
+(defun aa/insert-space-between-chinese-and-english ()
   "Insert space between Chinese and English text in each line of the region.
    Ignore lines starting with '#+'"
   (interactive)
@@ -71,7 +71,7 @@
   (shell-command "gtk-launch chrome-jlhoajbaojeilbdnlldgecmilgppanbh-Default.desktop"))
 
 ;;;###autoload
-(defun replace-dashes-with-stars (n)
+(defun aa/replace-dashes-with-stars (n)
   "Replace dashes with stars at the beginning of each line.
 The number of stars will be increased by N for each tab before the dash."
   (interactive "p")
@@ -80,7 +80,7 @@ The number of stars will be increased by N for each tab before the dash."
     (while (re-search-forward "^\\(\t*\\)-" nil t)
       (replace-match (make-string (1+ (length (match-string 1))) ?*) t nil))))
 
-(defun replace-stars-with-dashes (n)
+(defun aa/replace-stars-with-dashes (n)
   "Replace stars with dashes at the beginning of each line.
 The number of stars will be increased by N for each tab before the dash."
   (interactive "p")
@@ -88,10 +88,6 @@ The number of stars will be increased by N for each tab before the dash."
     (goto-char (point-min))
     (while (re-search-forward "^\\(\t*\\)\*" nil t)
       (replace-match (make-string (1+ (length (match-string 1))) ?-) t nil))))
-
-;;;###autoload
-(defun +installed-from-nix-p (executable-path)
-  (string-match-p ".nix-profile" executable-path))
 
 ;;;###autoload
 (defun aa/denote-rename-file-by-selecting (file)
@@ -262,7 +258,7 @@ And the line would be overlaid like:
               (goto-char (match-end 2)))))))))
 ;;; denote org transclusion
 ;;;###autoload
-(defun denote-org-transclusion-add (link plist)
+(defun ff/denote-org-transclusion-add (link plist)
   (when (string= "denote" (org-element-property :type link))
     (let* ((denote-full (org-element-property :path link)) ;; get denote id from denote:<denote-full> link
            (denote-parts (string-split denote-full "::"))
@@ -281,13 +277,13 @@ And the line would be overlaid like:
 
 
 ;;; denote org backlinks
-(defcustom +denote-org-backlinks-line-format-type 'all
+(defcustom vv/denote-org-backlinks-line-format-type 'all
   "empty"
   :type '(choice (const :tag "nil" nil)
           (const :tag "all line" all)
           (const :tag "only-heading" only-heading)))
 
-(defun +denote-org--backlinks-xref (identifier)
+(defun ff/denote-org--backlinks-xref (identifier)
   (when-let* ((files (denote-directory-files))
               (backlinks (--> (denote--get-all-backlinks files)
                               (gethash identifier it)
@@ -303,7 +299,7 @@ And the line would be overlaid like:
                              (regexp-quote (nth 1 format-parts)))))
     (xref-matches-in-files query-simple backlinks)))
 
-(defun +denote-org--remove-duplicate-lines (xrefs)
+(defun ff/denote-org--remove-duplicate-lines (xrefs)
   (cl-remove-duplicates xrefs
                         ;; xref will sorted by line and column, so we keep the one with smaller column.
                         :from-end t
@@ -316,7 +312,7 @@ And the line would be overlaid like:
                                  (equal (xref-file-location-line a-loc)
                                         (xref-file-location-line b-loc)))))))
 
-(defun +denote-org--backlinks-rewrite-xrefs-summary (xrefs)
+(defun ff/denote-org--backlinks-rewrite-xrefs-summary (xrefs)
   (with-temp-buffer
     (org-mode)
     (dolist (xref xrefs xrefs)
@@ -333,18 +329,18 @@ And the line would be overlaid like:
                            (split-string it "\n")))
                 (start column))
             (setf (xref-match-item-summary xref)
-                  (--> (mapcar #'+denote-org--fix-level text)
-                       (mapcar #'(lambda (str) (+denote-org--fix-denote-link str start)) it)
+                  (--> (mapcar #'ff/denote-org--fix-level text)
+                       (mapcar #'(lambda (str) (ff/denote-org--fix-denote-link str start)) it)
                        (mapconcat #'identity it "\n")))))))))
 
-(defun +denote-org--fix-level (str)
+(defun ff/denote-org--fix-level (str)
   (prog1 str
     (when (string-match org-outline-regexp-bol str)
       (let ((level (1- (- (match-end 0) (match-beginning 0)))))
         (add-text-properties 0 (length str) `(face ,(intern (format "org-level-%d" level))) str)
         (add-text-properties 0 (length str) `(+denote-query-outline-level ,(1+ level)) str)))))
 
-(defun +denote-org--fix-denote-link (str start)
+(defun ff/denote-org--fix-denote-link (str start)
   (prog1 str
     (let ((item-text-props (list 'mouse-face 'highlight
                                  'keymap xref--button-map
@@ -355,14 +351,14 @@ And the line would be overlaid like:
         (add-text-properties (match-beginning 0) (match-end 0) item-text-props str)))))
 
 ;;;###autoload
-(defun +denote-org-backlinks (&optional file)
+(defun aa/denote-org-backlinks (&optional file)
   (interactive)
   (let* ((inhibit-read-only t))
     (if-let* ((current-file (or file (buffer-file-name))))
         (let* ((identifier (denote-retrieve-filename-identifier current-file))
-               (xref-alist (--> (+denote-org--backlinks-xref identifier)
-                                (+denote-org--remove-duplicate-lines it)
-                                (+denote-org--backlinks-rewrite-xrefs-summary it)
+               (xref-alist (--> (ff/denote-org--backlinks-xref identifier)
+                                (ff/denote-org--remove-duplicate-lines it)
+                                (ff/denote-org--backlinks-rewrite-xrefs-summary it)
                                 (xref--analyze it)))
                (buf-name (denote--backlinks-get-buffer-name current-file identifier)))
           (unless xref-alist
@@ -378,11 +374,11 @@ And the line would be overlaid like:
                         (lambda ()
                           (save-excursion
                             (get-text-property (point) '+denote-query-outline-level))))
-            (+denote-org--xref-insert-xrefs xref-alist))
+            (ff/denote-org--xref-insert-xrefs xref-alist))
           (display-buffer buf-name))
       (user-error "Buffer `%s' is not associated with a file" (current-buffer)))))
 
-(defun +denote-org--xref-insert-xrefs (xref-alist)
+(defun ff/denote-org--xref-insert-xrefs (xref-alist)
   "Insert XREF-ALIST in the current buffer.
 XREF-ALIST is of the form ((GROUP . (XREF ...)) ...), where
 GROUP is a string for decoration purposes and XREF is an
@@ -408,15 +404,15 @@ GROUP is a string for decoration purposes and XREF is an
              (cl-incf xref-num-matches-found)
              (pcase-let* (((cl-struct xref-item summary location) xref)
                           ((cl-struct xref-file-location file line column) location))
-               (unless (eq +denote-org-backlinks-line-format-type 'nil)
+               (unless (eq vv/denote-org-backlinks-line-format-type 'nil)
                  (setq summary (--> (string-split summary "\n")
                                     (mapcar (let ((lc line)
                                                   (lc-origin line))
                                               (lambda (line)
                                                 (let ((lf (cond
-                                                           ((eq +denote-org-backlinks-line-format-type 'all)
+                                                           ((eq vv/denote-org-backlinks-line-format-type 'all)
                                                             (substring line-format))
-                                                           ((eq +denote-org-backlinks-line-format-type 'only-heading)
+                                                           ((eq vv/denote-org-backlinks-line-format-type 'only-heading)
                                                             (if (> lc lc-origin)
                                                                 ;; line-format has ':', so we need add two here
                                                                 (make-string (+ 2 (floor (log max-line 10))) ?\s)
@@ -442,3 +438,21 @@ GROUP is a string for decoration purposes and XREF is an
     (while (= 0 (forward-line 1))
       (xref--apply-truncation)))
   (run-hooks 'xref-after-update-hook))
+
+;;; compile advice
+;;;###autoload
+(defvar vv/compile-interactive-flag nil)
+
+;;;###autoload
+(defun ff/compile-expand-placeholders (args)
+  (pcase-let ((`(,command ,comint) args))
+    (let ((expanded (replace-regexp-in-string
+                     "@f"
+                     (shell-quote-argument
+                      (or buffer-file-name ""))
+                     command
+                     t t)))
+      (if (not vv/compile-interactive-flag)
+          (list command comint)
+        (setq vv/compile-interactive-flag nil)
+        (list expanded comint)))))
