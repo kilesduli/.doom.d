@@ -24,53 +24,32 @@
 ;; - `aa/' is for interactive function
 ;; - `ff/' is for non interactive function
 ;; - `vv/' is for defvar defvar-local
+;; - 'mm/' is for macro
 
-;;; Code:
-;;;; indent macro definition
-(defmacro progn-package (_ &rest body)
-  (declare (indent 1))
-  `(progn ,@body))
-
+;;; Hack:
 ;;;; benchmark init
-(unless (daemonp)
-  (use-package! benchmark-init
-    :config
-    ;; To disable collection of benchmark data after init is done.
-    (add-hook 'doom-first-input-hook 'benchmark-init/deactivate)))
-
-(remove-hook 'doom-first-buffer-hook #'global-flycheck-mode)
-(smartparens-global-mode -1)
-(global-flycheck-mode -1)
+(use-package! benchmark-init
+  :unless (daemonp)
+  :config
+  ;; To disable collection of benchmark data after init is done.
+  (add-hook 'doom-first-input-hook 'benchmark-init/deactivate))
 
 ;;;; use menu key as <hyper>
 (keymap-global-unset "<menu>" 'remove)
 (keymap-set function-key-map "<menu>" #'event-apply-hyper-modifier)
 
-;;;; doom-hacks fix
-(remove-hook! doom-first-buffer #'gcmh-mode)
-(add-hook! doom-after-init
-  (setq gc-cons-threshold (* 16 1024 1024))
-  (setq gc-cons-percentage 0.2))
-
+;;;; default emacs newline
 ;; We wanna default emacs behaviour. Use M-j add new comment line.
 ;; This is more compatible
 (advice-remove 'newline-and-indent #'+default--newline-indent-and-continue-comments-a)
 (keymap-global-unset "<remap> <newline>")
-;; I thought it is useful.
-(setopt show-trailing-whitespace t)
 
-(defun aa/duplicate-line ()
-  "Duplicate current line"
-  (interactive)
-  (let ((column (current-column))
-        (line (concat "\n" (buffer-substring-no-properties (pos-bol) (pos-eol)))))
-    (end-of-line)
-    (insert line)
-    (beginning-of-line)
-    (forward-char column)))
+;;;; doom-hacks fix
+(add-hook! doom-after-init
+  (setq gc-cons-threshold (* 16 1024 1024))
+  (setq gc-cons-percentage 0.2))
 
-(keymap-global-set "C-M-j" #'aa/duplicate-line)
-
+;;;; unicode fonts
 ;; Emacs will read LANG env to decide what fonts add to frame.
 ;; and this function will compute hash according frame font. so...
 (after! unicode-fonts
@@ -80,12 +59,64 @@
                                       (lambda () '())))
                             (apply old-fun args)))))
 
+;;;; fix java .project file is being detected project in doom
 (after! projectile
   (setq projectile-project-root-files-bottom-up '(".ccls-root" ".projectile"
                                                   ".git" ".hg"))
   (advice-remove #'projectile-dirconfig-file #'doom--projectile-dirconfig-file-a))
 
-;;;; Font defintion
+;;;; xft, if we not using cairo, emoji fix
+;; Fallback to xft, if we not using cairo
+(when (boundp 'xft-ignore-color-fonts)
+  (setq xft-ignore-color-fonts nil
+        face-ignored-fonts nil)
+  (set-fontset-font t 'emoji
+                    '("Noto Color Emoji" . "iso10646-1") nil 'prepend))
+
+;;;; org block support
+(eval-after-load 'ob-core
+  (lambda ()
+    (advice-patch 'org-babel-hide-result-toggle
+                  '(or
+                    (memq t
+                          (mapcar
+                           (lambda (overlay)
+                             (eq (overlay-get overlay 'invisible)
+                                 'org-babel-hide-result))
+                           (overlays-at start)))
+                    (eq force 'off))
+                  '(memq t
+                    (mapcar
+                     (lambda (overlay)
+                       (eq (overlay-get overlay 'invisible)
+                           'org-babel-hide-result))
+                     (overlays-at start))))))
+
+(advice-add 'org-cycle-set-startup-visibility
+            :after
+            (lambda ()
+              (unless (eq org-startup-folded 'showeverything)
+                (when vv/org-cycle-hide-result-startup
+                  (org-babel-result-hide-all))
+                (ff/block-visibility-according-to-property))))
+
+;;; Function in autoload
+;;;###autoload
+(setq frame-title-format '(:eval (ff/generate--frame-format)))
+(keymap-global-set "C-M-j" #'aa/duplicate-line)
+
+;;;; compile @f advice and compile
+;; let default empty
+(setopt compile-command "")
+(setq savehist-ignored-variables '(compile-history))
+
+(advice-add 'compile :before #'(lambda (&rest r) (setq vv/compile-interactive-flag (called-interactively-p 'interactive))))
+(advice-add 'recompile :before #'(lambda (&rest r) (setq vv/compile-interactive-flag (called-interactively-p 'interactive))))
+(advice-add 'compilation-start :filter-args #'ff/compile-expand-placeholders)
+
+;;; Misc:
+;; I thought it is useful.
+(setopt show-trailing-whitespace t)
 
 (setq doom-font (font-spec :family "MonoLisa duli Modified" :weight 'regular :size 32)
       doom-variable-pitch-font (font-spec :family "CMU Typewriter Text")
@@ -93,7 +124,6 @@
       doom-symbol-font (font-spec :family "LXGW Wenkai")
       doom-serif-font (font-spec :family "CMU Typewriter Text" :weight 'light :size 32))
 
-;;;; Basic settings and more
 (setq user-full-name "duli kiles"
       user-mail-address "duli4868@gmail.com")
 
@@ -105,16 +135,32 @@
       scroll-margin 0
       scroll-conservatively 101
       word-wrap-by-category t
-      delete-by-moving-to-trash t)
+      delete-by-moving-to-trash t
+      display-line-numbers-type 'relative)
+
+(after! projectile
+  (setq projectile-files-cache-expire 300))
+
+;; make height higher
+(set-popup-rule!
+  '"^\\*compilation"
+  :vslot -2 :size 0.36 :autosave t :quit t :ttl 0)
+
+(remove-hook! '(prog-mode-hook text-mode-hook conf-mode-hook)
+  #'display-line-numbers-mode)
+(remove-hook 'doom-first-buffer-hook #'global-flycheck-mode)
+(smartparens-global-mode -1)
+(global-flycheck-mode -1)
+(pixel-scroll-precision-mode 1)
 
 (put 'narrow-to-region 'disabled nil)
 
-(pixel-scroll-precision-mode 1)
+;;;; fullscreen setup
+(if (daemonp)
+    (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (add-to-list 'initial-frame-alist '(fullscreen . maximized)))
 
-;; (setf (cdr (assoc "default" fringe-styles)) '(32 . 32))
-
-
-;;;; doom theme and modeline hight
+;;;; theme
 (setq doom-theme 'modus-operandi-tritanopia
       doom-modeline-height 44)
 
@@ -140,22 +186,7 @@
                           `(org-block ((t (:background unspecified))))
                           `(org-block-begin-line ((t (:background unspecified))))
                           `(org-block-end-line ((t (:background unspecified))))))
-
-;;;; undo-limit
-(after! undo-fu
-  (setq undo-limit (* 8 1024 1024))
-  (setq undo-strong-limit (* 16 1024 1024))
-  (setq undo-outer-limit (* 36 1024 1024)))
-
-;;;; emoji settings(libxft)
-;; Fallback to xft, if we not using cairo
-(when (boundp 'xft-ignore-color-fonts)
-  (setq xft-ignore-color-fonts nil
-        face-ignored-fonts nil)
-  (set-fontset-font t 'emoji
-                    '("Noto Color Emoji" . "iso10646-1") nil 'prepend))
-
-;;;; org faces
+;; org level face
 (add-hook! doom-load-theme
   (apply #'custom-theme-set-faces
          'user
@@ -166,15 +197,12 @@
                                  `((t (:inherit ,(intern (format "modus-themes-heading-%d" i))
                                        :extend t
                                        :weight normal))))))))
-;;;; disable display-line-numbers-mode
-(remove-hook! '(prog-mode-hook text-mode-hook conf-mode-hook)
-  #'display-line-numbers-mode)
-(setq display-line-numbers-type 'relative)
 
-;;;; fullscreen setup
-(if (daemonp)
-    (add-to-list 'default-frame-alist '(fullscreen . maximized))
-  (add-to-list 'initial-frame-alist '(fullscreen . maximized)))
+;;;; undo-limit
+(after! undo-fu
+  (setq undo-limit (* 8 1024 1024))
+  (setq undo-strong-limit (* 16 1024 1024))
+  (setq undo-outer-limit (* 36 1024 1024)))
 
 ;;;; which-key delay
 (after! which-key
@@ -225,18 +253,16 @@
 (map! :map doom-leader-file-map
       "o" #'find-file-other-window)
 
-(setq frame-title-format '(:eval (ff/generate--frame-format)))
-
 ;;;; emacs-rime
 ;; emacs do not provide us a way to make keybinding live all over the time, but
 ;; use-package does. and don't need define a new minor mode. found in
 ;; https://emacs.stackexchange.com/questions/352/how-to-override-major-mode-bindings
 ;; We could use use-package:bind-key*
 ;;
-;; Now it is default C-\
+;; Now it is default C-\, there no needed.
 
 ;; rime setting
-(use-package! rime
+(use-package rime
   :bind
   ;; make delete words works
   (:map rime-mode-map
@@ -245,14 +271,7 @@
   (default-input-method "rime")
   (rime-user-data-dir "~/.local/share/emacs-rime")
   (rime-share-data-dir "~/.local/share/rime-data")
-  (rime-show-candidate 'posframe)
-  ;; (rime-inline-predicates '(rime-predicate-space-after-cc-p))
-  ;; (rime-disable-predicates
-  ;;  '(meow-normal-mode-p
-  ;;    meow-motion-mode-p
-  ;;    meow-keypad-mode-p
-  ;;    meow-beacon-mode-p))
-  )
+  (rime-show-candidate 'posframe))
 
 (after! rime
   (when (daemonp)
@@ -261,7 +280,60 @@
         (rime-compile-module))
       (rime--load-dynamic-module))))
 
-;;;; Org-mode
+;;;; +utils and something
+(use-package! info-colors
+  :hook (Info-selection . info-colors-fontify-node))
+
+(use-package! wakatime-mode
+  :config
+  (global-wakatime-mode))
+
+(use-package! indent-bars
+  :hook ((python-mode yaml-mode) . indent-bars-mode))
+
+(after! doom-modeline
+  (setopt doom-modeline-env-enable-python nil))
+
+;;;; cns
+(use-package! cns
+  :config
+  (setq cns-process-type 'network)
+  (setq cns-client-host "127.0.0.1")
+  (setq cns-recent-segmentation-limit 20) ; default is 10
+  (setq cns-debug nil) ; disable debug output, default is t
+  (setq cns-client-port 7878)
+  :hook
+  (find-file . cns-auto-enable))
+
+;;;; outli
+(use-package outli
+  :hook ((prog-mode text-mode) . outli-mode)
+  :bind
+  (:map outli-mode-map
+        ("C-c C-p" . (lambda () (interactive) (outline-back-to-heading)))))
+
+
+;;;; mail
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+(setq send-mail-function #'smtpmail-send-it)
+(setq message-send-mail-function #'smtpmail-send-it)
+(setq smtpmail-smtp-server "smtp.gmail.com")
+(setq smtpmail-smtp-service 587)
+(setq smtpmail-stream-type 'starttls)
+(setq smtpmail-smtp-user "duli4868@gmail.com")
+
+(setq smtpmail-auth-supported '(xoauth2 cram-md5 plain login))
+(setq smtpmail-servers-requiring-authorization ".*")
+
+(defun aa/copy-gmail-oauth2-access-key ()
+  (interactive)
+  (when (= 1 (shell-command "pgrep -f 'pizauth server'"))
+    (shell-command "pizauth server && cat ~/.config/gmail.auth | pizauth restore"))
+  (kill-new (shell-command-to-string "pizauth show dulikiles"))
+  (message "Copyed from pizauth show"))
+
+;;; Org-mode
+;;;; org
 (after! org
   (setq org-directory "~/documents/notes"
 
@@ -325,37 +397,7 @@
   ;; set org-encrypt key
   (setq org-crypt-key "01FC4F4457FB76A78E17C1CEDDF3E86600E4955A"))
 
-(after! org-tree-slide
-  (advice-remove 'org-tree-slide--display-tree-with-narrow
-                 #'+org-present--hide-first-heading-maybe-a)
-  (defadvice! +org-present--hide-first-heading-maybe-a (fn &rest args)
-    "Omit the first heading if `+org-present-hide-first-heading' is non-nil."
-    :around #'org-tree-slide--display-tree-with-narrow
-    (letf!
-      (defun org-narrow-to-subtree (&optional element)
-        "Narrow buffer to the current subtree."
-        (interactive)
-        (save-excursion
-          (save-match-data
-            (org-with-limited-levels
-             (narrow-to-region
-              (progn
-                (when (org-before-first-heading-p)
-                  (org-next-visible-heading 1))
-                (org-back-to-heading t)
-                (when +org-present-hide-first-heading
-                  (forward-line 1))
-                (point))
-              (progn
-                (org-end-of-subtree t t)
-                (when (and (org-at-heading-p) (not (eobp)))
-                  (backward-char 1))
-                (point)))))))
-      (apply fn args))))
-;;;;; denote with org-capture
-(defun ff/denote-downcase-str (STR)
-  (downcase STR))
-
+;;;; denote with org-capture
 (use-package! denote
   :config
   (setq denote-directory (concat (getenv "HOME") "/documents/notes/")
@@ -363,11 +405,11 @@
         denote-sort-keywords nil
         denote-known-keywords '("emacs" "note" "game" "refile" "rewrite")
         denote-prompts '(keywords title)
-        denote-file-name-slug-functions  '((title . denote-sluggify-title)
-                                           (keyword . ff/denote-downcase-str) ; make multi word keyword works
+        denote-file-name-slug-functions  `((title . denote-sluggify-title)
+                                           (keyword . ,(lambda (str) (downcase str))) ; make multi word keyword works
                                            (signature . denote-sluggify-signature)))
-  ;;  (denote-rename-buffer-mode t)
   )
+(denote-rename-buffer-mode t)
 
 (map! :map org-mode-map
       "C-c n r" #'denote-rename-file)
@@ -387,7 +429,6 @@
   (let ((system-time-locale "en_US.UTF-8"))
     (format-time-string "%B %d, %Y" (if r (date-to-time r) nil))))
 (advice-add #'denote-journal-daily--title-format :override #'ff/denote-journal-mdy-title-format-with-env)
-
 
 (keymap-global-set "H-c" #'aa/capture-note)
 (keymap-global-set "H-=" #'(lambda (arg)
@@ -429,7 +470,7 @@
   (when (denote-file-has-denoted-filename-p (buffer-file-name))
     (let (denote-rename-confirmations)
       (when-let ((file (denote-rename-file (buffer-file-name)
-                                           (denote-journal-mdy-title-format-with-env (denote-extract-id-from-string (buffer-file-name)))
+                                           (ff/denote-journal-mdy-title-format-with-env (denote-extract-id-from-string (buffer-file-name)))
                                            '("journal")
                                            'keep-current
                                            'keep-current
@@ -438,9 +479,9 @@
         (rename-file file new-path)
         (set-visited-file-name new-path t t)))))
 
+;; TODO
 (defun aa/visit-whole-day-journal (&optional op)
-  (interactive "P")
-  )
+  (interactive "P"))
 
 ;; Disable C-, to prevent accidental triggers due to its proximity to C-k.
 (add-hook 'org-capture-mode-hook
@@ -448,8 +489,7 @@
             (keymap-local-unset "C-,")
             (keymap-local-unset "C-.")))
 
-(defvar vv/denote-link-display-help-echo 't)
-(setq ff/denote-link-display-help-echo nil)
+(defvar vv/denote-link-display-help-echo nil)
 ;; fix help-echo
 (defun ff/denote-link-ol-help-echo (_window _object position)
   "Echo the full file path of the identifier at POSITION."
@@ -458,7 +498,6 @@
            (target (caar data)))
       (denote-get-path-by-id target))))
 (advice-add #'denote-link-ol-help-echo :override #'ff/denote-link-ol-help-echo)
-
 
 (use-package denote-menu
   :bind
@@ -472,9 +511,7 @@
 ;; (map! :map doom-leader-notes-map
 ;;       "r" #'+denote-random-note)
 
-(defvar +denote-refile-file (concat denote-directory "19700101T000000--refile__denote_refile.org"))
 (defvar +denote-todo-file (concat denote-directory "19700102T000000--todo__denote_todo.org"))
-(defvar +denote-readlist-file (concat denote-directory "19700103T000000--readlist__denote_readlist.org"))
 
 (after! org-capture
   (setq org-capture-templates
@@ -486,14 +523,12 @@
            :jump-to-captured t)
           ("t" "Personal todo" entry (file+headline +denote-todo-file "Inbox")
            "* [ ] %?" :prepend t)
-          ("c" "Collections (need refile)" entry (file+headline +denote-refile-file "Inbox")
-           "* %?" :prepend t)
           ("p" "Templates for projects")
           ("pt" "Project-local todo" entry  ; {project-root}/todo.org
-           (file+headline +org-capture-project-todo-file "Inbox")
+           (file+headline (lambda () (ff/find-corresponding-project-file 'todo nil)) "Inbox [%]")
            "* TODO %?\n%i\n%a" :prepend t)
           ("pn" "Project-local notes" entry  ; {project-root}/notes.org
-           (file+headline +org-capture-project-notes-file "Inbox")
+           (file+headline (lambda () (ff/find-corresponding-project-file 'notes nil)) "Inbox")
            "* %U %?\n%i\n%a" :prepend t)
           ("pc" "Project-local changelog" entry  ; {project-root}/changelog.org
            (file+headline +org-capture-project-changelog-file "Unreleased")
@@ -502,10 +537,10 @@
 (setq org-agenda-files '("~/documents/notes/" "~/documents/notes/journal/"))
 (setq org-roam-directory (concat (getenv "HOME") "/roam"))
 
-
+;;; Programming
 ;;;; company and orderless
 (after! company
-  (setq company-idle-delay 0)
+  (setq company-idle-delay 0.05)
   (setq company-tooltip-idle-delay 0)
   (map! :map company-active-map "<tab>"  #'company-complete-selection)
   (map! :map company-active-map "TAB"  #'company-complete-selection))
@@ -513,148 +548,24 @@
 (after! orderless
   (setq orderless-component-separator "[ &·]+"))
 
-;;;; TODO csharp
+;;;; lang: csharp
 (after! csharp-mode
   (add-hook! csharp-mode
     (c-set-offset 'func-decl-cont 0)
     (c-set-offset 'statement-cont 0)
     (c-set-offset 'topmost-intro-cont 0)))
 
-;;;; +utils and something
-(use-package! info-colors
-  :hook (Info-selection . info-colors-fontify-node))
 
-(use-package! wakatime-mode
-  :config
-  (global-wakatime-mode))
+(add-hook! '(scheme-mode-hook emacs-lisp-mode-hook lisp-mode-hook) #'paredit-mode)
 
-(after! 'treemacs
-  (setopt treemacs-width 25))
-
-(use-package! indent-bars
-  :hook ((python-mode yaml-mode) . indent-bars-mode))
-
-(after! doom-modeline
-  (setopt doom-modeline-env-enable-python nil))
-
-(add-hook! '(scheme-mode-hook emacs-lisp-mode-hook lisp-mode-hook)
-           #'paredit-mode)
-
-;;;; clang-fotmat+
+;;;; clang-format+
 (use-package! clang-format+
   :hook (c-mode-common . clang-format+-mode)
   :config
   (setq clang-format+-context 'modification
         clang-format+-always-enable t))
 
-;;;; cns
-(use-package! cns
-  :config
-  (let ((repodir (concat doom-local-dir "straight/" (format "build-%s" emacs-version) "/cns/")))
-    (setq cns-prog (concat repodir "cnws")
-          cns-process-type 'shell
-          cns-dict-directory (concat repodir "cppjieba/dict")))
-  :hook
-  (find-file . cns-auto-enable))
-
-;;;; outli
-(use-package outli
-  :hook ((prog-mode text-mode) . outli-mode)
-  :bind
-  (:map outli-mode-map
-        ("C-c C-p" . (lambda () (interactive) (outline-back-to-heading)))))
-
-;;;; nix
-(after! nix-mode
-  (set-formatter! 'nixpkgs-fmt '("nixpkgs-fmt") :modes '(nix-mode)))
-
-;;;; copilot
-(use-package! copilot
-  :bind (:map copilot-completion-map
-              ("<tab>" . 'copilot-accept-completion)
-              ("TAB" . 'copilot-accept-completion)
-              ("C-TAB" . 'copilot-accept-completion-by-word)
-              ("C-<tab>" . 'copilot-accept-completion-by-word)))
-
-;;;; typst-mode
-;; (use-package typst-ts-mode
-;;   :custom
-;;   (typst-ts-watch-options "--open")
-;;   (typst-ts-mode-enable-raw-blocks-highlight t)
-;;   :config
-;;   (keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu))
-
-;;;; gptel
-(after! doom-modeline
-  (setopt doom-modeline-env-enable-python nil))
-
-(add-hook! '(scheme-mode-hook emacs-lisp-mode-hook lisp-mode-hook)
-           #'paredit-mode)
-
-;;;; clang-fotmat+
-(use-package! clang-format+
-  :hook (c-mode-common . clang-format+-mode)
-  :config
-  (setq clang-format+-context 'modification
-        clang-format+-always-enable t))
-
-;;;; cns
-(use-package! cns
-  :config
-  (let ((repodir (concat doom-local-dir "straight/" (format "build-%s" emacs-version) "/cns/")))
-    (setq cns-prog (concat repodir "cnws")
-          cns-process-type 'shell
-          cns-dict-directory (concat repodir "cppjieba/dict")))
-  :hook
-  (find-file . cns-auto-enable))
-
-;;;; outli
-(use-package outli
-  :hook ((prog-mode text-mode) . outli-mode)
-  :bind
-  (:map outli-mode-map
-        ("C-c C-p" . (lambda () (interactive) (outline-back-to-heading)))))
-
-;;;; nix
-(after! nix-mode
-  (set-formatter! 'nixpkgs-fmt '("nixpkgs-fmt") :modes '(nix-mode)))
-
-;;;; copilot
-(use-package! copilot
-  :bind (:map copilot-completion-map
-              ("<tab>" . 'copilot-accept-completion)
-              ("TAB" . 'copilot-accept-completion)
-              ("C-TAB" . 'copilot-accept-completion-by-word)
-              ("C-<tab>" . 'copilot-accept-completion-by-word)))
-
-;;;; typst-mode
-;; (use-package typst-ts-mode
-;;   :custom
-;;   (typst-ts-watch-options "--open")
-;;   (typst-ts-mode-enable-raw-blocks-highlight t)
-;;   :config
-;;   (keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu))
-
-;;;; gptel
-(after! gptel
-  (setq gptel-expert-commands t)
-  (setq gptel-default-mode 'org-mode)
-  (gptel-make-openai "minimax"          ;Any name you want
-    :host "api.minimax.chat"
-    :endpoint "/v1/text/chatcompletion_v2"
-    :stream t
-    :key (gptel-api-key-from-auth-source "api.minimax.chat" "apikey")
-    :models '(MiniMax-Text-01 abab6.5s-chat))
-  (gptel-make-gemini "linkapi"
-    :host "api.linkapi.ai"
-    :key (gptel-api-key-from-auth-source "api.linkapi.ai" "apikey")
-    :models +gptel--linkapi-gemini-models))
-;;;; compile @f advice
-(advice-add 'compile :before #'(lambda (&rest r) (setq vv/compile-interactive-flag (called-interactively-p 'interactive))))
-(advice-add 'recompile :before #'(lambda (&rest r) (setq vv/compile-interactive-flag t (called-interactively-p 'interactive))))
-(advice-add 'compilation-start :filter-args #'ff/compile-expand-placeholders)
-
-;;;; rust-mode copy from doom module
+;;;; lang: rust
 ;; no more rustic-mode
 (use-package! rust-mode
   :defer t
@@ -733,6 +644,13 @@
 
 ;;;; eglot (modulep lsp +eglot)
 (when (modulep! :tools lsp +eglot)
+  (after! eglot
+    (setopt eglot-extend-to-xref t)
+    (setf (alist-get '(csharp-mode csharp-ts-mode) eglot-server-programs nil nil #'equal)
+          '("roslyn-language-server" "--stdio"))
+    (setf (alist-get '(rust-ts-mode rust-mode) eglot-server-programs nil nil #'equal)
+          `("rust-analyzer" :initializationOptions
+            ,(alist-get :rust-analyzer eglot-workspace-configuration))))
   (setq-default eglot-workspace-configuration
                 '((:rust-analyzer . (:cargo (:allFeatures t :allTargets t :features "full")
                                      :checkOnSave :json-false
@@ -741,7 +659,7 @@
                                      :hover (:memoryLayout (:size "both")
                                              :show (:traitAssocItems 5)
                                              :documentation (:keywords (:enable :json-false)))
-                                     :inlayHints(;:bindingModeHints (:enable t)
+                                     :inlayHints( ;:bindingModeHints (:enable t)
                                                  :lifetimeElisionHints (:enable "skip_trivial" :useParameterNames t)
                                                  :closureReturnTypeHints (:enable "always")
                                                  :discriminantHints (:enable t)
@@ -751,69 +669,26 @@
                                      :workspace (:symbol (:search (:kind "all_symbols"
                                                                    :scope "workspace_and_dependencies")))
                                      :lru (:capacity 1024)
-                                     :diagnostics (:enable :json-false))))))
-  ;; (after! rustic-lsp
-  ;;   (fset 'rustic-setup-eglot (lambda (&rest _)))
-  ;;   (after! eglot
-  ;;     (add-to-list 'eglot-server-programs
-  ;;                  `(rust-mode . ("rust-analyzer" :initializationOptions
-  ;;                                 ( :procMacro (:enable t)
-  ;;                                              :cargo ( :buildScripts (:enable t)
-  ;;                                                                     :features "all")
-  ;;                                              :rustfmt ( :rangeFormatting ( :enable t))))))))
+                                     :diagnostics (:enable :json-false)
+                                     :rustfmt (:rangeFormatting (:enable t))))
+                  (:java :autobuild (:enabled :json-false)))))
+
+;;;; formatter and template and automode alist
+(set-formatter! 'rustfmt '("rustfmt" "--quiet" "--emit" "stdout" "--edition" "2024") :modes '(rust-mode))
+(set-formatter! 'nixpkgs-fmt '("nixpkgs-fmt") :modes '(nix-mode))
+(set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
 
 
+;;;; :lang lisp (racket, common lisp)
+(add-to-list 'auto-mode-alist (cons "\\.zuo\\'" 'racket-mode))
+(add-to-list 'auto-mode-alist (cons ".sbclrc" 'lisp-mode))
+(after! sly
+  (setq sly-description-autofocus 't))
+
+;;; Load from volatile
+(load! "volatile")
 
 ;;; continue here
-
-  ;; (after! consult
-  ;;   (unless (featurep 'beframe)
-  ;;     (require 'beframe))
-  ;;   (defface beframe-buffer
-  ;;     '((t :inherit font-lock-string-face))
-  ;;     "Face for `consult' framed buffers.")
-  ;;   (defvar beframe--consult-source
-  ;;     `( :name     "Frame-specific buffers (current frame)"
-  ;;        :narrow   ?F
-  ;;        :category buffer
-  ;;        :face     beframe-buffer
-  ;;        :history  beframe-history
-  ;;        :items    ,#'beframe--buffer-names
-  ;;        :action   ,#'switch-to-buffer
-  ;;        :state    ,#'consult--buffer-state))
-  ;;   (add-to-list 'consult-buffer-sources 'beframe--consult-source))
-
-
-
-
-  ;; (after! consult
-  ;;   (defvar +consult-kill-buffer-source '(beframe--consult-source
-  ;;                                         consult--source-hidden-buffer
-  ;;                                         consult--source-modified-buffer
-  ;;                                         consult--source-buffer
-  ;;                                         consult--source-project-buffer-hidden))
-  ;;   (defun +consult-kill-buffer ()
-  ;;     (interactive)
-  ;;     (let ((selected (consult--multi +consult-kill-buffer-source
-  ;;                                     :prompt "Kill buffer: "
-  ;;                                     :history 'consult--buffer-history
-  ;;                                     :preview-key nil
-  ;;                                     :sort nil)))
-  ;;       (when (plist-get (cdr selected) :match)
-  ;;         (kill-buffer (car selected))))))
-  ;; (autoload '+consult-kill-buffer "consult" :type t)
-  ;; (map! "C-x k" #'+consult-kill-buffer)
-
-  (after! emmet-mode
-    (unbind-key "<tab>" emmet-mode-keymap)
-    (map! :map emmet-mode-keymap
-          "C-<tab>" #'+web/indent-or-yas-or-emmet-expand))
-
-(use-package! annotate
-  ;; :hook (prog-mode . annotate-mode)
-  :config
-  (setq annotate-file (concat (getenv "HOME") "/documents/notes/annotate")))
-
 (use-package! dogears
   :hook (after-init . dogears-mode)
   ;; These bindings are optional, of course:
@@ -840,117 +715,23 @@
                             xref-find-definitions
                             xref-find-references)))
 
-;; (add-to-list 'display-buffer-alist
-;;              `(,(rx string-start "*Async Shell Command*" string-end)
-;;                (display-buffer-no-window)))
-
-;; (load! "serenity-org-okular.el")
-
 ;; Fix guix
 (after! tramp
   (add-to-list 'tramp-remote-path "/run/current-system/profile/bin"))
 
-(add-to-list 'auto-mode-alist (cons "\\.zuo\\'" 'racket-mode))
-(add-to-list 'auto-mode-alist (cons ".sbclrc" 'lisp-mode))
-
 (setq inferior-lisp-program "/usr/bin/sbcl")
 
-(after! sly
-  (setq sly-description-autofocus 't))
 
 (after! comint
   (setq comint-buffer-maximum-size 81920))
-
-(use-package! ekg
-  :config
-  (setq ekg-notes-display-images nil))
-
-(use-package! telega
-  :config
-  (setq telega-server-libs-prefix "~/.nix-profile"))
-
-;; (require 'org-tidy)
-;; (add-hook 'org-mode-hook #'org-tidy-mode)
 
 ;; (add-to-list 'load-path "~/develop/denote-term")
 ;; (require 'denote-term)
 ;; (add-to-list 'load-path "~/develop/time-tracker")
 ;; (require 'time-tracker)
 
-;;; test
-(set-formatter! 'rustfmt '("rustfmt" "--quiet" "--emit" "stdout" "--edition" "2024") :modes '(rust-mode))
-(after! rustic
-  (keymap-unset rustic-mode-map "C-c C-c c" t))
 
-;; Use C-j visit stage file, instead of 
-;; (after! magit-diff
-;;   (setq magit-diff-visit-prefer-worktree t))
-
-(defun org-yank-generic (command arg)
-  "Perform some yank-like command.
-
-This function implements the behavior described in the `org-yank'
-documentation.  However, it has been generalized to work for any
-interactive command with similar behavior."
-
-  ;; pretend to be command COMMAND
-  (setq this-command command)
-
-  (if arg
-      (call-interactively command)
-
-    (let ((subtreep    ; is kill a subtree, and the yank position appropriate?
-	   (and (org-kill-is-subtree-p)
-		(or (bolp)
-		    (and (looking-at "[ \t]*$")
-			 (string-match
-			  "\\`\\*+\\'"
-                          (buffer-substring (line-beginning-position) (point)))))))
-	  swallowp)
-      (cond
-       ((and subtreep org-yank-folded-subtrees)
-	(let ((beg (point))
-	      end)
-	  (if (and subtreep org-yank-adjusted-subtrees)
-	      (org-paste-subtree nil nil 'for-yank)
-	    (call-interactively command))
-
-	  (setq end (point))
-	  (goto-char beg)
-	  (when (and (bolp) subtreep
-		     (not (setq swallowp
-			        (org-yank-folding-would-swallow-text beg end))))
-	    (org-with-limited-levels
-	     (or (looking-at org-outline-regexp)
-		 (re-search-forward org-outline-regexp-bol end t))
-	     (while (and (< (point) end) (looking-at org-outline-regexp))
-	       (org-fold-subtree t)
-	       (org-cycle-show-empty-lines 'folded)
-	       (condition-case nil
-		   (outline-forward-same-level 1)
-		 (error (goto-char end))))))
-	  (when swallowp
-	    (message
-	     "Inserted text not folded because that would swallow text"))
-
-	  (goto-char end)
-	  (skip-chars-forward " \t\n\r")
-	  (forward-line 0)
-	  (push-mark beg 'nomsg)))
-       ((and subtreep org-yank-adjusted-subtrees)
-        (let ((beg (line-beginning-position)))
-	  (org-paste-subtree nil nil 'for-yank)
-	  (push-mark beg 'nomsg)))
-
-       ((org-element-type-p (org-element-at-point) 'item)
-        (let ((wait-paste (split-string (current-kill 0 'do-not-move) "[\n\r]+" t)))
-          (while wait-paste
-            (insert (pop wait-paste))
-            (when wait-paste
-              (org-newline-and-indent)))))
-       (t
-	(call-interactively command))))))
-
+;;; Test ground
 (defvar +org-fold-task-ellipsis ".")
 (defun +org-fold-find-ov-with-exact-length (begin end ovs)
   (seq-filter (lambda (ov) (and (equal (overlay-start ov) begin)
@@ -995,12 +776,6 @@ interactive command with similar behavior."
          (remove-overlays from to 'display +org-fold-task-ellipsis))))))
 (advice-add 'org-fold-core-region :after #'+org-fold-core-region)
 
-(after! org-transclusion
-  (cl-pushnew 'ff/denote-org-transclusion-add
-              org-transclusion-add-functions)
-  (cl-pushnew 'keyword org-transclusion-exclude-elements))
-
-
 (defun ff/denote-open-link-function (path)
   (cl-flet ((has-dired-mode-p (elt)
               (equal 'dired-mode (buffer-local-value 'major-mode elt))))
@@ -1039,69 +814,6 @@ interactive command with similar behavior."
 
 ;; (advice-add 'call-process :around #'my/log-call-process)
 
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
-
-(setq send-mail-function #'smtpmail-send-it)
-(setq message-send-mail-function #'smtpmail-send-it)
-(setq smtpmail-smtp-server "smtp.gmail.com")
-(setq smtpmail-smtp-service 587)
-(setq smtpmail-stream-type 'starttls)
-(setq smtpmail-smtp-user "duli4868@gmail.com")
-
-(setq smtpmail-auth-supported '(xoauth2 cram-md5 plain login))
-(setq smtpmail-servers-requiring-authorization ".*")
-
-(defun aa/copy-gmail-oauth2-access-key ()
-  (interactive)
-  (when (= 1 (shell-command "pgrep -f 'pizauth server'"))
-    (shell-command "pizauth server && cat ~/.config/gmail.auth | pizauth restore"))
-  (kill-new (shell-command-to-string "pizauth show dulikiles"))
-  (message "Copyed from pizauth show"))
-
-
-;; (add-to-list 'auth-sources 'pizauth)
-
-;; (defvar pizauth-account-alist '(((:host "smtp.gmail.com" :user "xxxx@gmail.com") . "Gmail")))
-
-;; (cl-defun auth-source-pizauth-search (&rest spec
-;;                                             &key backend type host user port
-;;                                             require max
-;;                                             &allow-other-keys)
-;;   (when-let ((account (cdr
-;;                        (assoc
-;;                         `(:host ,host :user ,user)
-;;                         pizauth-account-alist))))
-;;     (if-let ((secret (with-temp-buffer
-;;                        (when (= 0 (call-process "pizauth" nil t nil "show" account))
-;;                          (buffer-substring-no-properties (point-min) (- (point-max) 1))))))
-;;         `(,(list :host host
-;;                  :user user
-;;                  :port port
-;;                  :backend backend 
-;;                  :type type
-;;                  :secret secret
-;;                  :smtp-auth 'xoauth2))
-;;       `(,(list :host host
-;;                :user user
-;;                :port port
-;;                :backend backend
-;;                :type type
-;;                :smtp-auth 'xoauth2)))))
-
-;; (defun auth-source-backends-parser-pizauth (entry)
-;;   (when (eq entry 'pizauth)
-;;     (auth-source-backend
-;;      :source ""
-;;      :type 'pizauth
-;;      :search-function #'auth-source-pizauth-search)))
-
-;; (add-hook 'auth-source-backend-parser-functions #'auth-source-backends-parser-pizauth)
-
-(add-to-list 'exec-path "/home/duli/develop/rpc-ssh/target/release")
-
-(defvar rpc-ssh-command "rpc-ssh-cli --config /home/duli/develop/rpc-ssh/cli.toml")
-
-
 (define-derived-mode denote-dash-mode tabulated-list-mode "Denote Menu"
   "Major mode for browsing a list of Denote files."
   :interactive nil
@@ -1120,62 +832,7 @@ interactive command with similar behavior."
   (tabulated-list-init-header)
   (tabulated-list-print))
 
-
-;; TODO new function turn capture note to journal note
-
-
-(eval-after-load 'ob-core
-  (lambda ()
-    (advice-patch 'org-babel-hide-result-toggle
-                  '(or
-                    (memq t
-                          (mapcar
-                           (lambda (overlay)
-                             (eq (overlay-get overlay 'invisible)
-                                 'org-babel-hide-result))
-                           (overlays-at start)))
-                    (eq force 'off))
-                  '(memq t
-                    (mapcar
-                     (lambda (overlay)
-                       (eq (overlay-get overlay 'invisible)
-                           'org-babel-hide-result))
-                     (overlays-at start))))))
-
-(defun ff/block-visibility-according-to-property ()
-  (org-block-map
-   (lambda ()
-     (pcase (cdr (assq :visibility (nth 2 (org-babel-get-src-block-info))))
-       ("fold"
-        (org-fold-hide-block-toggle 'hide)
-        (when-let ((location (org-babel-where-is-src-block-result)))
-          (goto-char location)
-          (org-babel-hide-result-toggle 'hide)))
-       ("all"
-        (org-fold-hide-block-toggle 'off)
-        (when-let ((location (org-babel-where-is-src-block-result)))
-          (goto-char location)
-          (org-babel-hide-result-toggle 'off)))
-       ("block"
-        (org-fold-hide-block-toggle 'off)
-        (when-let ((location (org-babel-where-is-src-block-result)))
-          (goto-char location)
-          (org-babel-hide-result-toggle 'hide)))
-       ("results"
-        (org-fold-hide-block-toggle 'hide)
-        (when-let ((location (org-babel-where-is-src-block-result)))
-          (goto-char location)
-          (org-babel-hide-result-toggle 'off)))))))
-
-(defvar vv/org-cycle-hide-result-startup nil)
-(advice-add 'org-cycle-set-startup-visibility
-            :after
-            (lambda ()
-              (unless (eq org-startup-folded 'showeverything)
-                (when vv/org-cycle-hide-result-startup
-                  (org-babel-result-hide-all))
-                (ff/block-visibility-according-to-property))))
-
+;;; continue here
 (defun ff/all-denote-file-names ()
   (mapcar
    (lambda (elt) (string-remove-prefix (denote-directory) elt))
@@ -1298,14 +955,3 @@ interactive command with similar behavior."
                       (delete-window side-window)))
                   nil
                   t)))))
-
-(set-file-template! "\\.h$" :trigger "__h" :mode 'c-mode)
-
-;; let default empty
-(setopt compile-command "")
-(setq savehist-ignored-variables '(compile-history))
-
-;; make height higher
-(set-popup-rule!
-  '"^\\*compilation"
-  :vslot -2 :size 0.36 :autosave t :quit t :ttl 0)
